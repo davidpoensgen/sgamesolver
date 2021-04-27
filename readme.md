@@ -1,6 +1,6 @@
 # dsGameSolver
 
-**Computing stationary equilibria finite discounted stochastic games**
+**Computing stationary equilibria of finite discounted stochastic games**
 
 
 ## HomCont
