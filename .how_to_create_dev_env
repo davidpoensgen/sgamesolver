@@ -1,0 +1,44 @@
+Step 1: set up ssh key
+----------------------
+
+in local terminal, run:
+ssh-keygen -o -a 100 -t ed25519 -f ~/.ssh/gitlab_eibie_net_ed25519 -C "gitlab_eibie_net"
+
+add to ~/.ssh/config:
+Host gitlab
+    Hostname gitlab.eibie.net
+    User git
+    Port 6622
+    IdentityFile ~/.ssh/gitlab_eibie_net_ed25519
+
+set up public ssh key on gitlab
+
+test ssh:
+ssh -o ConnectTimeout=5 -T gitlab 
+
+
+
+Step 2: create python environment
+---------------------------------
+
+through conda:
+download requirements_dev.txt
+conda create --name dsgamesolver-dev --file .requirements_dev.txt --channel conda-forge -y
+
+
+
+Step 3: set up git project
+--------------------------
+
+cd existing_folder
+git init
+
+git config --local user.name "USERNAME"
+git config --local user.email "EMAILADDRESS"
+
+git remote add origin ssh://git@gitlab.eibie.net:6622/steffen/dsgamesolver.git
+git config --local core.sshCommand "ssh -i ~/.ssh/gitlab_eibie_net_ed25519 -F /dev/null"
+
+git pull
+
+

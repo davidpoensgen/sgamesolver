@@ -1,0 +1,10 @@
+\babel@toc {american}{}
+\contentsline {section}{\numberline {1}Notation}{2}{section.1}%
+\contentsline {section}{\numberline {2}Stochastic Quantal Response Equilibrium}{2}{section.2}%
+\contentsline {section}{\numberline {3}Stochastic Logarithmic Tracing Procedure}{9}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Version 1: $\eta (t) = (1-t)\eta _0$ (Default)}{9}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Version 2: $\eta $ fix}{14}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Version 3: Agent Variation with $\eta (t) = (1-t)\eta _0$}{16}{subsection.3.3}%
+\contentsline {subsection}{\numberline {3.4}Version 4: Agent Variation with $\eta $ fix}{20}{subsection.3.4}%
+\contentsline {section}{\numberline {4}Harsanyi's Log Game Homotopy}{23}{section.4}%
+\contentsline {section}{\numberline {5}Interior-Point Homotopy of Herings and PhD Students}{27}{section.5}%

@@ -1,0 +1,7 @@
+python=3.9
+numpy
+scipy
+matplotlib    # optional
+numdifftools  # optional
+cython        # optional
+gxx_linux-64  # optional

@@ -1,0 +1,18 @@
+# conda create --name dsgamesolver-dev --file .requirements_dev.txt --channel conda-forge -y
+
+# core:
+python=3.8  # version 3.9 not (yet) compatible with all packages
+numpy
+scipy
+matplotlib
+numdifftools
+cython
+gxx_linux-64
+
+# dev:
+jupyter
+spyder-kernels=1.9.4
+pre-commit
+black
+flake8
+pytest
