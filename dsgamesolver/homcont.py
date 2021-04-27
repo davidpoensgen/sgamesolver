@@ -5,7 +5,8 @@ HomPath: class for logging homotopy path
 
 
 dsGameSolver:
-Python software for computing stationary equilibria of stochastic games.
+Python software for computing stationary equilibria
+of finite discounted stochastic games.
 
 Copyright (C) 2018  Steffen Eibelshäuser & David Poensgen
 
