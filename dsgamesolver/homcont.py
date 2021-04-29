@@ -764,9 +764,8 @@ def qr_inv(array):
 
 def angle(vector1, vector2):
     """Calculate the angle between two unit vectors, in degrees."""
-    scalar_product = np.clip(
-        np.dot(vector1, vector2), -1, 1
-    )  # Clipping prevents problems if vectors are colinear.
+    # Clipping prevents problems if vectors are colinear.
+    scalar_product = np.clip(np.dot(vector1, vector2), -1, 1)
     return np.arccos(scalar_product) * 180 / np.pi
 
 
@@ -775,7 +774,10 @@ def angle(vector1, vector2):
 
 class HomPath:
     def __init__(
-        self, dim: int, max_steps: int = 500000, x_transformer: callable = lambda x: x
+        self,
+        dim: int,
+        max_steps: int = 500000,
+        x_transformer: callable = lambda x: x,
     ):
         """Initialization of path.
 
