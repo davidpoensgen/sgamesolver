@@ -6,7 +6,7 @@ import dsgamesolver.dsgamesolver.sgame as sgame
 import string
 import warnings
 
-from dsgamesolver.dsgamesolver.homclass import HomCont
+from dsgamesolver.dsgamesolver.homcont import HomCont
 
 
 class sgameHomotopy():

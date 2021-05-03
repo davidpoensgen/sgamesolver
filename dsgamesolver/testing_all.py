@@ -1,6 +1,5 @@
-from dsgamesolver.dsgamesolver.homclass import HomCont
+from dsgamesolver.dsgamesolver.homcont import HomCont
 from dsgamesolver.dsgamesolver.sgame import sGame
-import dsgamesolver.dsgamesolver.homclass
 import dsgamesolver.dsgamesolver.homotopy as homotopy
 
 import numpy as np
@@ -10,8 +9,8 @@ import numpy as np
 
 num_s = 3           # number of states
 num_p = 3           # number of players
-num_a_max = 4       # maximum number of actions
-num_a_min = 2       # minimum number of actions
+num_a_max = 5       # maximum number of actions
+num_a_min = 3       # minimum number of actions
 delta_max = 0.95    # maximum discount factor
 delta_min = 0.90    # minimum discount factor
 
@@ -33,14 +32,11 @@ discountFactors = np.random.uniform(low=delta_min, high=delta_max, size=num_p)
 
 
 game = sGame(payoffMatrices, transitionMatrices, discountFactors)
-si = game.centroid_strategy_profile()
-game.get_values(si)
+si = game.centroid_strategy()
 
 qre = homotopy.QRE_np(game)
-
 qre.solver_setup()
-
-qre.solver.verbose = 3
+qre.solver.verbose = 2
 sol = qre.solver.solve()
 
 eq = np.exp(sol['y'][0:game.num_actions_total])

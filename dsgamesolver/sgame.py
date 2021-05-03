@@ -24,14 +24,14 @@ class sGame():
         # TODO ^ needed?
 
         # action_mask allows to convert between a jagged and a flat array containing a strategy profile (or similar)
-        self.action_mask = np.zeros((self.num_states, self.num_players,self.num_actions_max), dtype=bool)
+        self.action_mask = np.zeros((self.num_states, self.num_players, self.num_actions_max), dtype=bool)
         for s in range(self.num_states):
             for p in range(self.num_players):
                 self.action_mask[s, p, 0:self.nums_actions[s, p]] = 1
 
         # prepare array representing utilities
-        self.u_min = min([payoffMatrix.min() for payoffMatrix in self.payoff_matrices])
-        self.u_max = max([payoffMatrix.max() for payoffMatrix in self.payoff_matrices])
+        self.u_min = min([payoff_matrix.min() for payoff_matrix in self.payoff_matrices])
+        self.u_max = max([payoff_matrix.max() for payoff_matrix in self.payoff_matrices])
 
         self.u = np.nan * np.ones((self.num_states, self.num_players, *[self.num_actions_max] * self.num_players))
         for s in range(self.num_states):
@@ -41,7 +41,6 @@ class sGame():
 
         self.u_norm_with_nan = self.normalize(self.u)
         self.u_norm = copy_without_nan(self.u_norm_with_nan)
-
 
         # generate discount factors
         if isinstance(discount_factors, (list, tuple, np.ndarray)):
@@ -75,8 +74,7 @@ class sGame():
                     transitions[(s0,) + A + (s1,)] = self.transition_matrices[s0][A + (s1,)]
 
         self.transitionArray = np.nan * np.ones(
-            shape=(self.num_states, self.num_players, *[self.num_actions_max] * self.num_players, self.num_states),
-            dtype=np.float64)
+            (self.num_states, self.num_players, *[self.num_actions_max] * self.num_players, self.num_states))
         for p in range(self.num_players):
             self.transitionArray[:, p] = self.discount_factors[p] * transitions
         self.transitionArray_withNaN = self.transitionArray.copy()
@@ -84,7 +82,7 @@ class sGame():
         # TODO: reason to keep this both with and without NaN?
         # TODO: seems that: einsum wants 0s. find_y0_qre wants NaN
         # TODO: can now use get_values etc. for find y0. Any reason left to keep versions with NaN
-        # TODO: If kept, can use copy_without_nan
+        # TODO: If kept, can use copy_without_nan here
 
         self.phi = self.transitionArray
         # TODO: unify notation: phi / u / etc, transitionArray etc
@@ -128,7 +126,7 @@ class sGame():
 
         return values
 
-    def random_strategy_profile(self):
+    def random_strategy(self):
         """Generate a random strategy profile."""
 
         strategy_profile = np.nan * np.empty((self.num_states, self.num_players, self.num_actions_max))
@@ -140,7 +138,7 @@ class sGame():
 
         return strategy_profile
 
-    def centroid_strategy_profile(self):
+    def centroid_strategy(self):
         """Returns the centroid strategy profile."""
 
         strategy_profile = np.nan * np.empty((self.num_states, self.num_players, self.num_actions_max))
@@ -162,8 +160,16 @@ class sGame():
         np.place(out, self.action_mask, array)
         return out
 
+    def flatten_V(self, array):
+        """Flatten an array with shape (states, values), e.g. state-player-values."""
+        return array.reshape(-1)
+
+    def unflatten_V(self, array):
+        """Convert a flat array to shape (states, values), e.g. state-player-values."""
+        return array.reshape((self.num_states, self.num_players))
+
     def check_equilibrium(self, strategy_profile):
-        """Calculates "epsilon-equilibriumness" (max total utility any agent could gain by deviating)
+        """Calculate "epsilon-equilibriumness" (max total utility any agent could gain by deviating)
         of a given strategy profile.
          """
         sigma = copy_without_nan(strategy_profile)
@@ -194,4 +200,5 @@ def copy_without_nan(array: np.ndarray):
     out = array.copy()
     out[np.isnan(out)] = 0
     return out
+    # TODO: maybe use numpy.nan_to_num instead?
 
