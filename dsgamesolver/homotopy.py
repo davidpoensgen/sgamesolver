@@ -2,11 +2,11 @@
 # TODO: in which the equations are ordered in H?
 # TODO (if so, this should be documented; and could be used for symmetry helpers etc.)
 import numpy as np
-import homcont.sgame as sgame
+import dsgamesolver.dsgamesolver.sgame as sgame
 import string
 import warnings
 
-import homcont.homclass
+from dsgamesolver.dsgamesolver.homclass import HomCont
 
 
 class sgameHomotopy():
@@ -108,8 +108,8 @@ class QRE(sgameHomotopy):
         self.find_y0()
 
     def solver_setup(self, target_lambda=np.infty):
-        self.solver = homcont.homclass.HomCont(self.H, self.y0, self.J, parameters=self.tracking_parameters["normal"],
-                                               x_transformer=self.x_transformer)
+        self.solver = HomCont(self.H, self.y0, self.J, parameters=self.tracking_parameters["normal"],
+                              x_transformer=self.x_transformer)
         self.solver.t_target = target_lambda * (self.game.u_max - self.game.u_min)
 
     def find_y0(self):
@@ -117,8 +117,8 @@ class QRE(sgameHomotopy):
         strategy_axes = tuple(np.arange(1, 1 + num_p))
 
         # strategies: players randomize uniformly; beta is logarithmized.
-        beta = np.concatenate(
-            [np.log(np.ones(nums_a[s, p]) / nums_a[s, p]) for s in range(num_s) for p in range(num_p)])
+        beta = np.concatenate([np.log(np.ones(nums_a[s, p]) / nums_a[s, p])
+                               for s in range(num_s) for p in range(num_p)])
 
         # state values: solve linear system of equations for each player
         V = np.nan * np.ones(num_s * num_p, dtype=np.float64)
