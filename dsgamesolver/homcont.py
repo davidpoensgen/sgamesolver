@@ -389,8 +389,6 @@ class HomCont:
             return
 
         corr_dist_old = np.inf
-        corr_dist_tot = 0
-        # TODO: corr_dist_tot seems not to be used.
         self.corr_step = 0
 
         self.y_corr = self.y_pred
@@ -403,7 +401,6 @@ class HomCont:
             self.y_corr = self.y_corr - correction
 
             corr_dist = np.linalg.norm(correction)
-            corr_dist_tot += corr_dist
             corr_ratio = corr_dist / corr_dist_old
             corr_dist_old = corr_dist
 

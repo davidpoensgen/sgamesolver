@@ -15,7 +15,7 @@ delta_max = 0.95    # maximum discount factor
 delta_min = 0.90    # minimum discount factor
 
 # np.random.seed(0)
-nums_a = np.random.randint(low=num_a_min, high=num_a_max+1, size=(num_s,num_p), dtype=np.int32)
+nums_a = np.random.randint(low=num_a_min, high=num_a_max+1, size=(num_s, num_p), dtype=np.int32)
 
 payoffMatrices = [np.random.random((num_p, *nums_a[s,:])) for s in range(num_s)]
 

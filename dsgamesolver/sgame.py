@@ -169,8 +169,8 @@ class sGame():
         return array.reshape((self.num_states, self.num_players))
 
     def check_equilibrium(self, strategy_profile):
-        """Calculate "epsilon-equilibriumness" (max total utility any agent could gain by deviating)
-        of a given strategy profile.
+        """Calculate "epsilon-equilibriumness" (max total utility any
+        agent could gain by deviating) of a given strategy profile.
          """
         sigma = copy_without_nan(strategy_profile)
         u = copy_without_nan(self.u)
