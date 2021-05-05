@@ -166,9 +166,8 @@ class QRE_np(QRE):
                 flat_index += 1
         H_mask = np.array(H_mask, dtype=np.int64)
 
-        J_mask = tuple(
-            np.meshgrid(H_mask, np.append(H_mask, [num_s * num_p * num_a_max + num_s * num_p]),
-                        indexing='ij', sparse=True))
+        J_mask = tuple(np.meshgrid(H_mask, np.append(H_mask, [num_s * num_p * num_a_max + num_s * num_p]),
+                       indexing='ij', sparse=True))
 
         self.H_mask = H_mask
         self.J_mask = J_mask
@@ -394,8 +393,8 @@ class QRE_np(QRE):
 
             # dH_strat_dbeta
             J[0:spa, 0:spa] = (self.T_J[0] + np.einsum('spaSPA,SPA->spaSPA', self.T_J[1], sigma)
-                                + gamma * np.einsum('spatqb,tqbSPA->spaSPA', -self.T_H[2], dEu_tilde_a_dbeta)
-                                ).reshape((spa, spa))
+                               + gamma * np.einsum('spatqb,tqbSPA->spaSPA', -self.T_H[2], dEu_tilde_a_dbeta)
+                               ).reshape((spa, spa))
             # dH_strat_dV
             J[0:spa, spa:spa+sp] = gamma * np.einsum('spatqb,tqbSP->spaSP', -self.T_H[2],
                                                       dEu_tilde_a_dV).reshape((spa, sp))
@@ -422,10 +421,10 @@ class QRE_ct(QRE):
 
 
 class Tracing(sgameHomotopy):
-    def __init__(self, game: sgame.sGame, priors="centroid", etas=None, nu=1.0):
+    def __init__(self, game: sgame.sGame, priors='centroid', etas=None, nu=1.0):
         super().__init__(game)
 
-        if priors == "random":
+        if priors == 'random':
             priors = np.empty(self.game.num_actions_total, dtype=np.float64)
             idx = 0
             for s in range(self.game.num_states):
@@ -435,7 +434,7 @@ class Tracing(sgameHomotopy):
                     etas[idx:idx + self.game.nums_actions[s, p]] = sigma
                     idx += self.game.nums_actions[s, p]
             self.priors = priors
-        elif priors == "centroid":
+        elif priors == 'centroid':
             priors = np.empty(self.game.num_actions_total, dtype=np.float64)
             idx = 0
             for s in range(self.game.num_states):

@@ -7,9 +7,9 @@ import numpy as np
 
 # random game
 
-num_s = 5           # number of states
-num_p = 5           # number of players
-num_a_max = 5       # maximum number of actions
+num_s = 2           # number of states
+num_p = 2           # number of players
+num_a_max = 3       # maximum number of actions
 num_a_min = 3       # minimum number of actions
 delta_max = 0.95    # maximum discount factor
 delta_min = 0.90    # minimum discount factor
@@ -43,9 +43,9 @@ sol = qre.solver.solve()
 qre.solver.return_to_step(5)
 sol2 = qre.solver.solve()
 
-import timeit
+# import timeit
 
-%timeit -n 10 -r 10 qre.J(qre.y0, old=True)
-%timeit -n 10 -r 10 qre.J(qre.y0, old=False)
+# %timeit  qre.J(qre.y0, old=True)
+# %timeit  qre.J(qre.y0, old=False)
 
 
