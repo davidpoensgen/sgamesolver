@@ -149,7 +149,7 @@ class QRE_np(QRE):
         super().__init__(game)
 
         num_s, num_p, nums_a = self.game.num_states, self.game.num_players, self.game.nums_actions
-        num_a_max = nums_a.max()
+        num_a_max = self.game.num_actions_max
 
         # indices to mask H and J according to nums_a
         H_mask = []
@@ -304,7 +304,7 @@ class QRE_np(QRE):
 
         return H
 
-    def J(self, y):
+    def J(self, y, old=True):
 
         num_s = self.game.num_states
         num_p = self.game.num_players
@@ -323,12 +323,20 @@ class QRE_np(QRE):
 
         sigma_prod = np.einsum(self.einsum_eqs['sigma_prod'], *sigma_p_list)
 
-        sigma_prod_with_p = []
+        # TODO: replace this pattern:
+        # sigma_prod_with_p = []
+        # for p in range(num_p):
+        #     sigma_p_list_with_p = sigma_p_list[:p] + [np.ones_like(sigma[:, p, :])] \
+        #                           + sigma_p_list[(p + 1):]
+        #     sigma_prod_with_p.append(np.einsum(self.einsum_eqs['sigma_prod_with_p'][p], *sigma_p_list_with_p))
+        # sigma_prod_with_p = np.stack(sigma_prod_with_p, axis=1)
+        # TODO: with this:
+        sigma_prod_with_p = np.empty((num_s, num_p, *[num_a_max]*num_p))
         for p in range(num_p):
-            sigma_p_list_with_p = sigma_p_list[:p] + [np.ones(shape=sigma[:, p, :].shape, dtype=np.float64)] \
+            sigma_p_list_with_p = sigma_p_list[:p] + [np.ones_like(sigma[:, p, :])] \
                                   + sigma_p_list[(p + 1):]
-            sigma_prod_with_p.append(np.einsum(self.einsum_eqs['sigma_prod_with_p'][p], *sigma_p_list_with_p))
-        sigma_prod_with_p = np.stack(sigma_prod_with_p, axis=1)
+            sigma_prod_with_p[:, p] = np.einsum(self.einsum_eqs['sigma_prod_with_p'][p], *sigma_p_list_with_p)
+        # TODO (done within qre)
 
         if num_p > 1:
             Eu_tilde_a = np.empty((num_s, num_p, num_a_max))
@@ -353,27 +361,55 @@ class QRE_np(QRE):
 
         dEu_tilde_dV = np.einsum('spa,spaSP->spSP', sigma, dEu_tilde_a_dV)
 
-        # assemble J
-        dH_strat_dbeta = self.T_J[0] + np.einsum('spaSPA,SPA->spaSPA', self.T_J[1], sigma) \
-                         + gamma * np.einsum('spatqb,tqbSPA->spaSPA', -self.T_H[2], dEu_tilde_a_dbeta)
-        dH_strat_dV = gamma * np.einsum('spatqb,tqbSP->spaSP', -self.T_H[2], dEu_tilde_a_dV)
-        dH_strat_dlambda = np.einsum('spatqb,tqb->spa', -self.T_H[2], Eu_tilde_a)
-        dH_val_dbeta = np.einsum('sptq,tqSPA->spSPA', -self.T_H[3], dEu_tilde_dbeta)
-        dH_val_dV = self.T_J[5] + np.einsum('sptq,tqSP->spSP', -self.T_H[3], dEu_tilde_dV)
-        dH_val_dlambda = np.zeros(shape=(num_s, num_p), dtype=np.float64)
+        # TODO: tried "new" below - seems to bring no improvement.
+        if old:
+            # assemble J
+            dH_strat_dbeta = self.T_J[0] + np.einsum('spaSPA,SPA->spaSPA', self.T_J[1], sigma) \
+                             + gamma * np.einsum('spatqb,tqbSPA->spaSPA', -self.T_H[2], dEu_tilde_a_dbeta)
+            dH_strat_dV = gamma * np.einsum('spatqb,tqbSP->spaSP', -self.T_H[2], dEu_tilde_a_dV)
+            dH_strat_dlambda = np.einsum('spatqb,tqb->spa', -self.T_H[2], Eu_tilde_a)
+            dH_val_dbeta = np.einsum('sptq,tqSPA->spSPA', -self.T_H[3], dEu_tilde_dbeta)
+            dH_val_dV = self.T_J[5] + np.einsum('sptq,tqSP->spSP', -self.T_H[3], dEu_tilde_dV)
+            dH_val_dlambda = np.zeros(shape=(num_s, num_p), dtype=np.float64)
 
-        J = np.concatenate([
-            np.concatenate([
-                dH_strat_dbeta.reshape((num_s * num_p * num_a_max, num_s * num_p * num_a_max)),
-                dH_strat_dV.reshape((num_s * num_p * num_a_max, num_s * num_p)),
-                dH_strat_dlambda.reshape((num_s * num_p * num_a_max, 1))
-            ], axis=1),
-            np.concatenate([
-                dH_val_dbeta.reshape((num_s * num_p, num_s * num_p * num_a_max)),
-                dH_val_dV.reshape((num_s * num_p, num_s * num_p)),
-                dH_val_dlambda.reshape((num_s * num_p, 1))
-            ], axis=1)
-        ], axis=0)[self.J_mask]
+            J = np.concatenate([
+                np.concatenate([
+                    dH_strat_dbeta.reshape((num_s * num_p * num_a_max, num_s * num_p * num_a_max)),
+                    dH_strat_dV.reshape((num_s * num_p * num_a_max, num_s * num_p)),
+                    dH_strat_dlambda.reshape((num_s * num_p * num_a_max, 1))
+                ], axis=1),
+                np.concatenate([
+                    dH_val_dbeta.reshape((num_s * num_p, num_s * num_p * num_a_max)),
+                    dH_val_dV.reshape((num_s * num_p, num_s * num_p)),
+                    dH_val_dlambda.reshape((num_s * num_p, 1))
+                ], axis=1)
+            ], axis=0)[self.J_mask]
+
+        if not old:
+            # assemble J
+            spa = num_s * num_p * num_a_max
+            sp = num_s * num_p
+            J = np.empty((num_s * num_p * num_a_max + num_s * num_p,
+                          num_s * num_p * num_a_max + num_s * num_p + 1))
+
+            # dH_strat_dbeta
+            J[0:spa, 0:spa] = (self.T_J[0] + np.einsum('spaSPA,SPA->spaSPA', self.T_J[1], sigma)
+                                + gamma * np.einsum('spatqb,tqbSPA->spaSPA', -self.T_H[2], dEu_tilde_a_dbeta)
+                                ).reshape((spa, spa))
+            # dH_strat_dV
+            J[0:spa, spa:spa+sp] = gamma * np.einsum('spatqb,tqbSP->spaSP', -self.T_H[2],
+                                                      dEu_tilde_a_dV).reshape((spa, sp))
+            # dH_strat_dlambda
+            J[0:spa, spa+sp] = np.einsum('spatqb,tqb->spa', -self.T_H[2], Eu_tilde_a).reshape((spa))
+            # dH_val_dbeta
+            J[spa:spa+sp, 0:spa] = np.einsum('sptq,tqSPA->spSPA', -self.T_H[3], dEu_tilde_dbeta).reshape((sp, spa))
+            # dH_val_dV
+            J[spa:spa+sp, spa:spa+sp] = (self.T_J[5] + np.einsum('sptq,tqSP->spSP', -self.T_H[3],
+                                                                 dEu_tilde_dV)).reshape((sp, sp))
+            # dH_val_dlambda
+            J[spa:spa+sp, spa+sp] = 0
+
+            J = J[self.J_mask]
 
         return J
 
