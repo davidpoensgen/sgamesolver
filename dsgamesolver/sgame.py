@@ -201,4 +201,3 @@ def copy_without_nan(array: np.ndarray):
     out[np.isnan(out)] = 0
     return out
     # TODO: maybe use numpy.nan_to_num instead?
-
