@@ -58,7 +58,7 @@ class sgameHomotopy():
         """
         pass
 
-    def y_to_sigma_V(self):
+    def y_to_sigma_V_t(self, y):
         """ Translate a y-vector to arrays representing sigma / V """
         pass
 
@@ -109,31 +109,17 @@ class QRE(sgameHomotopy):
 
     def solver_setup(self, target_lambda=np.infty):
         self.solver = HomCont(self.H, self.y0, self.J, parameters=self.tracking_parameters["normal"],
-                              x_transformer=self.x_transformer)
+                              x_transformer=self.x_transformer, store_path=True)
         self.solver.t_target = target_lambda * (self.game.u_max - self.game.u_min)
 
     def find_y0(self):
-        num_s, num_p, nums_a = self.game.num_states, self.game.num_players, self.game.nums_actions
-        strategy_axes = tuple(np.arange(1, 1 + num_p))
+        sigma = self.game.centroid_strategy()
+        beta = np.log(self.game.flatten(sigma))
 
-        # strategies: players randomize uniformly; beta is logarithmized.
-        beta = np.concatenate([np.log(np.ones(nums_a[s, p]) / nums_a[s, p])
-                               for s in range(num_s) for p in range(num_p)])
-
-        # state values: solve linear system of equations for each player
-        V = np.nan * np.ones(num_s * num_p, dtype=np.float64)
-        for p in range(num_p):
-            A = np.identity(num_s) - np.nanmean(self.game.transitionArray_withNaN[:, p], axis=strategy_axes)
-            b = np.nanmean(self.game.u_norm_with_nan[:, p], axis=strategy_axes)
-            mu_p = np.linalg.solve(A, b)
-            for s in range(num_s):
-                V[s * num_p + p] = mu_p[s]
+        V = self.game.get_values(sigma, normalized=True).reshape(-1)
 
         self.y0 = np.concatenate([beta, V, [0.0]])
-
-        if np.isnan(self.y0).any():
-            warnings.warn('Encountered a problem when setting starting point y0: '
-                          'Linear system of equations could not be solved.')
+        return self.y0
 
     def x_transformer(self, y):
         """Reverts logarithmization of strategies in vector y:
@@ -143,12 +129,18 @@ class QRE(sgameHomotopy):
         out[:self.game.num_actions_total] = np.exp(out[:self.game.num_actions_total])
         return out
 
+    def y_to_sigma_V_t(self, y):
+        sigma = np.exp(y[:self.game.num_actions_total])
+        sigma = self.game.unflatten(sigma)
+        V = self.game.get_values(sigma)
+        # TODO: if we end up using non-normalized utilities, values can be read from y
+        return sigma, V, y[-1]
+
 
 class QRE_np(QRE):
 
     def __init__(self, game: sgame.sGame):
         """prepares the following for QRE homotopy (numpy version):
-            - T_y2beta
             - H_mask, J_mask
             - T_H, T_J
             - einsum_eqs
@@ -158,18 +150,6 @@ class QRE_np(QRE):
 
         num_s, num_p, nums_a = self.game.num_states, self.game.num_players, self.game.nums_actions
         num_a_max = nums_a.max()
-
-        # array to extract beta[s,p,a] from y[:num_a_tot]
-        T_y2beta = np.zeros(shape=(num_s, num_p, num_a_max, nums_a.sum()), dtype=np.float64)
-        flat_index = 0
-        for s in range(num_s):
-            for p in range(num_p):
-                for a in range(nums_a[s, p]):
-                    T_y2beta[s, p, a, flat_index] = 1
-                    flat_index += 1
-                for a in range(nums_a[s, p], num_a_max):
-                    T_y2beta[s, p, a] = np.nan
-        self.T_y2beta = T_y2beta
 
         # indices to mask H and J according to nums_a
         H_mask = []
@@ -288,18 +268,17 @@ class QRE_np(QRE):
 
     def H(self, y):
 
-        num_s, num_p, num_a_tot = self.game.num_states, self.game.num_players, self.game.num_actions_total
+        num_s = self.game.num_states
+        num_p = self.game.num_players
+        num_a_tot = self.game.num_actions_total
 
         # extract log-strategies beta, state values V and homotopy parameter gamma from y
-        beta = np.einsum('spaN,N->spa', self.T_y2beta, y[:num_a_tot])
+        beta = self.game.unflatten(y[:num_a_tot], zeros=True)
+        sigma = self.game.unflatten(np.exp(y[:num_a_tot]), zeros=True)
         V = y[num_a_tot:-1].reshape((num_s, num_p))
         gamma = y[-1]
 
         # generate building blocks of H
-        sigma = np.exp(beta)
-        sigma[np.isnan(sigma)] = 0
-        beta[np.isnan(beta)] = 0
-        # TODO: original also defined beta_withnan - any reason why?
 
         sigma_p_list = [sigma[:, p, :] for p in range(num_p)]
         u_tilde = self.game.u_norm + np.einsum('sp...S,Sp->sp...', self.game.phi, V)
@@ -335,16 +314,12 @@ class QRE_np(QRE):
         num_a_tot = self.game.num_actions_total
 
         # extract log-strategies beta, state values V and homotopy parameter gamma from y
-        beta = np.einsum('spaN,N->spa', self.T_y2beta, y[:num_a_tot])
+        beta = self.game.unflatten(y[:num_a_tot], zeros=True)
+        sigma = self.game.unflatten(np.exp(y[:num_a_tot]), zeros=True)
         V = y[num_a_tot:-1].reshape((num_s, num_p))
         gamma = y[-1]
 
         # generate building blocks of J
-        sigma = np.exp(beta)
-        sigma[np.isnan(sigma)] = 0
-        beta[np.isnan(beta)] = 0
-        # TODO: original also defined beta_withnan - any reason why? seems that it was not used anywhere
-
         sigma_p_list = [sigma[:, p, :] for p in range(num_p)]
         u_tilde = self.game.u_norm + np.einsum('sp...S,Sp->sp...', self.game.phi, V)
 

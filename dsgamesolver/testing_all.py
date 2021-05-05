@@ -8,7 +8,7 @@ import numpy as np
 # random game
 
 num_s = 3           # number of states
-num_p = 3           # number of players
+num_p = 2           # number of players
 num_a_max = 5       # maximum number of actions
 num_a_min = 3       # minimum number of actions
 delta_max = 0.95    # maximum discount factor
@@ -37,7 +37,8 @@ si = game.centroid_strategy()
 qre = homotopy.QRE_np(game)
 qre.solver_setup()
 qre.solver.verbose = 2
+qre.solver.max_steps = 50
 sol = qre.solver.solve()
 
-eq = np.exp(sol['y'][0:game.num_actions_total])
-eq = game.check_equilibrium(game.unflatten(eq))
+qre.solver.return_to_step(5)
+sol2 = qre.solver.solve()
