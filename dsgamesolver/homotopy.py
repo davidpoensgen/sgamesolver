@@ -2,14 +2,14 @@
 # TODO: in which the equations are ordered in H?
 # TODO (if so, this should be documented; and could be used for symmetry helpers etc.)
 import numpy as np
-import dsgamesolver.dsgamesolver.sgame as sgame
+import dsgamesolver.sgame as sgame
 import string
-import warnings
+# import warnings
 
-from dsgamesolver.dsgamesolver.homcont import HomCont
+from dsgamesolver.homcont import HomCont
 
 
-class sgameHomotopy():
+class sgameHomotopy:
     """ General homotopy class for some sgame."""
 
     def __init__(self, game: sgame.sGame):
@@ -21,12 +21,12 @@ class sgameHomotopy():
 
     def initialize(self):
         """Any steps in preparation to start solver:
-            - set priors, weights etc. if needed
-            - set starting point y0
-            - prepare symmetry helpers
-                + (make sure priors and other parameters are in accordance with symmetries)
+        - set priors, weights etc. if needed
+        - set starting point y0
+        - prepare symmetry helpers
+            + (make sure priors and other parameters are in accordance with symmetries)
 
-            - set up homCont to solve the game.
+        - set up homCont to solve the game.
         """
 
     def find_y0(self):
@@ -51,10 +51,10 @@ class sgameHomotopy():
 
     def x_transformer(self, y):
         """Transform the relevant part a vector y to strategies.
-           Needed only if the homotopy uses transformed strategies (e.g. logarithmized),
-           but one would like to use convergence checks that operate on untransformed strategies.
-           (Example: qre, which uses beta=log(sigma), but convergence criterion is based on sigma).
-           If not needed: can simply pass None to homCont
+        Needed only if the homotopy uses transformed strategies (e.g. logarithmized),
+        but one would like to use convergence checks that operate on untransformed strategies.
+        (Example: qre, which uses beta=log(sigma), but convergence criterion is based on sigma).
+        If not needed: can simply pass None to homCont
         """
         pass
 
@@ -86,7 +86,7 @@ class QRE(sgameHomotopy):
             "corr_dist_max": 0.3,
             "corr_ratio_max": 0.3,
             "detJ_change_max": 0.7,  # TODO: change format. was: 1.3
-            "bifurc_angle_min": 175
+            "bifurc_angle_min": 175,
         }
 
         self.tracking_parameters["robust"] = {
@@ -102,7 +102,7 @@ class QRE(sgameHomotopy):
             "corr_dist_max": 0.1,
             "corr_ratio_max": 0.1,
             "detJ_change_max": 0.7,  # TODO: change format. was: 1.1
-            "bifurc_angle_min": 175
+            "bifurc_angle_min": 175,
         }
 
         self.find_y0()
@@ -123,10 +123,10 @@ class QRE(sgameHomotopy):
 
     def x_transformer(self, y):
         """Reverts logarithmization of strategies in vector y:
-           Transformed values are needed to check whether sigmas have converged.
+        Transformed values are needed to check whether sigmas have converged.
         """
         out = y.copy()
-        out[:self.game.num_actions_total] = np.exp(out[:self.game.num_actions_total])
+        out[: self.game.num_actions_total] = np.exp(out[: self.game.num_actions_total])
         return out
 
     def y_to_sigma_V_t(self, y):
@@ -138,7 +138,6 @@ class QRE(sgameHomotopy):
 
 
 class QRE_np(QRE):
-
     def __init__(self, game: sgame.sGame):
         """prepares the following for QRE homotopy (numpy version):
             - H_mask, J_mask
@@ -166,6 +165,14 @@ class QRE_np(QRE):
                 flat_index += 1
         H_mask = np.array(H_mask, dtype=np.int64)
 
+        J_mask = tuple(
+            np.meshgrid(
+                H_mask,
+                np.append(H_mask, [num_s * num_p * num_a_max + num_s * num_p]),
+                indexing="ij",
+                sparse=True,
+            )
+        )
         J_mask = tuple(np.meshgrid(H_mask, np.append(H_mask, [num_s * num_p * num_a_max + num_s * num_p]),
                        indexing='ij', sparse=True))
 
@@ -178,7 +185,9 @@ class QRE_np(QRE):
             for p in range(num_p):
                 T_H_qre_0[s, p, 0] = 1
 
-        T_H_qre_1 = np.zeros(shape=(num_s, num_p, num_a_max, num_s, num_p, num_a_max), dtype=np.float64)
+        T_H_qre_1 = np.zeros(
+            shape=(num_s, num_p, num_a_max, num_s, num_p, num_a_max), dtype=np.float64
+        )
         for s in range(num_s):
             for p in range(num_p):
                 T_H_qre_1[s, p, 0, s, p, :] = -1
@@ -393,8 +402,8 @@ class QRE_np(QRE):
 
             # dH_strat_dbeta
             J[0:spa, 0:spa] = (self.T_J[0] + np.einsum('spaSPA,SPA->spaSPA', self.T_J[1], sigma)
-                               + gamma * np.einsum('spatqb,tqbSPA->spaSPA', -self.T_H[2], dEu_tilde_a_dbeta)
-                               ).reshape((spa, spa))
+                                + gamma * np.einsum('spatqb,tqbSPA->spaSPA', -self.T_H[2], dEu_tilde_a_dbeta)
+                                ).reshape((spa, spa))
             # dH_strat_dV
             J[0:spa, spa:spa+sp] = gamma * np.einsum('spatqb,tqbSP->spaSP', -self.T_H[2],
                                                       dEu_tilde_a_dV).reshape((spa, sp))
@@ -421,10 +430,10 @@ class QRE_ct(QRE):
 
 
 class Tracing(sgameHomotopy):
-    def __init__(self, game: sgame.sGame, priors='centroid', etas=None, nu=1.0):
+    def __init__(self, game: sgame.sGame, priors="centroid", etas=None, nu=1.0):
         super().__init__(game)
 
-        if priors == 'random':
+        if priors == "random":
             priors = np.empty(self.game.num_actions_total, dtype=np.float64)
             idx = 0
             for s in range(self.game.num_states):
@@ -434,7 +443,7 @@ class Tracing(sgameHomotopy):
                     etas[idx:idx + self.game.nums_actions[s, p]] = sigma
                     idx += self.game.nums_actions[s, p]
             self.priors = priors
-        elif priors == 'centroid':
+        elif priors == "centroid":
             priors = np.empty(self.game.num_actions_total, dtype=np.float64)
             idx = 0
             for s in range(self.game.num_states):
