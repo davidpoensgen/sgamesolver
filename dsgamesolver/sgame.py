@@ -20,8 +20,6 @@ class sGame():
 
         self.num_actions_max = self.nums_actions.max()
         self.num_actions_total = self.nums_actions.sum()
-        # self.num_actionProfiles = np.product(self.nums_actions, axis=1).sum()
-        # TODO ^ needed?
 
         # action_mask allows to convert between a jagged and a flat array containing a strategy profile (or similar)
         self.action_mask = np.zeros((self.num_states, self.num_players, self.num_actions_max), dtype=bool)

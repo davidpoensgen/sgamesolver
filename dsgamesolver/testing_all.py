@@ -42,3 +42,8 @@ sol = qre.solver.solve()
 
 qre.solver.return_to_step(5)
 sol2 = qre.solver.solve()
+
+import timeit
+timeit.timeit("qre.J(qre.y0, old = True)",number=100000,globals=globals())
+
+timeit.timeit("qre.J(qre.y0, old = False)",number=100000,globals=globals())
