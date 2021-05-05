@@ -7,12 +7,12 @@ import numpy as np
 
 # random game
 
-num_s = 3  # number of states
-num_p = 3  # number of players
-num_a_max = 5  # maximum number of actions
-num_a_min = 3  # minimum number of actions
-delta_max = 0.95  # maximum discount factor
-delta_min = 0.90  # minimum discount factor
+num_s = 5           # number of states
+num_p = 5           # number of players
+num_a_max = 5       # maximum number of actions
+num_a_min = 3       # minimum number of actions
+delta_max = 0.95    # maximum discount factor
+delta_min = 0.90    # minimum discount factor
 
 # np.random.seed(0)
 nums_a = np.random.randint(
@@ -41,7 +41,12 @@ si = game.centroid_strategy()
 qre = homotopy.QRE_np(game)
 qre.solver_setup()
 qre.solver.verbose = 2
+qre.solver.max_steps = 50
 sol = qre.solver.solve()
 
-eq = np.exp(sol["y"][0 : game.num_actions_total])
-eq = game.check_equilibrium(game.unflatten(eq))
+qre.solver.return_to_step(5)
+sol2 = qre.solver.solve()
+
+# import timeit
+# %timeit -n 10 -r 10 qre.J(qre.y0, old=True)
+# %timeit -n 10 -r 10 qre.J(qre.y0, old=False)

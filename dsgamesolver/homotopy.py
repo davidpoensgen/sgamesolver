@@ -4,7 +4,7 @@
 import numpy as np
 import dsgamesolver.sgame as sgame
 import string
-import warnings
+# import warnings
 
 from dsgamesolver.homcont import HomCont
 
@@ -58,7 +58,7 @@ class sgameHomotopy:
         """
         pass
 
-    def y_to_sigma_V(self):
+    def y_to_sigma_V_t(self, y):
         """ Translate a y-vector to arrays representing sigma / V """
         pass
 
@@ -108,50 +108,18 @@ class QRE(sgameHomotopy):
         self.find_y0()
 
     def solver_setup(self, target_lambda=np.infty):
-        self.solver = HomCont(
-            self.H,
-            self.y0,
-            self.J,
-            parameters=self.tracking_parameters["normal"],
-            x_transformer=self.x_transformer,
-        )
+        self.solver = HomCont(self.H, self.y0, self.J, parameters=self.tracking_parameters["normal"],
+                              x_transformer=self.x_transformer, store_path=True)
         self.solver.t_target = target_lambda * (self.game.u_max - self.game.u_min)
 
     def find_y0(self):
-        num_s, num_p, nums_a = (
-            self.game.num_states,
-            self.game.num_players,
-            self.game.nums_actions,
-        )
-        strategy_axes = tuple(np.arange(1, 1 + num_p))
+        sigma = self.game.centroid_strategy()
+        beta = np.log(self.game.flatten(sigma))
 
-        # strategies: players randomize uniformly; beta is logarithmized.
-        beta = np.concatenate(
-            [
-                np.log(np.ones(nums_a[s, p]) / nums_a[s, p])
-                for s in range(num_s)
-                for p in range(num_p)
-            ]
-        )
-
-        # state values: solve linear system of equations for each player
-        V = np.nan * np.ones(num_s * num_p, dtype=np.float64)
-        for p in range(num_p):
-            A = np.identity(num_s) - np.nanmean(
-                self.game.transitionArray_withNaN[:, p], axis=strategy_axes
-            )
-            b = np.nanmean(self.game.u_norm_with_nan[:, p], axis=strategy_axes)
-            mu_p = np.linalg.solve(A, b)
-            for s in range(num_s):
-                V[s * num_p + p] = mu_p[s]
+        V = self.game.get_values(sigma, normalized=True).reshape(-1)
 
         self.y0 = np.concatenate([beta, V, [0.0]])
-
-        if np.isnan(self.y0).any():
-            warnings.warn(
-                "Encountered a problem when setting starting point y0: "
-                "Linear system of equations could not be solved."
-            )
+        return self.y0
 
     def x_transformer(self, y):
         """Reverts logarithmization of strategies in vector y:
@@ -161,38 +129,26 @@ class QRE(sgameHomotopy):
         out[: self.game.num_actions_total] = np.exp(out[: self.game.num_actions_total])
         return out
 
+    def y_to_sigma_V_t(self, y):
+        sigma = np.exp(y[:self.game.num_actions_total])
+        sigma = self.game.unflatten(sigma)
+        V = self.game.get_values(sigma)
+        # TODO: if we end up using non-normalized utilities, values can be read from y
+        return sigma, V, y[-1]
+
 
 class QRE_np(QRE):
     def __init__(self, game: sgame.sGame):
         """prepares the following for QRE homotopy (numpy version):
-        - T_y2beta
-        - H_mask, J_mask
-        - T_H, T_J
-        - einsum_eqs
+            - H_mask, J_mask
+            - T_H, T_J
+            - einsum_eqs
         """
 
         super().__init__(game)
 
-        num_s, num_p, nums_a = (
-            self.game.num_states,
-            self.game.num_players,
-            self.game.nums_actions,
-        )
-        num_a_max = nums_a.max()
-
-        # array to extract beta[s,p,a] from y[:num_a_tot]
-        T_y2beta = np.zeros(
-            shape=(num_s, num_p, num_a_max, nums_a.sum()), dtype=np.float64
-        )
-        flat_index = 0
-        for s in range(num_s):
-            for p in range(num_p):
-                for a in range(nums_a[s, p]):
-                    T_y2beta[s, p, a, flat_index] = 1
-                    flat_index += 1
-                for a in range(nums_a[s, p], num_a_max):
-                    T_y2beta[s, p, a] = np.nan
-        self.T_y2beta = T_y2beta
+        num_s, num_p, nums_a = self.game.num_states, self.game.num_players, self.game.nums_actions
+        num_a_max = self.game.num_actions_max
 
         # indices to mask H and J according to nums_a
         H_mask = []
@@ -351,37 +307,26 @@ class QRE_np(QRE):
 
     def H(self, y):
 
-        num_s, num_p, num_a_tot = (
-            self.game.num_states,
-            self.game.num_players,
-            self.game.num_actions_total,
-        )
+        num_s = self.game.num_states
+        num_p = self.game.num_players
+        num_a_tot = self.game.num_actions_total
 
         # extract log-strategies beta, state values V and homotopy parameter gamma from y
-        beta = np.einsum("spaN,N->spa", self.T_y2beta, y[:num_a_tot])
+        beta = self.game.unflatten(y[:num_a_tot], zeros=True)
+        sigma = self.game.unflatten(np.exp(y[:num_a_tot]), zeros=True)
         V = y[num_a_tot:-1].reshape((num_s, num_p))
         gamma = y[-1]
 
         # generate building blocks of H
-        sigma = np.exp(beta)
-        sigma[np.isnan(sigma)] = 0
-        beta[np.isnan(beta)] = 0
-        # TODO: original also defined beta_withnan - any reason why?
 
         sigma_p_list = [sigma[:, p, :] for p in range(num_p)]
         u_tilde = self.game.u_norm + np.einsum("sp...S,Sp->sp...", self.game.phi, V)
 
         if num_p > 1:
-            Eu_tilde_a = []
+            Eu_tilde_a = np.empty((num_s, num_p, self.game.num_actions_max))
             for p in range(num_p):
-                Eu_tilde_a.append(
-                    np.einsum(
-                        self.einsum_eqs["Eu_tilde_a_H"][p],
-                        u_tilde[:, p],
-                        *(sigma_p_list[:p] + sigma_p_list[(p + 1) :])
-                    )
-                )
-            Eu_tilde_a = np.stack(Eu_tilde_a, axis=1)
+                Eu_tilde_a[:, p] = np.einsum(self.einsum_eqs['Eu_tilde_a_H'][p], u_tilde[:, p],
+                                             *(sigma_p_list[:p] + sigma_p_list[(p + 1):]))
         else:
             Eu_tilde_a = u_tilde
 
@@ -403,7 +348,7 @@ class QRE_np(QRE):
 
         return H
 
-    def J(self, y):
+    def J(self, y, old=True):
 
         num_s = self.game.num_states
         num_p = self.game.num_players
@@ -411,75 +356,48 @@ class QRE_np(QRE):
         num_a_tot = self.game.num_actions_total
 
         # extract log-strategies beta, state values V and homotopy parameter gamma from y
-        beta = np.einsum("spaN,N->spa", self.T_y2beta, y[:num_a_tot])
+        # beta = self.game.unflatten(y[:num_a_tot], zeros=True)
+        sigma = self.game.unflatten(np.exp(y[:num_a_tot]), zeros=True)
         V = y[num_a_tot:-1].reshape((num_s, num_p))
         gamma = y[-1]
 
         # generate building blocks of J
-        sigma = np.exp(beta)
-        sigma[np.isnan(sigma)] = 0
-        beta[np.isnan(beta)] = 0
-        # TODO: original also defined beta_withnan - any reason why? seems that it was not used anywhere
-
         sigma_p_list = [sigma[:, p, :] for p in range(num_p)]
         u_tilde = self.game.u_norm + np.einsum("sp...S,Sp->sp...", self.game.phi, V)
 
         sigma_prod = np.einsum(self.einsum_eqs["sigma_prod"], *sigma_p_list)
 
-        sigma_prod_with_p = []
+        # TODO: replace this pattern:
+        # sigma_prod_with_p = []
+        # for p in range(num_p):
+        #     sigma_p_list_with_p = sigma_p_list[:p] + [np.ones_like(sigma[:, p, :])] \
+        #                           + sigma_p_list[(p + 1):]
+        #     sigma_prod_with_p.append(np.einsum(self.einsum_eqs['sigma_prod_with_p'][p], *sigma_p_list_with_p))
+        # sigma_prod_with_p = np.stack(sigma_prod_with_p, axis=1)
+        # TODO: with this:
+        sigma_prod_with_p = np.empty((num_s, num_p, *[num_a_max]*num_p))
         for p in range(num_p):
-            sigma_p_list_with_p = (
-                sigma_p_list[:p]
-                + [np.ones(shape=sigma[:, p, :].shape, dtype=np.float64)]
-                + sigma_p_list[(p + 1) :]
-            )
-            sigma_prod_with_p.append(
-                np.einsum(self.einsum_eqs["sigma_prod_with_p"][p], *sigma_p_list_with_p)
-            )
-        sigma_prod_with_p = np.stack(sigma_prod_with_p, axis=1)
+            sigma_p_list_with_p = sigma_p_list[:p] + [np.ones_like(sigma[:, p, :])] \
+                                  + sigma_p_list[(p + 1):]
+            sigma_prod_with_p[:, p] = np.einsum(self.einsum_eqs['sigma_prod_with_p'][p], *sigma_p_list_with_p)
+        # TODO (done within qre)
 
         if num_p > 1:
-            Eu_tilde_a = []
-            dEu_tilde_a_dbeta = []
-            dEu_tilde_a_dV = []
-
+            Eu_tilde_a = np.empty((num_s, num_p, num_a_max))
+            dEu_tilde_a_dbeta = np.empty((num_s, num_p, num_a_max, num_s, num_p, num_a_max))
+            dEu_tilde_a_dV = np.empty((num_s, num_p, num_a_max, num_s, num_p))
             for p in range(num_p):
-                Eu_tilde_a.append(
-                    np.einsum(
-                        self.einsum_eqs["Eu_tilde_a_J"][p],
-                        u_tilde[:, p],
-                        sigma_prod_with_p[:, p],
-                    )
-                )
-                dEu_tilde_a_dV.append(
-                    np.einsum(
-                        self.einsum_eqs["dEu_tilde_a_dV"][p],
-                        self.T_J[3][:, p],
-                        sigma_prod_with_p[:, p],
-                    )
-                )
-
-                T_temp = np.einsum(
-                    "s...,s...->s...", u_tilde[:, p], sigma_prod_with_p[:, p]
-                )
-                dEu_tilde_a_dbeta.append(
-                    np.einsum(
-                        self.einsum_eqs["dEu_tilde_a_dbeta"][p],
-                        T_temp,
-                        self.T_J[2][:, p],
-                    )
-                )
-
-            Eu_tilde_a = np.stack(Eu_tilde_a, axis=1)
-            dEu_tilde_a_dbeta = np.stack(dEu_tilde_a_dbeta, axis=1)
-            dEu_tilde_a_dV = np.stack(dEu_tilde_a_dV, axis=1)
+                Eu_tilde_a[:, p] = np.einsum(self.einsum_eqs['Eu_tilde_a_J'][p],
+                                             u_tilde[:, p], sigma_prod_with_p[:, p])
+                dEu_tilde_a_dV[:, p] = np.einsum(self.einsum_eqs['dEu_tilde_a_dV'][p],
+                                                 self.T_J[3][:, p], sigma_prod_with_p[:, p])
+                T_temp = np.einsum('s...,s...->s...', u_tilde[:, p], sigma_prod_with_p[:, p])
+                dEu_tilde_a_dbeta[:, p] = np.einsum(self.einsum_eqs['dEu_tilde_a_dbeta'][p],
+                                                    T_temp, self.T_J[2][:, p])
 
         else:
             Eu_tilde_a = u_tilde
-            dEu_tilde_a_dbeta = np.zeros(
-                shape=(num_s, num_p, num_a_max, num_s, num_p, num_a_max),
-                dtype=np.float64,
-            )
+            dEu_tilde_a_dbeta = np.zeros(shape=(num_s, num_p, num_a_max, num_s, num_p, num_a_max))
             dEu_tilde_a_dV = self.T_J[3]
 
         T_temp = np.einsum("sp...,s...->sp...", u_tilde, sigma_prod)
@@ -489,48 +407,55 @@ class QRE_np(QRE):
 
         dEu_tilde_dV = np.einsum("spa,spaSP->spSP", sigma, dEu_tilde_a_dV)
 
-        # assemble J
-        dH_strat_dbeta = (
-            self.T_J[0]
-            + np.einsum("spaSPA,SPA->spaSPA", self.T_J[1], sigma)
-            + gamma
-            * np.einsum("spatqb,tqbSPA->spaSPA", -self.T_H[2], dEu_tilde_a_dbeta)
-        )
-        dH_strat_dV = gamma * np.einsum(
-            "spatqb,tqbSP->spaSP", -self.T_H[2], dEu_tilde_a_dV
-        )
-        dH_strat_dlambda = np.einsum("spatqb,tqb->spa", -self.T_H[2], Eu_tilde_a)
-        dH_val_dbeta = np.einsum("sptq,tqSPA->spSPA", -self.T_H[3], dEu_tilde_dbeta)
-        dH_val_dV = self.T_J[5] + np.einsum(
-            "sptq,tqSP->spSP", -self.T_H[3], dEu_tilde_dV
-        )
-        dH_val_dlambda = np.zeros(shape=(num_s, num_p), dtype=np.float64)
+        # TODO: tried "new" below - seems to bring no improvement.
+        if old:
+            # assemble J
+            dH_strat_dbeta = self.T_J[0] + np.einsum('spaSPA,SPA->spaSPA', self.T_J[1], sigma) \
+                             + gamma * np.einsum('spatqb,tqbSPA->spaSPA', -self.T_H[2], dEu_tilde_a_dbeta)
+            dH_strat_dV = gamma * np.einsum('spatqb,tqbSP->spaSP', -self.T_H[2], dEu_tilde_a_dV)
+            dH_strat_dlambda = np.einsum('spatqb,tqb->spa', -self.T_H[2], Eu_tilde_a)
+            dH_val_dbeta = np.einsum('sptq,tqSPA->spSPA', -self.T_H[3], dEu_tilde_dbeta)
+            dH_val_dV = self.T_J[5] + np.einsum('sptq,tqSP->spSP', -self.T_H[3], dEu_tilde_dV)
+            dH_val_dlambda = np.zeros(shape=(num_s, num_p), dtype=np.float64)
 
-        J = np.concatenate(
-            [
-                np.concatenate(
-                    [
-                        dH_strat_dbeta.reshape(
-                            (num_s * num_p * num_a_max, num_s * num_p * num_a_max)
-                        ),
-                        dH_strat_dV.reshape((num_s * num_p * num_a_max, num_s * num_p)),
-                        dH_strat_dlambda.reshape((num_s * num_p * num_a_max, 1)),
-                    ],
-                    axis=1,
-                ),
-                np.concatenate(
-                    [
-                        dH_val_dbeta.reshape(
-                            (num_s * num_p, num_s * num_p * num_a_max)
-                        ),
-                        dH_val_dV.reshape((num_s * num_p, num_s * num_p)),
-                        dH_val_dlambda.reshape((num_s * num_p, 1)),
-                    ],
-                    axis=1,
-                ),
-            ],
-            axis=0,
-        )[self.J_mask]
+            J = np.concatenate([
+                np.concatenate([
+                    dH_strat_dbeta.reshape((num_s * num_p * num_a_max, num_s * num_p * num_a_max)),
+                    dH_strat_dV.reshape((num_s * num_p * num_a_max, num_s * num_p)),
+                    dH_strat_dlambda.reshape((num_s * num_p * num_a_max, 1))
+                ], axis=1),
+                np.concatenate([
+                    dH_val_dbeta.reshape((num_s * num_p, num_s * num_p * num_a_max)),
+                    dH_val_dV.reshape((num_s * num_p, num_s * num_p)),
+                    dH_val_dlambda.reshape((num_s * num_p, 1))
+                ], axis=1)
+            ], axis=0)[self.J_mask]
+
+        if not old:
+            # assemble J
+            spa = num_s * num_p * num_a_max
+            sp = num_s * num_p
+            J = np.empty((num_s * num_p * num_a_max + num_s * num_p,
+                          num_s * num_p * num_a_max + num_s * num_p + 1))
+
+            # dH_strat_dbeta
+            J[0:spa, 0:spa] = (self.T_J[0] + np.einsum('spaSPA,SPA->spaSPA', self.T_J[1], sigma)
+                               + gamma * np.einsum('spatqb,tqbSPA->spaSPA', -self.T_H[2], dEu_tilde_a_dbeta)
+                               ).reshape((spa, spa))
+            # dH_strat_dV
+            J[0:spa, spa:spa+sp] = gamma * np.einsum('spatqb,tqbSP->spaSP', -self.T_H[2],
+                                                     dEu_tilde_a_dV).reshape((spa, sp))
+            # dH_strat_dlambda
+            J[0:spa, spa+sp] = np.einsum('spatqb,tqb->spa', -self.T_H[2], Eu_tilde_a).reshape((spa))
+            # dH_val_dbeta
+            J[spa:spa+sp, 0:spa] = np.einsum('sptq,tqSPA->spSPA', -self.T_H[3], dEu_tilde_dbeta).reshape((sp, spa))
+            # dH_val_dV
+            J[spa:spa+sp, spa:spa+sp] = (self.T_J[5] + np.einsum('sptq,tqSP->spSP', -self.T_H[3],
+                                                                 dEu_tilde_dV)).reshape((sp, sp))
+            # dH_val_dlambda
+            J[spa:spa+sp, spa+sp] = 0
+
+            J = J[self.J_mask]
 
         return J
 

@@ -1,3 +1,5 @@
+# TODO: add ds to path? (might be useful for debugging)
+
 import numpy as np
 import time
 from datetime import timedelta
@@ -157,14 +159,14 @@ class HomCont:
             self.set_greedy_sign()
 
         self.tangent_old = self.tangent
+        self.ds = self.ds0
 
         self.store_path = store_path
         if store_path:
             self.path = HomPath(dim=len(self.y), x_transformer=self.x_transformer)
-            self.path.update(y=self.y, s=0, cond=self.cond, sign=self.sign, step=0)
+            self.path.update(y=self.y, s=0, cond=self.cond, sign=self.sign, step=0, ds=self.ds)
 
         # attributes to be used later
-        self.ds = self.ds0
         self.step = 0
         self.s = 0
         self.corrector_success = False
@@ -309,9 +311,6 @@ class HomCont:
 
                 self.check_bifurcation()
 
-                if self.store_path:
-                    self.path.update(y=self.y, s=self.s, cond=self.cond,
-                                     sign=self.sign, step=self.step)
                 if self.verbose >= 2:
                     sys.stdout.write(f'\rStep {self.step:5d}: t = {self.t:#.4g},  '
                                      f's = {self.s:#.4g},  ds = {self.ds:#.4g},  '
@@ -338,6 +337,9 @@ class HomCont:
                 self.failed = 'max_steps'
 
             self.adapt_stepsize()
+
+            if self.corrector_success and self.store_path:
+                self.path.update(y=self.y, s=self.s, cond=self.cond, sign=self.sign, step=self.step, ds=self.ds)
 
             if self.failed:
                 time_sec = time.perf_counter() - start_time
@@ -442,7 +444,7 @@ class HomCont:
                            np.linalg.det(np.vstack([self.J, self.tangent])))
         if det_ratio < self.detJ_change_max or det_ratio > 1/self.detJ_change_max:
             if self.verbose >= 2:
-                sys.stdout.write(f'\nStep {self.step:5d}: Possible segment jump, discarding predictor. '
+                sys.stdout.write(f'\nStep {self.step:5d}: Possible segment jump, discarding step. '
                                  f'Ratio of augmented determinants: det(J_new)/det(J_old) = {det_ratio:0.2f}\n')
                 sys.stdout.flush()
             return
@@ -718,32 +720,27 @@ class HomPath:
         self.x_transformer = x_transformer
         self.dim = dim
 
-        self.y = np.NaN * np.empty(shape=(max_steps, dim), dtype=np.float64)
-        self.s = np.NaN * np.empty(shape=max_steps, dtype=np.float64)
-        self.cond = np.NaN * np.empty(shape=max_steps, dtype=np.float64)
-        self.sign = np.NaN * np.empty(shape=max_steps, dtype=np.float64)
-        self.step = np.NaN * np.empty(shape=max_steps, dtype=np.float64)
+        self.y = np.nan * np.empty(shape=(max_steps, dim), dtype=np.float64)
+        self.s = np.nan * np.empty(shape=max_steps, dtype=np.float64)
+        self.cond = np.nan * np.empty(shape=max_steps, dtype=np.float64)
+        self.sign = np.nan * np.empty(shape=max_steps, dtype=np.float64)
+        self.step = np.nan * np.empty(shape=max_steps, dtype=np.float64)
+        self.ds = np.nan * np.empty(shape=max_steps, dtype=np.float64)
 
         self.index = 0
-        self.step_counter = 0
 
-    def update(self, y: np.ndarray, s: float = np.NaN,
-               cond: float = np.NaN, sign: int = np.NaN, step: int = None):
+    def update(self, y: np.ndarray, s: float, cond: float, sign: int, step: int, ds: float):
 
         self.y[self.index] = y
         self.s[self.index] = s
         self.cond[self.index] = cond
         self.sign[self.index] = sign
-        if step is not None:
-            self.step[self.index] = step
-        else:
-            self.step[self.index] = self.step_counter
-            self.step_counter += 1
+        self.step[self.index] = step
+        self.ds[self.index] = ds
 
         self.index += 1
         if self.index >= self.max_steps:
             self.downsample(10)
-            self.index = len(self.s[::10])
 
     def plot(self, x_name: str = 'Variables', max_plotted: int = 1000):
         """Plot path."""
@@ -814,17 +811,10 @@ class HomPath:
     def downsample(self, freq):
 
         cutoff = len(self.s[::freq])
-
-        self.y[:cutoff] = self.y[::freq]
-        self.y[cutoff:] = np.NaN
-        self.s[:cutoff] = self.s[::freq]
-        self.s[cutoff:] = np.NaN
-        self.cond[:cutoff] = self.cond[::freq]
-        self.cond[cutoff:] = np.NaN
-        self.sign[:cutoff] = self.sign[::freq]
-        self.sign[cutoff:] = np.NaN
-        self.step[:cutoff] = self.step[::freq]
-        self.step[cutoff:] = np.NaN
+        for variable in [self.y, self.s, self.cond, self.sign, self.step, self.ds]:
+            variable[:cutoff] = self.y[::freq]
+            variable[cutoff:] = np.NaN
+        self.index = cutoff
 
     def get_step(self, step_no: int):
         """Returns data for step_no if possible.
@@ -836,7 +826,8 @@ class HomPath:
                      's': self.s[index][0],
                      'sign': self.sign[index][0],
                      'step': self.step[index][0],
-                     'index': int(index)
+                     'index': int(index),
+                     'ds': self.ds[index][0]
                      }
             return state
 

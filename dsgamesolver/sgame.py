@@ -20,8 +20,6 @@ class sGame():
 
         self.num_actions_max = self.nums_actions.max()
         self.num_actions_total = self.nums_actions.sum()
-        # self.num_actionProfiles = np.product(self.nums_actions, axis=1).sum()
-        # TODO ^ needed?
 
         # action_mask allows to convert between a jagged and a flat array containing a strategy profile (or similar)
         self.action_mask = np.zeros((self.num_states, self.num_players, self.num_actions_max), dtype=bool)
@@ -55,33 +53,33 @@ class sGame():
         # TODO: why not use discount factors*phi instead? (guess that'd need a lot of fixing)
 
         if transition_matrices is None:
-            self.transition_matrices = [np.ones((*self.nums_actions[s], self.num_states))
-                                        for s in range(self.num_states)]
-            for s in range(self.num_states):
-                for index, value in np.ndenumerate(np.sum(self.transition_matrices[s], axis=-1)):
-                    self.transition_matrices[s][index] *= 1 / value
-            # TODO: what exactly does this do? is it for (separated) repeated games?
+            # If no transitions are specified, game will default to separated repeated
+            # games: phi(s,s') = 1 if s==s' and 0 else, for all action profiles.
+            transition_matrices = []
+            for s in self.num_states:
+                mat = np.zeros((*self.nums_actions[s], self.num_states))
+                mat[..., s] = 1
+                transition_matrices.append(mat)
         else:
-            self.transition_matrices = []
-            for s in range(self.num_states):
-                self.transition_matrices.append(np.array(transition_matrices[s], dtype=np.float64))
+            transition_matrices = [transition_matrices[s] for s in range(self.num_states)]
 
-        transitions = np.nan * np.ones(shape=(self.num_states,
-                                              *[self.num_actions_max] * self.num_players, self.num_states))
+        transitions = np.nan * np.empty((self.num_states, *[self.num_actions_max] * self.num_players, self.num_states))
         for s0 in range(self.num_states):
             for A in np.ndindex(*self.nums_actions[s0]):
                 for s1 in range(self.num_states):
-                    transitions[(s0,) + A + (s1,)] = self.transition_matrices[s0][A + (s1,)]
+                    transitions[(s0,)+A+(s1,)] = transition_matrices[s0][A+(s1,)]
 
-        self.transitionArray = np.nan * np.ones(
-            (self.num_states, self.num_players, *[self.num_actions_max] * self.num_players, self.num_states))
+        self.transitionArray = np.nan * np.empty(
+            (self.num_states, self.num_players,
+             *[self.num_actions_max] * self.num_players, self.num_states))
         for p in range(self.num_players):
             self.transitionArray[:, p] = self.discount_factors[p] * transitions
         self.transitionArray_withNaN = self.transitionArray.copy()
         self.transitionArray[np.isnan(self.transitionArray)] = 0.0
         # TODO: reason to keep this both with and without NaN?
-        # TODO: seems that: einsum wants 0s. find_y0_qre wants NaN
-        # TODO: can now use get_values etc. for find y0. Any reason left to keep versions with NaN
+        # TODO: seems that: einsum wants 0s. find_y0_qre wanted NaN
+        # TODO: can now use get_values etc. for find y0.
+        # TODO: Any reason left to keep versions with NaN?
         # TODO: If kept, can use copy_without_nan here
 
         self.phi = self.transitionArray
@@ -98,16 +96,19 @@ class sGame():
         return (u - self.u_min) / (self.u_max - self.u_min)
 
     def denormalize(self, u_norm):
-        """ Calculate de-normalized utilities. u may be a scalar or np.array."""
+        """ Calculate de-normalized utilities. u_norm may be a scalar or np.array."""
         return u_norm * (self.u_max - self.u_min) + self.u_min
 
-    def get_values(self, strategy_profile):
+    def get_values(self, strategy_profile, normalized=False):
         """Calculate state-player values for a given strategy profile."""
 
         sigma = copy_without_nan(strategy_profile)
         sigma_list = [sigma[:, p, :] for p in range(self.num_players)]
 
-        u = copy_without_nan(self.u)
+        if normalized:
+            u = copy_without_nan(self.u_norm)
+        else:
+            u = copy_without_nan(self.u)
 
         ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
         einsum_eq_u = ('sp' + ABC[0:self.num_players] + ',s' +
@@ -119,11 +120,13 @@ class sGame():
         phi = np.einsum(einsum_eq_phi, self.transitionArray, *sigma_list)
 
         values = np.empty((self.num_states, self.num_players))
-
-        for p in range(self.num_players):
-            A = np.eye(self.num_states) - phi[:, p, :]
-            values[:, p] = np.linalg.solve(A, u[:, p])
-
+        try:
+            for p in range(self.num_players):
+                A = np.eye(self.num_states) - phi[:, p, :]
+                values[:, p] = np.linalg.solve(A, u[:, p])
+        except np.linalg.LinAlgError:
+            raise('Failed to solve for state-player values: '
+                  'Transition matrix not invertible.')
         return values
 
     def random_strategy(self):
@@ -139,7 +142,7 @@ class sGame():
         return strategy_profile
 
     def centroid_strategy(self):
-        """Returns the centroid strategy profile."""
+        """Generate the centroid strategy profile."""
 
         strategy_profile = np.nan * np.empty((self.num_states, self.num_players, self.num_actions_max))
         for s in range(self.num_states):
@@ -149,14 +152,19 @@ class sGame():
         return strategy_profile
 
     def flatten(self, array):
-        """Convert a jagged array of shape (states, players, max_actions) to a flat array, removing all Nans."""
+        """Convert a jagged array of shape (states, players, max_actions) to a flat
+        array, removing all NaNs.
+        """
         return np.extract(self.action_mask, array)
 
-    def unflatten(self, array):
-        """Convert a flat array containing a strategy profile or similar to an array with
-        shape (states, players, max_actions), padded with NaNs where necessary.
+    def unflatten(self, array, zeros=False):
+        """Convert a flat array containing a strategy profile or similar to an array
+        with shape (states, players, max_actions), padded with NaNs (or zeros under the respective option.)
         """
-        out = np.nan * np.empty((self.num_states, self.num_players, self.num_actions_max))
+        if zeros:
+            out = np.zeros((self.num_states, self.num_players, self.num_actions_max))
+        else:
+            out = np.nan*np.empty((self.num_states, self.num_players, self.num_actions_max))
         np.place(out, self.action_mask, array)
         return out
 
@@ -171,7 +179,7 @@ class sGame():
     def check_equilibrium(self, strategy_profile):
         """Calculate "epsilon-equilibriumness" (max total utility any
         agent could gain by deviating) of a given strategy profile.
-         """
+        """
         sigma = copy_without_nan(strategy_profile)
         u = copy_without_nan(self.u)
         values = self.get_values(sigma)
