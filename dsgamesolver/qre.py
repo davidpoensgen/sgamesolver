@@ -27,7 +27,7 @@ QRE_ct:
 from typing import Tuple, Union
 
 import numpy as np
-# from numba.experimental import jitclass
+from numba.experimental import jitclass
 
 from dsgamesolver.sgame import SGame, SGameHomotopy
 from dsgamesolver.homcont import HomCont
@@ -400,18 +400,18 @@ class QRE_np(QRE):
 # %% Numpy implementation of QRE with Numba boost
 
 
-# @jitclass
-# class QRE_np_numba(QRE_np):
-#     """QRE homotopy: Numpy implementation with Numba boost."""
+@jitclass
+class QRE_np_numba(QRE_np):
+    """QRE homotopy: Numpy implementation with Numba boost."""
 
-#     # def __init__(self, game: SGame) -> None:
-#     #     super().__init__(game)
+    # def __init__(self, game: SGame) -> None:
+    #     super().__init__(game)
 
-#     def H(self, y: np.ndarray) -> np.ndarray:
-#         return super().H(y)
+    def H(self, y: np.ndarray) -> np.ndarray:
+        return super().H(y)
 
-#     def J(self, y: np.ndarray, old: bool = True) -> np.ndarray:
-#         return super().J(y, old)
+    def J(self, y: np.ndarray, old: bool = True) -> np.ndarray:
+        return super().J(y, old)
 
 
 # %% Cython implementation of QRE
