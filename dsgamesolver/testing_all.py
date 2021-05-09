@@ -52,5 +52,4 @@ print(sol)
 # numba test:
 # qre2 = QRE_np_numba(game)
 # qre2.initialize()
-# qre2.solver.verbose = 2
 # sol2 = qre2.solver.solve()
