@@ -1,77 +1,50 @@
 # TODO: is there a canonical way in which strategies, values are ordered in y?
 # TODO: in which the equations are ordered in H?
 # TODO (if so, this should be documented; and could be used for symmetry helpers etc.)
-import numpy as np
-import dsgamesolver.sgame as sgame
-import string
-# import warnings
+"""CHANGELOG (to be deleted after approval)
 
+
+QRE:
+----
+
+ABC as constant outside of class.
+
+Added type hints.
+
+
+
+QRE_np:
+-------
+
+
+
+QRE_ct:
+-------
+
+
+"""
+
+from typing import Tuple, Union
+
+import numpy as np
+# from numba.experimental import jitclass
+
+from dsgamesolver.sgame import SGame, SGameHomotopy
 from dsgamesolver.homcont import HomCont
 
-
-class sgameHomotopy:
-    """ General homotopy class for some sgame."""
-
-    def __init__(self, game: sgame.sGame):
-        self.game = game
-        self.y0 = None
-        self.tracking_parameters = {}
-
-        self.solver = None
-
-    def initialize(self):
-        """Any steps in preparation to start solver:
-        - set priors, weights etc. if needed
-        - set starting point y0
-        - prepare symmetry helpers
-            + (make sure priors and other parameters are in accordance with symmetries)
-
-        - set up homCont to solve the game.
-        """
-
-    def find_y0(self):
-        """calculate starting point y0"""
-        pass
-
-    def H(self, y):
-        """Homotopy function evaluated at y."""
-        pass
-
-    def J(self, y):
-        """ Jacobian of homotopy function evaluated at y."""
-        pass
-
-    def H_reduced(self, y):
-        """H reduced by exploiting symmetries."""
-        pass
-
-    def J_reduced(self, y):
-        """J reduced by exploiting symmetries."""
-        pass
-
-    def x_transformer(self, y):
-        """Transform the relevant part a vector y to strategies.
-        Needed only if the homotopy uses transformed strategies (e.g. logarithmized),
-        but one would like to use convergence checks that operate on untransformed strategies.
-        (Example: qre, which uses beta=log(sigma), but convergence criterion is based on sigma).
-        If not needed: can simply pass None to homCont
-        """
-        pass
-
-    def y_to_sigma_V_t(self, y):
-        """ Translate a y-vector to arrays representing sigma / V """
-        pass
-
-    def sigma_V_to_y(self):
-        """ Translate arrays representing sigma and V to a vector  y """
-        pass
+ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
 
-class QRE(sgameHomotopy):
+# %% general QRE class
+
+
+class QRE(SGameHomotopy):
     """QRE homotopy: base class"""
 
-    def __init__(self, game: sgame.sGame):
+    def __init__(self, game: SGame) -> None:
         super().__init__(game)
+
+        # TODO: adjust parameters with scale of payoff matrix:
 
         self.tracking_parameters["normal"] = {
             "x_tol": 1e-7,
@@ -105,46 +78,60 @@ class QRE(sgameHomotopy):
             "bifurc_angle_min": 175,
         }
 
-        self.find_y0()
-
-    def solver_setup(self, target_lambda=np.infty):
-        self.solver = HomCont(self.H, self.y0, self.J, parameters=self.tracking_parameters["normal"],
+    def initialize(self, target_lambda: float = np.inf) -> None:
+        self.y0 = self.find_y0()
+        self.solver = HomCont(self.H, self.y0, self.J, t_target=target_lambda,
+                              parameters=self.tracking_parameters["normal"],
                               x_transformer=self.x_transformer, store_path=True)
-        self.solver.t_target = target_lambda * (self.game.u_max - self.game.u_min)
+        # TODO: delete normalization
+        # self.solver = HomCont(self.H, self.y0, self.J, parameters=self.tracking_parameters["normal"],
+        #                       x_transformer=self.x_transformer, store_path=True)
+        # self.solver.t_target = target_lambda * (self.game.payoff_max-self.game.payoff_min)
 
-    def find_y0(self):
+    def find_y0(self) -> np.ndarray:
         sigma = self.game.centroid_strategy()
-        beta = np.log(self.game.flatten(sigma))
+        V = self.game.get_values(sigma)
+        t = 0.0
+        return self.sigma_V_t_to_y(sigma, V, t)
 
-        V = self.game.get_values(sigma, normalized=True).reshape(-1)
-
-        self.y0 = np.concatenate([beta, V, [0.0]])
-        return self.y0
-
-    def x_transformer(self, y):
+    def x_transformer(self, y: np.ndarray) -> np.ndarray:
         """Reverts logarithmization of strategies in vector y:
         Transformed values are needed to check whether sigmas have converged.
         """
         out = y.copy()
-        out[: self.game.num_actions_total] = np.exp(out[: self.game.num_actions_total])
+        out[0 : self.game.num_actions_total] = np.exp(out[0 : self.game.num_actions_total])
         return out
 
-    def y_to_sigma_V_t(self, y):
-        sigma = np.exp(y[:self.game.num_actions_total])
-        sigma = self.game.unflatten(sigma)
-        V = self.game.get_values(sigma)
-        # TODO: if we end up using non-normalized utilities, values can be read from y
-        return sigma, V, y[-1]
+    def sigma_V_t_to_y(self, sigma: np.ndarray, V: np.ndarray, t: Union[float, int]) -> np.ndarray:
+        beta_flat = np.log(self.game.flatten_strategies(sigma))
+        V_flat = self.game.flatten_values(V)
+        # TODO: delete normalization
+        # V = self.game.flatten_values(self.game.get_values(sigma, normalized=True))
+        return np.concatenate([beta_flat, V_flat, [t]])
+
+    def y_to_sigma_V_t(self, y: np.ndarray, zeros: bool = False) -> Tuple[np.ndarray, np.ndarray, Union[float, int]]:
+        sigma_V_t_flat = self.x_transformer(y)
+
+        sigma = self.game.unflatten_strategies(sigma_V_t_flat[0:self.game.num_actions_total], zeros=zeros)
+        V = self.game.unflatten_values(sigma_V_t_flat[self.game.num_actions_total:-1])
+        # V = self.game.get_values(sigma)  # if values in y are transformed
+        t = sigma_V_t_flat[-1]
+
+        return sigma, V, t
+
+
+# %% Numpy implementation of QRE
 
 
 class QRE_np(QRE):
-    def __init__(self, game: sgame.sGame):
-        """prepares the following for QRE homotopy (numpy version):
+    """QRE homotopy: Numpy implementation"""
+
+    def __init__(self, game: SGame) -> None:
+        """prepares the following:
             - H_mask, J_mask
             - T_H, T_J
             - einsum_eqs
         """
-
         super().__init__(game)
 
         num_s, num_p, nums_a = self.game.num_states, self.game.num_players, self.game.nums_actions
@@ -168,7 +155,7 @@ class QRE_np(QRE):
         J_mask = tuple(
             np.meshgrid(
                 H_mask,
-                np.append(H_mask, [num_s * num_p * num_a_max + num_s * num_p]),
+                np.append(H_mask, [num_s*num_p*num_a_max + num_s*num_p]),
                 indexing="ij",
                 sparse=True,
             )
@@ -177,22 +164,18 @@ class QRE_np(QRE):
         self.H_mask = H_mask
         self.J_mask = J_mask
 
-        # arrays to assemble H_qre
+        # tensors to assemble H_qre
         T_H_qre_0 = np.zeros(shape=(num_s, num_p, num_a_max), dtype=np.float64)
         for s in range(num_s):
             for p in range(num_p):
                 T_H_qre_0[s, p, 0] = 1
 
-        T_H_qre_1 = np.zeros(
-            shape=(num_s, num_p, num_a_max, num_s, num_p, num_a_max), dtype=np.float64
-        )
+        T_H_qre_1 = np.zeros(shape=(num_s, num_p, num_a_max, num_s, num_p, num_a_max), dtype=np.float64)
         for s in range(num_s):
             for p in range(num_p):
                 T_H_qre_1[s, p, 0, s, p, :] = -1
 
-        T_H_qre_2 = np.zeros(
-            shape=(num_s, num_p, num_a_max, num_s, num_p, num_a_max), dtype=np.float64
-        )
+        T_H_qre_2 = np.zeros(shape=(num_s, num_p, num_a_max, num_s, num_p, num_a_max), dtype=np.float64)
         for s in range(num_s):
             for p in range(num_p):
                 for a in range(1, nums_a[s, p]):
@@ -206,10 +189,8 @@ class QRE_np(QRE):
 
         self.T_H = {0: T_H_qre_0, 1: T_H_qre_1, 2: T_H_qre_2, 3: T_H_qre_3}
 
-        # arrays to assemble J_qre
-        T_J_qre_temp = np.zeros(
-            shape=(num_s, num_p, num_a_max, num_s, num_p, num_a_max), dtype=np.float64
-        )
+        # tensors to assemble J_qre
+        T_J_qre_temp = np.zeros(shape=(num_s, num_p, num_a_max, num_s, num_p, num_a_max), dtype=np.float64)
         for s in range(num_s):
             for p in range(num_p):
                 for a in range(nums_a[s, p]):
@@ -224,29 +205,22 @@ class QRE_np(QRE):
             for p in range(num_p):
                 T_J_qre_temp[s, p, s, p] = 1
 
-        T_J_qre_3 = np.einsum("sp...t,tpSP->sp...SP", self.game.phi, T_J_qre_temp)
+        T_J_qre_3 = np.einsum("sp...t,tpSP->sp...SP", self.game.transitions, T_J_qre_temp)
 
         T_J_qre_5 = np.einsum("sptq,tqSP->spSP", T_H_qre_3, T_J_qre_temp)
 
-        T_J_qre_2 = np.zeros(
-            shape=(num_s, num_p, *[num_a_max] * (num_p - 1), num_s, num_p, num_a_max),
-            dtype=np.float64,
-        )
+        T_J_qre_2 = np.zeros(shape=(num_s, num_p, *[num_a_max] * (num_p - 1), num_s, num_p, num_a_max),
+                             dtype=np.float64)
         for s in range(num_s):
             for p in range(num_p):
-                a_profiles_without_p = list(
-                    np.ndindex(tuple(nums_a[s, :p]) + tuple(nums_a[s, (p + 1) :]))
-                )
+                a_profiles_without_p = list(np.ndindex(tuple(nums_a[s, :p]) + tuple(nums_a[s, (p + 1) :])))
                 for A in a_profiles_without_p:
                     for p_ in range(num_p):
                         if p_ != p:
                             a_ = A[p_] if p_ < p else A[p_ - 1]
                             T_J_qre_2[(s, p) + A + (s, p_, a_)] = 1
 
-        T_J_qre_4 = np.zeros(
-            shape=(num_s, num_p, *[num_a_max] * num_p, num_s, num_p, num_a_max),
-            dtype=np.float64,
-        )
+        T_J_qre_4 = np.zeros(shape=(num_s, num_p, *[num_a_max] * num_p, num_s, num_p, num_a_max), dtype=np.float64)
         for s in range(num_s):
             for p in range(num_p):
                 a_profiles = list(np.ndindex(tuple(nums_a[s, :])))
@@ -263,107 +237,70 @@ class QRE_np(QRE):
             5: T_J_qre_5,
         }
 
-        # defining equations to be used by einsum
-        ABC = string.ascii_uppercase
+        # equations to be used by einsum
         self.einsum_eqs = {
             "sigma_prod": "s" + ",s".join(ABC[0:num_p]) + "->s" + ABC[0:num_p],
-            "sigma_prod_with_p": [
-                "s" + ",s".join(ABC[0:num_p]) + "->s" + ABC[0:num_p]
-                for p in range(num_p)
-            ],
-            "Eu_tilde_a_H": [
-                "s"
-                + ABC[0:num_p]
-                + ",s"
-                + ",s".join([ABC[p_] for p_ in range(num_p) if p_ != p])
-                + "->s"
-                + ABC[p]
-                for p in range(num_p)
-            ],
-            "Eu_tilde_a_J": [
-                "s" + ABC[0:num_p] + ",s" + ABC[0:num_p] + "->s" + ABC[p]
-                for p in range(num_p)
-            ],
-            "dEu_tilde_a_dbeta": [
-                "s"
-                + ABC[0:num_p]
-                + ",s"
-                + "".join([ABC[p_] for p_ in range(num_p) if p_ != p])
-                + "tqb->s"
-                + ABC[p]
-                + "tqb"
-                for p in range(num_p)
-            ],
-            "dEu_tilde_a_dV": [
-                "s" + ABC[0:num_p] + "tp,s" + ABC[0:num_p] + "->s" + ABC[p] + "tp"
-                for p in range(num_p)
-            ],
-            "dEu_tilde_dbeta": "sp"
-            + ABC[0:num_p]
-            + ",sp"
-            + ABC[0:num_p]
-            + "tqb->sptqb",
+            "sigma_prod_with_p": ["s" + ",s".join(ABC[0:num_p]) + "->s" + ABC[0:num_p] for p in range(num_p)],
+            "Eu_tilde_a_H": ["s" + ABC[0:num_p] + ",s" + ",s".join([ABC[p_] for p_ in range(num_p) if p_ != p])
+                             + "->s" + ABC[p] for p in range(num_p)],
+            "Eu_tilde_a_J": ["s" + ABC[0:num_p] + ",s" + ABC[0:num_p] + "->s" + ABC[p] for p in range(num_p)],
+            "dEu_tilde_a_dbeta": ["s" + ABC[0:num_p] + ",s" + "".join([ABC[p_] for p_ in range(num_p) if p_ != p])
+                                  + "tqb->s" + ABC[p] + "tqb" for p in range(num_p)],
+            "dEu_tilde_a_dV": ["s" + ABC[0:num_p] + "tp,s" + ABC[0:num_p] + "->s" + ABC[p] + "tp"
+                               for p in range(num_p)],
+            "dEu_tilde_dbeta": "sp" + ABC[0:num_p] + ",sp" + ABC[0:num_p] + "tqb->sptqb",
         }
 
-    def H(self, y):
+    def H(self, y: np.ndarray) -> np.ndarray:
+        """Homotopy function."""
 
-        num_s = self.game.num_states
-        num_p = self.game.num_players
-        num_a_tot = self.game.num_actions_total
+        num_s, num_p = self.game.num_states, self.game.num_players
+        num_a_max, num_a_tot = self.game.num_actions_max, self.game.num_actions_total
 
         # extract log-strategies beta, state values V and homotopy parameter gamma from y
-        beta = self.game.unflatten(y[:num_a_tot], zeros=True)
-        sigma = self.game.unflatten(np.exp(y[:num_a_tot]), zeros=True)
-        V = y[num_a_tot:-1].reshape((num_s, num_p))
-        gamma = y[-1]
+        beta = self.game.unflatten_strategies(y[:num_a_tot], zeros=True)
+        sigma, V, gamma = self.y_to_sigma_V_t(y, zeros=True)
 
         # generate building blocks of H
 
         sigma_p_list = [sigma[:, p, :] for p in range(num_p)]
-        u_tilde = self.game.u_norm + np.einsum("sp...S,Sp->sp...", self.game.phi, V)
+        # TODO: delete normalization
+        # u_tilde = self.game.payoffs_normalized + np.einsum("sp...S,Sp->sp...", self.game.transitions, V)
+        u_tilde = self.game.payoffs + np.einsum("sp...S,Sp->sp...", self.game.transitions, V)
 
         if num_p > 1:
-            Eu_tilde_a = np.empty((num_s, num_p, self.game.num_actions_max))
+            Eu_tilde_a = np.empty((num_s, num_p, num_a_max))
             for p in range(num_p):
                 Eu_tilde_a[:, p] = np.einsum(self.einsum_eqs['Eu_tilde_a_H'][p], u_tilde[:, p],
-                                             *(sigma_p_list[:p] + sigma_p_list[(p + 1):]))
+                                             *(sigma_p_list[:p] + sigma_p_list[(p+1):]))
         else:
             Eu_tilde_a = u_tilde
 
         Eu_tilde = np.einsum("spa,spa->sp", sigma, Eu_tilde_a)
 
         # assemble H
-        H_strat = (
-            self.T_H[0]
-            + np.einsum("spaSPA,SPA->spa", self.T_H[1], sigma)
-            + np.einsum("spaSPA,SPA->spa", self.T_H[2], beta)
-            + gamma * np.einsum("spaSPA,SPA->spa", -self.T_H[2], Eu_tilde_a)
-        )
 
-        H_val = np.einsum("spSP,SP->sp", self.T_H[3], V) + np.einsum(
-            "spSP,SP->sp", -self.T_H[3], Eu_tilde
-        )
+        H_strat = (self.T_H[0] + np.einsum("spaSPA,SPA->spa", self.T_H[1], sigma)
+                   + np.einsum("spaSPA,SPA->spa", self.T_H[2], beta)
+                   + gamma * np.einsum("spaSPA,SPA->spa", -self.T_H[2], Eu_tilde_a))
 
-        H = np.append(H_strat.ravel(), H_val.ravel())[self.H_mask]
+        H_val = np.einsum("spSP,SP->sp", self.T_H[3], V) + np.einsum("spSP,SP->sp", -self.T_H[3], Eu_tilde)
 
-        return H
+        return np.append(H_strat.ravel(), H_val.ravel())[self.H_mask]
 
-    def J(self, y, old=True):
+    def J(self, y: np.ndarray, old: bool = True) -> np.ndarray:
+        """Jacobian matrix of homotopy function."""
 
-        num_s = self.game.num_states
-        num_p = self.game.num_players
-        num_a_max = self.game.num_actions_max
-        num_a_tot = self.game.num_actions_total
+        num_s, num_p, num_a_max = self.game.num_states, self.game.num_players, self.game.num_actions_max
 
         # extract log-strategies beta, state values V and homotopy parameter gamma from y
-        # beta = self.game.unflatten(y[:num_a_tot], zeros=True)
-        sigma = self.game.unflatten(np.exp(y[:num_a_tot]), zeros=True)
-        V = y[num_a_tot:-1].reshape((num_s, num_p))
-        gamma = y[-1]
+        sigma, V, gamma = self.y_to_sigma_V_t(y, zeros=True)
 
         # generate building blocks of J
         sigma_p_list = [sigma[:, p, :] for p in range(num_p)]
-        u_tilde = self.game.u_norm + np.einsum("sp...S,Sp->sp...", self.game.phi, V)
+        # TODO: delete normalization
+        # u_tilde = self.game.payoffs_normalized + np.einsum("sp...S,Sp->sp...", self.game.transitions, V)
+        u_tilde = self.game.payoffs + np.einsum("sp...S,Sp->sp...", self.game.transitions, V)
 
         sigma_prod = np.einsum(self.einsum_eqs["sigma_prod"], *sigma_p_list)
 
@@ -418,16 +355,19 @@ class QRE_np(QRE):
             dH_val_dV = self.T_J[5] + np.einsum('sptq,tqSP->spSP', -self.T_H[3], dEu_tilde_dV)
             dH_val_dlambda = np.zeros(shape=(num_s, num_p), dtype=np.float64)
 
-            J = np.concatenate([
+            spa = num_s * num_p * num_a_max
+            sp = num_s * num_p
+
+            return np.concatenate([
                 np.concatenate([
-                    dH_strat_dbeta.reshape((num_s * num_p * num_a_max, num_s * num_p * num_a_max)),
-                    dH_strat_dV.reshape((num_s * num_p * num_a_max, num_s * num_p)),
-                    dH_strat_dlambda.reshape((num_s * num_p * num_a_max, 1))
+                    dH_strat_dbeta.reshape((spa, spa)),
+                    dH_strat_dV.reshape((spa, sp)),
+                    dH_strat_dlambda.reshape((spa, 1))
                 ], axis=1),
                 np.concatenate([
-                    dH_val_dbeta.reshape((num_s * num_p, num_s * num_p * num_a_max)),
-                    dH_val_dV.reshape((num_s * num_p, num_s * num_p)),
-                    dH_val_dlambda.reshape((num_s * num_p, 1))
+                    dH_val_dbeta.reshape((sp, spa)),
+                    dH_val_dV.reshape((sp, sp)),
+                    dH_val_dlambda.reshape((sp, 1))
                 ], axis=1)
             ], axis=0)[self.J_mask]
 
@@ -435,8 +375,7 @@ class QRE_np(QRE):
             # assemble J
             spa = num_s * num_p * num_a_max
             sp = num_s * num_p
-            J = np.empty((num_s * num_p * num_a_max + num_s * num_p,
-                          num_s * num_p * num_a_max + num_s * num_p + 1))
+            J = np.empty((spa+sp, spa+sp+1))
 
             # dH_strat_dbeta
             J[0:spa, 0:spa] = (self.T_J[0] + np.einsum('spaSPA,SPA->spaSPA', self.T_J[1], sigma)
@@ -455,13 +394,33 @@ class QRE_np(QRE):
             # dH_val_dlambda
             J[spa:spa+sp, spa+sp] = 0
 
-            J = J[self.J_mask]
+            return J[self.J_mask]
 
-        return J
+
+# %% Numpy implementation of QRE with Numba boost
+
+
+# @jitclass
+# class QRE_np_numba(QRE_np):
+#     """QRE homotopy: Numpy implementation with Numba boost."""
+
+#     # def __init__(self, game: SGame) -> None:
+#     #     super().__init__(game)
+
+#     def H(self, y: np.ndarray) -> np.ndarray:
+#         return super().H(y)
+
+#     def J(self, y: np.ndarray, old: bool = True) -> np.ndarray:
+#         return super().J(y, old)
+
+
+# %% Cython implementation of QRE
 
 
 class QRE_ct(QRE):
-    def __init__(self, game: sgame.sGame):
+    """QRE homotopy: Cython implementation"""
+
+    def __init__(self, game: SGame):
         super().__init__(game)
         # temporary:
         game = game
@@ -475,8 +434,8 @@ class QRE_ct(QRE):
     # TODO: all
 
 
-class Tracing(sgameHomotopy):
-    def __init__(self, game: sgame.sGame, priors="centroid", etas=None, nu=1.0):
+class Tracing(SGameHomotopy):
+    def __init__(self, game: SGame, priors="centroid", etas=None, nu=1.0):
         super().__init__(game)
 
         if priors == "random":

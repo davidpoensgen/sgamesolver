@@ -476,7 +476,8 @@ class HomCont:
         # Case b): t_target is infinite
         elif np.isinf(self.t_target):
             if self.ds >= self.ds_max:
-                conv_test = np.max(np.abs(self.x_transformer(self.y[:-1]) - self.x_transformer(self.y_corr[:-1]))) / self.ds
+                conv_test = (np.max(np.abs(self.x_transformer(self.y[:-1]) - self.x_transformer(self.y_corr[:-1])))
+                             / self.ds)
                 if conv_test < self.x_tol:
                     self.converged = True
 
