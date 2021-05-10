@@ -1,25 +1,23 @@
-from dsgamesolver.sgame import sGame
-import dsgamesolver.homotopy as homotopy
-
 import numpy as np
 
-# from dsGameSolver.gameClass import dsGame
+from dsgamesolver.sgame import SGame
+from dsgamesolver.qre import QRE_np, QRE_ct  # , QRE_np_numba
 
 # random game
 
-num_s = 5           # number of states
-num_p = 5           # number of players
-num_a_max = 5       # maximum number of actions
-num_a_min = 3       # minimum number of actions
+num_s = 3           # number of states
+num_p = 3           # number of players
+num_a_max = 4       # maximum number of actions
+num_a_min = 2       # minimum number of actions
 delta_max = 0.95    # maximum discount factor
 delta_min = 0.90    # minimum discount factor
 
 # np.random.seed(0)
-nums_a = np.random.randint(
-    low=num_a_min, high=num_a_max + 1, size=(num_s, num_p), dtype=np.int32
-)
+nums_a = np.random.randint(low=num_a_min, high=num_a_max + 1, size=(num_s, num_p), dtype=np.int32)
 
-payoffMatrices = [np.random.random((num_p, *nums_a[s, :])) for s in range(num_s)]
+a = 0
+b = 1
+payoffMatrices = [a + b * np.random.random((num_p, *nums_a[s, :])) for s in range(num_s)]
 
 # stop normalization for testing
 A = (0,) * num_p
@@ -33,18 +31,31 @@ for s in range(num_s):
 discountFactors = np.random.uniform(low=delta_min, high=delta_max, size=num_p)
 
 
-game = sGame(payoffMatrices, transitionMatrices, discountFactors)
+game = SGame(payoffMatrices, transitionMatrices, discountFactors)
 si = game.centroid_strategy()
 
-qre = homotopy.QRE_np(game)
-qre.solver_setup()
+qre = QRE_np(game)
+qre.initialize()
 qre.solver.verbose = 2
-qre.solver.max_steps = 50
+# qre.solver.max_steps = 50
 sol = qre.solver.solve()
+print(sol)
 
-qre.solver.return_to_step(5)
-sol2 = qre.solver.solve()
+# qre.solver.return_to_step(5)
+# sol2 = qre.solver.solve()
 
 # import timeit
 # %timeit -n 10 -r 10 qre.J(qre.y0, old=True)
 # %timeit -n 10 -r 10 qre.J(qre.y0, old=False)
+
+
+# cython test:
+qre2 = QRE_ct(game)
+qre2.initialize()
+sol2 = qre2.solver.solve()
+
+
+# numba test:
+# qre3 = QRE_np_numba(game)
+# qre3.initialize()
+# sol3 = qre3.solver.solve()

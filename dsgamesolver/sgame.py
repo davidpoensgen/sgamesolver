@@ -1,15 +1,81 @@
+"""CHANGELOG (to be deleted after approval)
+
+
+sGame:
+------
+
+Variable names:
+    - inputs, also saved as class attributes:
+        payoff_matrices, transition_matrices, discount_factors
+    - class attributes, for computation of homotopy:
+        payoffs, payoffs_normalized, payoffs_with_nan, payoffs_normalized_with_nan, transitions, etc.
+    - short notation for internal computation within functions, never used by user:
+        u, phi, delta, etc.
+
+Allow array-like inputs.
+
+Use np.nan_to_num instead of custom function copy_without_nan, as suggested.
+
+Attribute transitions_with_nan removed, as suggested.
+
+Transitions include discounting, as before.
+Having discount factors separately would result in unnecessary multiplications with every call of H and J.
+
+ABC as constant outside of class.
+
+Normalization and de-normalization of payoffs without nan placeholders, using payoff_mask.
+
+Added type hints.
+
+Added unit tests.
+
+
+
+sGameHomotopy:
+--------------
+
+sGameHomotopy into this file.
+
+Added type hints.
+
+Question: Will y always consist of sigma, V and t?
+
+"""
+
+from typing import List, Tuple, Union, Optional
+
 import numpy as np
+from numpy.typing import ArrayLike
+
+ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
 
-class sGame():
+# %% game class
+
+
+class SGame():
     """A stochastic game."""
 
-    def __init__(self, payoff_matrices, transition_matrices=None, discount_factors=0.0):
+    def __init__(self, payoff_matrices: List[ArrayLike], transition_matrices: Optional[List[ArrayLike]] = None,
+                 discount_factors: Union[ArrayLike, float, int] = 0.0) -> None:
+        """Inputs:
+
+        payoff_matrices:      list of array-like, one for each state: payoff_matrices[s][p,A]
+
+        transition_matrices:  list of array-like, one for each from_state: transition_matrices[s][p,A,s']
+                              or None (-> separated repeated game)
+
+        discount_factors:     array-like: discount_factors[p]
+                              or numeric (-> common discount factor)
+
+        Different numbers of actions across states and players are allowed.
+        Inputs should be of relevant dimension and should NOT contain nan.
+        """
+
+        # bring payoff_matrices to list of np.ndarray, one array for each state
+        self.payoff_matrices = [np.array(payoff_matrices[s], dtype=np.float64) for s in range(len(payoff_matrices))]
 
         # read out game shape
-
-        self.payoff_matrices = [payoff_matrices[s] for s in range(len(payoff_matrices))]
-
         self.num_states = len(self.payoff_matrices)
         self.num_players = self.payoff_matrices[0].shape[0]
 
@@ -27,23 +93,32 @@ class sGame():
             for p in range(self.num_players):
                 self.action_mask[s, p, 0:self.nums_actions[s, p]] = 1
 
-        # prepare array representing utilities
-        self.u_min = min([payoff_matrix.min() for payoff_matrix in self.payoff_matrices])
-        self.u_max = max([payoff_matrix.max() for payoff_matrix in self.payoff_matrices])
-
-        self.u = np.nan * np.ones((self.num_states, self.num_players, *[self.num_actions_max] * self.num_players))
+        # payoff_mask allows to normalize and de-normalize payoffs
+        self.payoff_mask = np.zeros((self.num_states, self.num_players, *[self.num_actions_max]*self.num_players),
+                                    dtype=bool)
         for s in range(self.num_states):
             for p in range(self.num_players):
                 for A in np.ndindex(*self.nums_actions[s]):
-                    self.u[(s, p) + A] = self.payoff_matrices[s][(p,) + A]
+                    self.payoff_mask[(s, p) + A] = 1
 
-        self.u_norm_with_nan = self.normalize(self.u)
-        self.u_norm = copy_without_nan(self.u_norm_with_nan)
+        # generate array representing payoffs [s,p,A]
+        self.payoffs = np.zeros((self.num_states, self.num_players, *[self.num_actions_max]*self.num_players),
+                                dtype=np.float64)
+        for s in range(self.num_states):
+            for p in range(self.num_players):
+                for A in np.ndindex(*self.nums_actions[s]):
+                    self.payoffs[(s, p) + A] = self.payoff_matrices[s][(p,) + A]
 
-        # generate discount factors
+        # TODO: delete once unnormalized payoffs are used throughout
+        # self.payoff_min = self.payoffs[self.payoff_mask].min()
+        # self.payoff_max = self.payoffs[self.payoff_mask].max()
+        # self.payoffs_normalized = self.normalize_payoffs(self.payoffs)
+
+        # generate array representing discount factors [p]
         if isinstance(discount_factors, (list, tuple, np.ndarray)):
             self.discount_factors = np.array(discount_factors, dtype=np.float64)
         else:
+<<<<<<< HEAD
             self.discount_factors = discount_factors * np.ones(self.num_players)
 
         # prepare array representing delta * phi (transition probabilities, incorporates individual discount factors)
@@ -60,48 +135,42 @@ class sGame():
                 mat = np.zeros((*self.nums_actions[s], self.num_states))
                 mat[..., s] = 1
                 transition_matrices.append(mat)
-        else:
-            transition_matrices = [transition_matrices[s] for s in range(self.num_states)]
+=======
+            self.discount_factors = discount_factors * np.ones(self.num_players, dtype=np.float64)
 
-        transitions = np.nan * np.empty((self.num_states, *[self.num_actions_max] * self.num_players, self.num_states))
+        # define scale for adjusting tracking parameters
+        # TODO
+
+        # bring transition_matrices to list of np.ndarray, one array for each state
+        if transition_matrices is not None:
+            self.transition_matrices = [np.array(transition_matrices[s], dtype=np.float64)
+                                        for s in range(self.num_states)]
+>>>>>>> 3496dc6121aaf076441f91bef45893ce7eb4424a
+        else:
+            # If no transitions are specified, specification will default to separated repeated games:
+            # phi(s,s') = 1 if s==s' and 0 else, for all action profiles.
+            self.transition_matrices = []
+            for s in self.num_states:
+                phi_s = np.zeros((*self.nums_actions[s], self.num_states), dtype=np.float64)
+                phi_s[..., s] = 1
+                self.transition_matrices.append(phi_s)
+
+        # build big transition matrix [s,A,s'] from list of small transition matrices [A,s'] for each s
+        transition_matrix = np.zeros((self.num_states, *[self.num_actions_max]*self.num_players, self.num_states),
+                                     dtype=np.float64)
         for s0 in range(self.num_states):
             for A in np.ndindex(*self.nums_actions[s0]):
                 for s1 in range(self.num_states):
-                    transitions[(s0,)+A+(s1,)] = transition_matrices[s0][A+(s1,)]
+                    transition_matrix[(s0,)+A+(s1,)] = self.transition_matrices[s0][A+(s1,)]
 
-        self.transitionArray = np.nan * np.empty(
-            (self.num_states, self.num_players,
-             *[self.num_actions_max] * self.num_players, self.num_states))
+        # generate array representing transitions, including discounting: delta * phi [s,p,A,s']
+        # (player index due to potentially player-specific discount factors)
+        self.transitions = np.zeros((self.num_states, self.num_players, *[self.num_actions_max]*self.num_players,
+                                     self.num_states), dtype=np.float64)
         for p in range(self.num_players):
-            self.transitionArray[:, p] = self.discount_factors[p] * transitions
-        self.transitionArray_withNaN = self.transitionArray.copy()
-        self.transitionArray[np.isnan(self.transitionArray)] = 0.0
-        # TODO: reason to keep this both with and without NaN?
-        # TODO: seems that: einsum wants 0s. find_y0_qre wanted NaN
-        # TODO: can now use get_values etc. for find y0.
-        # TODO: Any reason left to keep versions with NaN?
-        # TODO: If kept, can use copy_without_nan here
+            self.transitions[:, p] = self.discount_factors[p] * transition_matrix
 
-        self.phi = self.transitionArray
-        # TODO: unify notation: phi / u / etc, transitionArray etc
-
-    def detect_symmetries(self):
-        """Detect symmetries between agents. (TBD) """
-        pass
-
-    def normalize(self, u):
-        """ Normalize u to values between 0 and 1: u_norm = (u - u_m)/(u_max - u_min).
-            u may be a scalar or np.array.
-        """
-        return (u - self.u_min) / (self.u_max - self.u_min)
-
-    def denormalize(self, u_norm):
-        """ Calculate de-normalized utilities. u_norm may be a scalar or np.array."""
-        return u_norm * (self.u_max - self.u_min) + self.u_min
-
-    def get_values(self, strategy_profile, normalized=False):
-        """Calculate state-player values for a given strategy profile."""
-
+<<<<<<< HEAD
         sigma = copy_without_nan(strategy_profile)
         sigma_list = [sigma[:, p, :] for p in range(self.num_players)]
 
@@ -128,83 +197,212 @@ class sGame():
             print('Failed to solve for state-player values: Transition matrix not invertible.')
             raise
         return values
+=======
+    def detect_symmetries(self) -> None:
+        """Detect symmetries between agents."""
+        # TODO: tbd
+        pass
+>>>>>>> 3496dc6121aaf076441f91bef45893ce7eb4424a
 
-    def random_strategy(self):
+    # TODO: delete once unnormalized payoffs are used throughout
+    # def normalize_payoffs(self, payoffs: ArrayLike) -> np.ndarray:
+    #     """Normalize payoffs to values between 0 and 1. Keep zeros for nonexisting actions."""
+    #     payoffs_normalized = (np.array(payoffs)-self.payoff_min) / (self.payoff_max-self.payoff_min)
+    #     payoffs_normalized[~self.payoff_mask] = 0.0
+    #     return payoffs_normalized
+    #
+    # def denormalize_payoffs(self, payoffs_normalized: ArrayLike) -> np.ndarray:
+    #     """Calculate de-normalized payoffs. Keep zeros for nonexisting actions."""
+    #     payoffs = self.payoff_min + np.array(payoffs_normalized) * (self.payoff_max-self.payoff_min)
+    #     payoffs[~self.payoff_mask] = 0.0
+    #     return payoffs
+
+    def random_strategy(self) -> np.ndarray:
         """Generate a random strategy profile."""
 
-        strategy_profile = np.nan * np.empty((self.num_states, self.num_players, self.num_actions_max))
+        strategy_profile = np.nan * np.empty((self.num_states, self.num_players, self.num_actions_max),
+                                             dtype=np.float64)
         for s in range(self.num_states):
             for p in range(self.num_players):
                 sigma = np.random.exponential(scale=1, size=self.nums_actions[s, p])
                 sigma = sigma / sigma.sum()
-                strategy_profile[s, p, 0:self.nums_actions[s, p]] = sigma
+                strategy_profile[s, p, :self.nums_actions[s, p]] = sigma
 
         return strategy_profile
 
-    def centroid_strategy(self):
+    def centroid_strategy(self) -> np.ndarray:
         """Generate the centroid strategy profile."""
 
-        strategy_profile = np.nan * np.empty((self.num_states, self.num_players, self.num_actions_max))
+        strategy_profile = np.nan * np.empty((self.num_states, self.num_players, self.num_actions_max),
+                                             dtype=np.float64)
         for s in range(self.num_states):
             for p in range(self.num_players):
-                strategy_profile[s, p, 0:self.nums_actions[s, p]] = 1 / self.nums_actions[s, p]
+                strategy_profile[s, p, :self.nums_actions[s, p]] = 1 / self.nums_actions[s, p]
 
         return strategy_profile
 
-    def flatten(self, array):
-        """Convert a jagged array of shape (states, players, max_actions) to a flat
-        array, removing all NaNs.
+    def flatten_strategies(self, strategies: ArrayLike) -> np.ndarray:
+        """Convert a jagged array of shape (num_states, num_players, num_actions_max), e.g. strategy profile,
+        to a flat array, removing all NaNs.
         """
-        return np.extract(self.action_mask, array)
+        return np.extract(self.action_mask, strategies)
 
-    def unflatten(self, array, zeros=False):
+    def unflatten_strategies(self, strategies_flat: ArrayLike, zeros: bool = False) -> np.ndarray:
         """Convert a flat array containing a strategy profile or similar to an array
-        with shape (states, players, max_actions), padded with NaNs (or zeros under the respective option.)
+        with shape (num_states, num_players, num_actions_max), padded with NaNs (or zeros under the respective option.)
         """
         if zeros:
-            out = np.zeros((self.num_states, self.num_players, self.num_actions_max))
+            strategies = np.zeros((self.num_states, self.num_players, self.num_actions_max), dtype=np.float64)
         else:
-            out = np.nan*np.empty((self.num_states, self.num_players, self.num_actions_max))
-        np.place(out, self.action_mask, array)
-        return out
+            strategies = np.nan * np.empty((self.num_states, self.num_players, self.num_actions_max), dtype=np.float64)
+        np.place(strategies, self.action_mask, strategies_flat)
+        return strategies
 
-    def flatten_V(self, array):
-        """Flatten an array with shape (states, values), e.g. state-player-values."""
-        return array.reshape(-1)
+    # TODO: delete once unnormalized payoffs are used throughout
+    # def get_values(self, strategy_profile: ArrayLike, normalized: bool = False) -> np.ndarray:
+    def get_values(self, strategy_profile: ArrayLike) -> np.ndarray:
+        """Calculate state-player values for a given strategy profile."""
 
-    def unflatten_V(self, array):
-        """Convert a flat array to shape (states, values), e.g. state-player-values."""
-        return array.reshape((self.num_states, self.num_players))
+        sigma = np.nan_to_num(strategy_profile)
+        sigma_list = [sigma[:, p, :] for p in range(self.num_players)]
 
-    def check_equilibrium(self, strategy_profile):
-        """Calculate "epsilon-equilibriumness" (max total utility any
-        agent could gain by deviating) of a given strategy profile.
+        # TODO: delete once unnormalized payoffs are used throughout
+        # payoffs = self.payoffs_normalized if normalized else self.payoffs
+
+        einsum_eq_u = ('sp' + ABC[0:self.num_players] + ',s' +
+                       ',s'.join(ABC[p] for p in range(self.num_players)) + '->sp')
+        einsum_eq_phi = ('sp' + ABC[0:self.num_players] + 't,s' +
+                         ',s'.join(ABC[p] for p in range(self.num_players)) + '->spt')
+
+        # TODO: delete once unnormalized payoffs are used throughout
+        # u = np.einsum(einsum_eq_u, payoffs, *sigma_list)
+        u = np.einsum(einsum_eq_u, self.payoffs, *sigma_list)
+        phi = np.einsum(einsum_eq_phi, self.transitions, *sigma_list)
+
+        values = np.empty((self.num_states, self.num_players), dtype=np.float64)
+        try:
+            for p in range(self.num_players):
+                A = np.eye(self.num_states) - phi[:, p, :]
+                values[:, p] = np.linalg.solve(A, u[:, p])
+        except np.linalg.LinAlgError:
+            raise("Failed to solve for state-player values: Transition matrix not invertible.")
+        return values
+
+    # TODO: delete once unnormalized payoffs are used throughout
+    # def normalize_values(self, values: Union[ArrayLike, float, int]) -> Union[np.ndarray, float]:
+    #     """Normalize values to [0,1]."""
+    #     return (np.array(values)-self.payoff_min) / (self.payoff_max-self.payoff_min)
+    #
+    # def denormalize_values(self, values_normalized: Union[ArrayLike, float, int]) -> Union[np.ndarray, float]:
+    #     """Calculate de-normalized values. Argument may be a scalar or np.ndarray."""
+    #     return self.payoff_min + np.array(values_normalized) * (self.payoff_max-self.payoff_min)
+
+    def flatten_values(self, values: ArrayLike) -> np.ndarray:
+        """Flatten an array with shape (num_states, num_players), e.g. state-player values."""
+        return np.array(values).reshape(-1)
+
+    def unflatten_values(self, values_flat: ArrayLike) -> np.ndarray:
+        """Convert a flat array to shape (num_states, num_players), e.g. state-player values."""
+        return np.array(values_flat).reshape((self.num_states, self.num_players))
+
+    def check_equilibrium(self, strategy_profile: ArrayLike) -> np.ndarray:
+        """Calculate "epsilon-equilibriumness" (max total utility any agent could gain by deviating)
+        of a given strategy profile.
         """
-        sigma = copy_without_nan(strategy_profile)
-        u = copy_without_nan(self.u)
-        values = self.get_values(sigma)
+        values = self.get_values(strategy_profile)
+        sigma = np.nan_to_num(strategy_profile)
 
-        # u_tilde: normal form games that include continuation values.
-        u_tilde = u + np.einsum('sp...S,Sp->sp...', self.transitionArray, values)
+        # u_tilde: payoffs of normal form games that include continuation values.
+        u_tilde = self.payoffs + np.einsum('sp...S,Sp->sp...', self.transitions, values)
 
-        losses = np.empty((self.num_states, self.num_players))
+        losses = np.empty((self.num_states, self.num_players), dtype=np.float64)
 
-        ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
         for p in range(self.num_players):
             others = [q for q in range(self.num_players) if q != p]
+<<<<<<< HEAD
             einsum_eq = ('s' + ABC[0:self.num_players] + ',s' + ',s'.join([ABC[q] for q in others]) + '->s' + ABC[p])
+=======
+            einsum_eq = ('s' + ABC[0:self.num_players] + ',s' + ',s'.join(ABC[q] for q in others) + '->s' + ABC[p])
+>>>>>>> 3496dc6121aaf076441f91bef45893ce7eb4424a
             action_values = np.einsum(einsum_eq, u_tilde[:, p, :], *[sigma[:, q, :] for q in others])
 
             losses[:, p] = action_values.max(axis=-1) - values[:, p]
 
-        # TODO: decide whether this should be aggregated (player/agent/...?)
+        # TODO: absolute losses mean different things when games are scaled differently.
+        # TODO: should we use percentages? or the min of some percentage and some absolute deviation?
+
+        # TODO: decide whether losses should be aggregated (player/agent/...?)
         # TODO: Should this function report? Return? etc.
         return losses
 
 
-def copy_without_nan(array: np.ndarray):
-    """Copy input array and replace all NaNs with 0."""
-    out = array.copy()
-    out[np.isnan(out)] = 0
-    return out
-    # TODO: maybe use numpy.nan_to_num instead?
+# %% blueprint for homotopy classes
+
+
+class SGameHomotopy:
+    """General homotopy class for some sGame."""
+
+    def __init__(self, game: SGame) -> None:
+        self.game = game
+        self.y0 = None
+        self.tracking_parameters = {}
+        self.solver = None
+
+    def initialize(self) -> None:
+        """Any steps in preparation to start solver:
+        - set priors, weights etc. if needed
+        - set starting point y0
+        - prepare symmetry helpers
+            + (make sure priors and other parameters are in accordance with symmetries)
+        - set up homCont to solve the game
+        """
+        pass
+
+    def find_y0(self) -> np.ndarray:
+        """Calculate starting point y0."""
+        pass
+
+    def H(self, y: np.ndarray) -> np.ndarray:
+        """Homotopy function evaluated at y."""
+        pass
+
+    def J(self, y: np.ndarray) -> np.ndarray:
+        """Jacobian of homotopy function evaluated at y."""
+        pass
+
+    def x_transformer(self, y: np.ndarray) -> Optional[np.ndarray]:
+        """Transform vector y to vector x.
+
+        Vector y is used during path tracing.
+        Vector x is used to check for convergence.
+
+        Typical use case: Strategies are relevant for convergence, but are transformed during tracing.
+        Example: QRE, with uses log strategies beta=log(sigma) during tracing.
+
+        Note: If not needed, can simply pass None to HomCont.
+        """
+        pass
+
+    def H_reduced(self, y: np.ndarray) -> np.ndarray:
+        """H evaluated at y, reduced by exploiting symmetries."""
+        # TODO: to be implemented here
+        pass
+
+    def J_reduced(self, y: np.ndarray) -> np.ndarray:
+        """J evaluated at y, reduced by exploiting symmetries."""
+        # TODO: to be implemented here
+        pass
+
+    def sigma_V_t_to_y(self, sigma: np.ndarray, V: np.ndarray, t: Union[float, int]) -> np.ndarray:
+        """Translate arrays representing strategies sigma, values V and homotopy parameter t to a vector y."""
+        beta_flat = np.log(self.game.flatten_strategies(sigma))
+        V_flat = self.game.flatten_values(V)
+        return np.concatenate([beta_flat, V_flat, [t]])
+
+    def y_to_sigma_V_t(self, y: np.ndarray, zeros: bool = False) -> Tuple[np.ndarray, np.ndarray, Union[float, int]]:
+        """Translate a vector y to arrays representing strategies sigma, values V and homotopy parameter t."""
+        sigma_V_t_flat = self.x_transformer(y)
+        sigma = self.game.unflatten_strategies(sigma_V_t_flat[0:self.game.num_actions_total], zeros=zeros)
+        V = self.game.unflatten_values(sigma_V_t_flat[self.game.num_actions_total:-1])
+        t = sigma_V_t_flat[-1]
+        return sigma, V, t
