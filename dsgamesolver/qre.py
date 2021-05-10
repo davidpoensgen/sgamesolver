@@ -32,8 +32,6 @@ TODO: Stick to pxyimport?
 
 """
 
-from typing import Tuple, Union
-
 import numpy as np
 
 from dsgamesolver.sgame import SGame, SGameHomotopy
@@ -53,42 +51,42 @@ class QRE(SGameHomotopy):
 
         # TODO: adjust parameters with scale of payoff matrix:
 
-        self.tracking_parameters["normal"] = {
-            "x_tol": 1e-7,
-            "t_tol": 1e-7,
-            "H_tol": 1e-7,
-            "ds0": 0.01,
-            "ds_infl": 1.2,
-            "ds_defl": 0.5,
-            "ds_min": 1e-9,
-            "ds_max": 1000,
-            "corr_steps_max": 20,
-            "corr_dist_max": 0.3,
-            "corr_ratio_max": 0.3,
-            "detJ_change_max": 0.7,  # TODO: change format. was: 1.3
-            "bifurc_angle_min": 175,
+        self.tracking_parameters['normal'] = {
+            'x_tol': 1e-7,
+            't_tol': 1e-7,
+            'H_tol': 1e-7,
+            'ds0': 0.01,
+            'ds_infl': 1.2,
+            'ds_defl': 0.5,
+            'ds_min': 1e-9,
+            'ds_max': 1000,
+            'corr_steps_max': 20,
+            'corr_dist_max': 0.3,
+            'corr_ratio_max': 0.3,
+            'detJ_change_max': 0.7,  # TODO: change format. was: 1.3
+            'bifurc_angle_min': 175,
         }
 
-        self.tracking_parameters["robust"] = {
-            "x_tol": 1e-7,
-            "t_tol": 1e-7,
-            "H_tol": 1e-8,
-            "ds0": 0.01,
-            "ds_infl": 1.1,
-            "ds_defl": 0.5,
-            "ds_min": 1e-9,
-            "ds_max": 1000,
-            "corr_steps_max": 30,
-            "corr_dist_max": 0.1,
-            "corr_ratio_max": 0.1,
-            "detJ_change_max": 0.7,  # TODO: change format. was: 1.1
-            "bifurc_angle_min": 175,
+        self.tracking_parameters['robust'] = {
+            'x_tol': 1e-7,
+            't_tol': 1e-7,
+            'H_tol': 1e-8,
+            'ds0': 0.01,
+            'ds_infl': 1.1,
+            'ds_defl': 0.5,
+            'ds_min': 1e-9,
+            'ds_max': 1000,
+            'corr_steps_max': 30,
+            'corr_dist_max': 0.1,
+            'corr_ratio_max': 0.1,
+            'detJ_change_max': 0.7,  # TODO: change format. was: 1.1
+            'bifurc_angle_min': 175,
         }
 
     def initialize(self, target_lambda: float = np.inf) -> None:
         self.y0 = self.find_y0()
         self.solver = HomCont(self.H, self.y0, self.J, t_target=target_lambda,
-                              parameters=self.tracking_parameters["normal"],
+                              parameters=self.tracking_parameters['normal'],
                               x_transformer=self.x_transformer, store_path=True)
         # TODO: delete normalization
         # self.solver = HomCont(self.H, self.y0, self.J, parameters=self.tracking_parameters["normal"],
@@ -108,23 +106,6 @@ class QRE(SGameHomotopy):
         out = y.copy()
         out[0 : self.game.num_actions_total] = np.exp(out[0 : self.game.num_actions_total])
         return out
-
-    def sigma_V_t_to_y(self, sigma: np.ndarray, V: np.ndarray, t: Union[float, int]) -> np.ndarray:
-        beta_flat = np.log(self.game.flatten_strategies(sigma))
-        V_flat = self.game.flatten_values(V)
-        # TODO: delete normalization
-        # V = self.game.flatten_values(self.game.get_values(sigma, normalized=True))
-        return np.concatenate([beta_flat, V_flat, [t]])
-
-    def y_to_sigma_V_t(self, y: np.ndarray, zeros: bool = False) -> Tuple[np.ndarray, np.ndarray, Union[float, int]]:
-        sigma_V_t_flat = self.x_transformer(y)
-
-        sigma = self.game.unflatten_strategies(sigma_V_t_flat[0:self.game.num_actions_total], zeros=zeros)
-        V = self.game.unflatten_values(sigma_V_t_flat[self.game.num_actions_total:-1])
-        # V = self.game.get_values(sigma)  # if values in y are transformed
-        t = sigma_V_t_flat[-1]
-
-        return sigma, V, t
 
 
 # %% Numpy implementation of QRE
@@ -203,18 +184,18 @@ class QRE_np(QRE):
                 for a in range(nums_a[s, p]):
                     T_J_qre_temp[s, p, a, s, p, a] = 1
 
-        T_J_qre_0 = np.einsum("spatqb,tqbSPA->spaSPA", T_H_qre_2, T_J_qre_temp)
+        T_J_qre_0 = np.einsum('spatqb,tqbSPA->spaSPA', T_H_qre_2, T_J_qre_temp)
 
-        T_J_qre_1 = np.einsum("spatqb,tqbSPA->spaSPA", T_H_qre_1, T_J_qre_temp)
+        T_J_qre_1 = np.einsum('spatqb,tqbSPA->spaSPA', T_H_qre_1, T_J_qre_temp)
 
         T_J_qre_temp = np.zeros(shape=(num_s, num_p, num_s, num_p), dtype=np.float64)
         for s in range(num_s):
             for p in range(num_p):
                 T_J_qre_temp[s, p, s, p] = 1
 
-        T_J_qre_3 = np.einsum("sp...t,tpSP->sp...SP", self.game.transitions, T_J_qre_temp)
+        T_J_qre_3 = np.einsum('sp...t,tpSP->sp...SP', self.game.transitions, T_J_qre_temp)
 
-        T_J_qre_5 = np.einsum("sptq,tqSP->spSP", T_H_qre_3, T_J_qre_temp)
+        T_J_qre_5 = np.einsum('sptq,tqSP->spSP', T_H_qre_3, T_J_qre_temp)
 
         T_J_qre_2 = np.zeros(shape=(num_s, num_p, *[num_a_max] * (num_p - 1), num_s, num_p, num_a_max),
                              dtype=np.float64)
@@ -246,16 +227,16 @@ class QRE_np(QRE):
 
         # equations to be used by einsum
         self.einsum_eqs = {
-            "sigma_prod": "s" + ",s".join(ABC[0:num_p]) + "->s" + ABC[0:num_p],
-            "sigma_prod_with_p": ["s" + ",s".join(ABC[0:num_p]) + "->s" + ABC[0:num_p] for p in range(num_p)],
-            "Eu_tilde_a_H": ["s" + ABC[0:num_p] + ",s" + ",s".join([ABC[p_] for p_ in range(num_p) if p_ != p])
-                             + "->s" + ABC[p] for p in range(num_p)],
-            "Eu_tilde_a_J": ["s" + ABC[0:num_p] + ",s" + ABC[0:num_p] + "->s" + ABC[p] for p in range(num_p)],
-            "dEu_tilde_a_dbeta": ["s" + ABC[0:num_p] + ",s" + "".join([ABC[p_] for p_ in range(num_p) if p_ != p])
-                                  + "tqb->s" + ABC[p] + "tqb" for p in range(num_p)],
-            "dEu_tilde_a_dV": ["s" + ABC[0:num_p] + "tp,s" + ABC[0:num_p] + "->s" + ABC[p] + "tp"
+            'sigma_prod': 's' + ',s'.join(ABC[0:num_p]) + '->s' + ABC[0:num_p],
+            'sigma_prod_with_p': ['s' + ',s'.join(ABC[0:num_p]) + '->s' + ABC[0:num_p] for p in range(num_p)],
+            'Eu_tilde_a_H': ['s' + ABC[0:num_p] + ',s' + ',s'.join([ABC[p_] for p_ in range(num_p) if p_ != p])
+                             + '->s' + ABC[p] for p in range(num_p)],
+            'Eu_tilde_a_J': ['s' + ABC[0:num_p] + ',s' + ABC[0:num_p] + '->s' + ABC[p] for p in range(num_p)],
+            'dEu_tilde_a_dbeta': ['s' + ABC[0:num_p] + ',s' + ''.join([ABC[p_] for p_ in range(num_p) if p_ != p])
+                                  + 'tqb->s' + ABC[p] + 'tqb' for p in range(num_p)],
+            'dEu_tilde_a_dV': ['s' + ABC[0:num_p] + 'tp,s' + ABC[0:num_p] + '->s' + ABC[p] + 'tp'
                                for p in range(num_p)],
-            "dEu_tilde_dbeta": "sp" + ABC[0:num_p] + ",sp" + ABC[0:num_p] + "tqb->sptqb",
+            'dEu_tilde_dbeta': 'sp' + ABC[0:num_p] + ',sp' + ABC[0:num_p] + 'tqb->sptqb',
         }
 
     def H(self, y: np.ndarray) -> np.ndarray:
@@ -283,15 +264,15 @@ class QRE_np(QRE):
         else:
             Eu_tilde_a = u_tilde
 
-        Eu_tilde = np.einsum("spa,spa->sp", sigma, Eu_tilde_a)
+        Eu_tilde = np.einsum('spa,spa->sp', sigma, Eu_tilde_a)
 
         # assemble H
 
-        H_strat = (self.T_H[0] + np.einsum("spaSPA,SPA->spa", self.T_H[1], sigma)
-                   + np.einsum("spaSPA,SPA->spa", self.T_H[2], beta)
-                   + gamma * np.einsum("spaSPA,SPA->spa", -self.T_H[2], Eu_tilde_a))
+        H_strat = (self.T_H[0] + np.einsum('spaSPA,SPA->spa', self.T_H[1], sigma)
+                   + np.einsum('spaSPA,SPA->spa', self.T_H[2], beta)
+                   + gamma * np.einsum('spaSPA,SPA->spa', -self.T_H[2], Eu_tilde_a))
 
-        H_val = np.einsum("spSP,SP->sp", self.T_H[3], V) + np.einsum("spSP,SP->sp", -self.T_H[3], Eu_tilde)
+        H_val = np.einsum('spSP,SP->sp', self.T_H[3], V) + np.einsum('spSP,SP->sp', -self.T_H[3], Eu_tilde)
 
         return np.append(H_strat.ravel(), H_val.ravel())[self.H_mask]
 
@@ -307,9 +288,9 @@ class QRE_np(QRE):
         sigma_p_list = [sigma[:, p, :] for p in range(num_p)]
         # TODO: delete normalization
         # u_tilde = self.game.payoffs_normalized + np.einsum("sp...S,Sp->sp...", self.game.transitions, V)
-        u_tilde = self.game.payoffs + np.einsum("sp...S,Sp->sp...", self.game.transitions, V)
+        u_tilde = self.game.payoffs + np.einsum('sp...S,Sp->sp...', self.game.transitions, V)
 
-        sigma_prod = np.einsum(self.einsum_eqs["sigma_prod"], *sigma_p_list)
+        sigma_prod = np.einsum(self.einsum_eqs['sigma_prod'], *sigma_p_list)
 
         # TODO: replace this pattern:
         # sigma_prod_with_p = []
@@ -346,10 +327,10 @@ class QRE_np(QRE):
 
         T_temp = np.einsum("sp...,s...->sp...", u_tilde, sigma_prod)
         dEu_tilde_dbeta = np.einsum(
-            self.einsum_eqs["dEu_tilde_dbeta"], T_temp, self.T_J[4]
+            self.einsum_eqs['dEu_tilde_dbeta'], T_temp, self.T_J[4]
         )
 
-        dEu_tilde_dV = np.einsum("spa,spaSP->spSP", sigma, dEu_tilde_a_dV)
+        dEu_tilde_dV = np.einsum('spa,spaSP->spSP', sigma, dEu_tilde_a_dV)
 
         # TODO: tried "new" below - seems to bring no improvement.
         if old:

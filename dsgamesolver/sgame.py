@@ -318,16 +318,6 @@ class SGameHomotopy:
         """Jacobian of homotopy function evaluated at y."""
         pass
 
-    def H_reduced(self, y: np.ndarray) -> np.ndarray:
-        """H evaluated at y, reduced by exploiting symmetries."""
-        # TODO: to be implemented here
-        pass
-
-    def J_reduced(self, y: np.ndarray) -> np.ndarray:
-        """J evaluated at y, reduced by exploiting symmetries."""
-        # TODO: to be implemented here
-        pass
-
     def x_transformer(self, y: np.ndarray) -> Optional[np.ndarray]:
         """Transform vector y to vector x.
 
@@ -341,10 +331,26 @@ class SGameHomotopy:
         """
         pass
 
+    def H_reduced(self, y: np.ndarray) -> np.ndarray:
+        """H evaluated at y, reduced by exploiting symmetries."""
+        # TODO: to be implemented here
+        pass
+
+    def J_reduced(self, y: np.ndarray) -> np.ndarray:
+        """J evaluated at y, reduced by exploiting symmetries."""
+        # TODO: to be implemented here
+        pass
+
     def sigma_V_t_to_y(self, sigma: np.ndarray, V: np.ndarray, t: Union[float, int]) -> np.ndarray:
         """Translate arrays representing strategies sigma, values V and homotopy parameter t to a vector y."""
-        pass
+        beta_flat = np.log(self.game.flatten_strategies(sigma))
+        V_flat = self.game.flatten_values(V)
+        return np.concatenate([beta_flat, V_flat, [t]])
 
     def y_to_sigma_V_t(self, y: np.ndarray, zeros: bool = False) -> Tuple[np.ndarray, np.ndarray, Union[float, int]]:
         """Translate a vector y to arrays representing strategies sigma, values V and homotopy parameter t."""
-        pass
+        sigma_V_t_flat = self.x_transformer(y)
+        sigma = self.game.unflatten_strategies(sigma_V_t_flat[0:self.game.num_actions_total], zeros=zeros)
+        V = self.game.unflatten_values(sigma_V_t_flat[self.game.num_actions_total:-1])
+        t = sigma_V_t_flat[-1]
+        return sigma, V, t
