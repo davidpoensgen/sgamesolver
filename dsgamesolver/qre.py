@@ -18,8 +18,16 @@ QRE_np:
 
 
 
+
 QRE_ct:
 -------
+
+Implemented.
+
+Compilation complains about depreciated Numpy API.
+Could be suppressed in general setup.py with 'define_macros': [('NPY_NO_DEPRECATED_API', 'NPY_1_7_API_VERSION')].
+Seemingly cannot be suppressed with pxyimport.
+TODO: Stick to pxyimport?
 
 
 """
@@ -27,7 +35,6 @@ QRE_ct:
 from typing import Tuple, Union
 
 import numpy as np
-from numba.experimental import jitclass
 
 from dsgamesolver.sgame import SGame, SGameHomotopy
 from dsgamesolver.homcont import HomCont
@@ -35,7 +42,7 @@ from dsgamesolver.homcont import HomCont
 ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
 
-# %% general QRE class
+# %% parent class for QRE homotopy
 
 
 class QRE(SGameHomotopy):
@@ -397,83 +404,69 @@ class QRE_np(QRE):
             return J[self.J_mask]
 
 
-# %% Numpy implementation of QRE with Numba boost
-
-
-@jitclass
-class QRE_np_numba(QRE_np):
-    """QRE homotopy: Numpy implementation with Numba boost."""
-
-    # def __init__(self, game: SGame) -> None:
-    #     super().__init__(game)
-
-    def H(self, y: np.ndarray) -> np.ndarray:
-        return super().H(y)
-
-    def J(self, y: np.ndarray, old: bool = True) -> np.ndarray:
-        return super().J(y, old)
-
-
 # %% Cython implementation of QRE
 
 
 class QRE_ct(QRE):
     """QRE homotopy: Cython implementation"""
 
+    try:
+        import pyximport
+        pyximport.install(build_dir='./dsgamesolver/__build__/', build_in_temp=False, language_level=3,
+                          setup_args={'include_dirs': [np.get_include()]})
+        import dsgamesolver.qre_ct as qre_ct
+    except ImportError:
+        raise("Cython implementation of QRE homotopy could not be imported. ",
+              "Make sure your system has the relevant C compilers installed. ",
+              "For Windows, check https://wiki.python.org/moin/WindowsCompilers ",
+              "to find the right Microsoft Visual C++ compiler for your Python version. ",
+              "Standalone compilers are sufficient, there is no need to install Visual Studio. ",
+              "For Linux, make sure the Python package gxx_linux-64 is installed in your environment.")
+
     def __init__(self, game: SGame):
         super().__init__(game)
-        # temporary:
-        game = game
 
-    def H(self, y):
-        return QRE_np(self.game).H(y)
+    def H(self, y: np.ndarray) -> np.ndarray:
+        return self.qre_ct.H(y, self.game.payoffs, self.game.transitions, self.game.num_states, self.game.num_players,
+                             self.game.nums_actions, self.game.num_actions_max, self.game.num_actions_total)
 
-    def J(self, y):
-        return QRE_np(self.game).J(y)
-
-    # TODO: all
+    def J(self, y: np.ndarray) -> np.ndarray:
+        return self.qre_ct.J(y, self.game.payoffs, self.game.transitions, self.game.num_states, self.game.num_players,
+                             self.game.nums_actions, self.game.num_actions_max, self.game.num_actions_total)
 
 
-class Tracing(SGameHomotopy):
-    def __init__(self, game: SGame, priors="centroid", etas=None, nu=1.0):
-        super().__init__(game)
+# %% experimental: Numpy implementation of QRE with Numba boost
+# some trouble with custom classes...
 
-        if priors == "random":
-            priors = np.empty(self.game.num_actions_total, dtype=np.float64)
-            idx = 0
-            for s in range(self.game.num_states):
-                for p in range(self.game.num_players):
-                    sigma = np.random.exponential(
-                        scale=1, size=self.game.nums_actions[s, p]
-                    )
-                    sigma = sigma / sigma.sum()
-                    etas[idx : idx + self.game.nums_actions[s, p]] = sigma
-                    idx += self.game.nums_actions[s, p]
-            self.priors = priors
-        elif priors == "centroid":
-            priors = np.empty(self.game.num_actions_total, dtype=np.float64)
-            idx = 0
-            for s in range(self.game.num_states):
-                for p in range(self.game.num_players):
-                    etas[idx : idx + self.game.nums_actions[s, p]] = (
-                        1 / self.game.nums_actions[s, p]
-                    )
-                    idx += self.game.nums_actions[s, p]
-            self.priors = priors
-        else:
-            # TODO: how are priors specified / should they be checked?
-            self.priors = priors
 
-        self.nu = nu
+# from numba.experimental import jitclass
 
-        if etas is None:
-            # TODO: format of etas?
-            pass
-        else:
-            # TODO: how are etas specified / should they be checked?
-            self.etas = etas
 
-    def find_y0(self):
-        # TODO
-        y0 = None
-        self.y0 = y0
+# @jitclass
+# class QRE_np_numba(QRE_np):
+#     """QRE homotopy: Numpy implementation with Numba boost."""
+
+#     # def __init__(self, game: SGame) -> None:
+#     #     super().__init__(game)
+
+#     def H(self, y: np.ndarray) -> np.ndarray:
+#         return super().H(y)
+
+#     def J(self, y: np.ndarray, old: bool = True) -> np.ndarray:
+#         return super().J(y, old)
+
+
+# %% testing
+
+
+if __name__ == '__main__':
+    from tests.random_game import create_random_game
+
+    game = SGame(*create_random_game())
+
+    # numpy
+    QRE_np(game)
+
+    # cython
+    qre = QRE_ct(game)
+    print(qre.H(qre.find_y0()))

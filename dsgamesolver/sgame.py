@@ -112,7 +112,6 @@ class SGame():
         # TODO: delete once unnormalized payoffs are used throughout
         # self.payoff_min = self.payoffs[self.payoff_mask].min()
         # self.payoff_max = self.payoffs[self.payoff_mask].max()
-        #
         # self.payoffs_normalized = self.normalize_payoffs(self.payoffs)
 
         # generate array representing discount factors [p]
@@ -120,6 +119,9 @@ class SGame():
             self.discount_factors = np.array(discount_factors, dtype=np.float64)
         else:
             self.discount_factors = discount_factors * np.ones(self.num_players, dtype=np.float64)
+
+        # define scale for adjusting tracking parameters
+        # TODO
 
         # bring transition_matrices to list of np.ndarray, one array for each state
         if transition_matrices is not None:
@@ -282,7 +284,7 @@ class SGame():
         return losses
 
 
-# %% homotopy class
+# %% blueprint for homotopy classes
 
 
 class SGameHomotopy:
