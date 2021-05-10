@@ -26,9 +26,7 @@ A = (0,) * num_p
 payoffMatrices[0][(0,) + A] = 0
 payoffMatrices[1][(0,) + A] = 1
 
-transitionMatrices = [
-    np.random.exponential(scale=1, size=(*nums_a[s, :], num_s)) for s in range(num_s)
-]
+transitionMatrices = [np.random.exponential(scale=1, size=(*nums_a[s, :], num_s)) for s in range(num_s)]
 for s in range(num_s):
     for index, value in np.ndenumerate(np.sum(transitionMatrices[s], axis=-1)):
         transitionMatrices[s][index] *= 1 / value

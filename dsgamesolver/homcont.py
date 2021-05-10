@@ -378,7 +378,7 @@ class HomCont:
                 self.ds = max(self.ds_defl*self.ds, self.ds_min)
                 self.predict()
             else:
-                self.failed = "predictor"
+                self.failed = 'predictor'
 
     def correct(self):
         """Perform corrector iteration.
@@ -671,7 +671,7 @@ class HomCont:
             print(f'Current state saved as {filename}.')
 
     def load_file(self, filename):
-        """Load state from a file created by save_file()."""
+        """Load solver state from a file created by save_file()."""
         import os
         import json
         if not os.path.isfile(filename):
@@ -687,8 +687,8 @@ class HomCont:
 def qr_inv(array):
     """Calculate Moore-Penrose pseudo-inverse of a 2D-array using QR decomposition.
 
-   Note: Appears to be significantly faster than the equivalent, built-in numpy method
-   np.linalg.pinv, which is based on SVD.
+    Note: Appears to be significantly faster than the equivalent, built-in numpy method
+    np.linalg.pinv, which is based on SVD.
     """
     Q, R = np.linalg.qr(array.transpose(), mode='complete')
     return np.dot(Q, np.vstack((np.linalg.inv(np.delete(R, -1, axis=0).transpose()), np.zeros(R.shape[1]))))
@@ -818,7 +818,7 @@ class HomPath:
 
     def get_step(self, step_no: int):
         """Returns data for step_no if possible.
-           If step_no is not present, the last step preceding it is returned instead.
+        If step_no is not present, the last step preceding it is returned instead.
         """
         try:
             index = np.where(self.step == self.step[self.step <= step_no].max())[0]

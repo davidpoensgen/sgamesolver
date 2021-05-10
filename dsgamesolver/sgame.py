@@ -56,7 +56,7 @@ class sGame():
             # If no transitions are specified, game will default to separated repeated
             # games: phi(s,s') = 1 if s==s' and 0 else, for all action profiles.
             transition_matrices = []
-            for s in self.num_states:
+            for s in range(self.num_states):
                 mat = np.zeros((*self.nums_actions[s], self.num_states))
                 mat[..., s] = 1
                 transition_matrices.append(mat)
@@ -125,8 +125,8 @@ class sGame():
                 A = np.eye(self.num_states) - phi[:, p, :]
                 values[:, p] = np.linalg.solve(A, u[:, p])
         except np.linalg.LinAlgError:
-            raise('Failed to solve for state-player values: '
-                  'Transition matrix not invertible.')
+            print('Failed to solve for state-player values: Transition matrix not invertible.')
+            raise
         return values
 
     def random_strategy(self):
@@ -192,8 +192,7 @@ class sGame():
         ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
         for p in range(self.num_players):
             others = [q for q in range(self.num_players) if q != p]
-            einsum_eq = ('s' + ABC[0:self.num_players] + ',s' +
-                         ',s'.join([ABC[q] for q in others]) + '->s' + ABC[p])
+            einsum_eq = ('s' + ABC[0:self.num_players] + ',s' + ',s'.join([ABC[q] for q in others]) + '->s' + ABC[p])
             action_values = np.einsum(einsum_eq, u_tilde[:, p, :], *[sigma[:, q, :] for q in others])
 
             losses[:, p] = action_values.max(axis=-1) - values[:, p]
