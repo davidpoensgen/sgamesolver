@@ -73,16 +73,16 @@ class SGame():
         """
 
         # bring payoff_matrices to list of np.ndarray, one array for each state
-        self.payoff_matrices = [np.array(payoff_matrices[s], dtype=np.float64) for s in range(len(payoff_matrices))]
+        payoff_matrices = [np.array(payoff_matrices[s], dtype=np.float64) for s in range(len(payoff_matrices))]
 
         # read out game shape
-        self.num_states = len(self.payoff_matrices)
-        self.num_players = self.payoff_matrices[0].shape[0]
+        self.num_states = len(payoff_matrices)
+        self.num_players = payoff_matrices[0].shape[0]
 
         self.nums_actions = np.zeros((self.num_states, self.num_players), dtype=np.int32)
         for s in range(self.num_states):
             for p in range(self.num_players):
-                self.nums_actions[s, p] = self.payoff_matrices[s].shape[1 + p]
+                self.nums_actions[s, p] = payoff_matrices[s].shape[1 + p]
 
         self.num_actions_max = self.nums_actions.max()
         self.num_actions_total = self.nums_actions.sum()
@@ -94,20 +94,19 @@ class SGame():
                 self.action_mask[s, p, 0:self.nums_actions[s, p]] = 1
 
         # payoff_mask allows to normalize and de-normalize payoffs
-        self.payoff_mask = np.zeros((self.num_states, self.num_players, *[self.num_actions_max]*self.num_players),
-                                    dtype=bool)
-        for s in range(self.num_states):
-            for p in range(self.num_players):
-                for A in np.ndindex(*self.nums_actions[s]):
-                    self.payoff_mask[(s, p) + A] = 1
+        # self.payoff_mask = np.zeros((self.num_states, self.num_players, *[self.num_actions_max]*self.num_players),
+        #                             dtype=bool)
+        # for s in range(self.num_states):
+        #     for p in range(self.num_players):
+        #         for A in np.ndindex(*self.nums_actions[s]):
+        #             self.payoff_mask[(s, p) + A] = 1
 
         # generate array representing payoffs [s,p,A]
-        self.payoffs = np.zeros((self.num_states, self.num_players, *[self.num_actions_max]*self.num_players),
-                                dtype=np.float64)
+        self.payoffs = np.zeros((self.num_states, self.num_players, *[self.num_actions_max]*self.num_players))
         for s in range(self.num_states):
             for p in range(self.num_players):
                 for A in np.ndindex(*self.nums_actions[s]):
-                    self.payoffs[(s, p) + A] = self.payoff_matrices[s][(p,) + A]
+                    self.payoffs[(s, p) + A] = payoff_matrices[s][(p,) + A]
 
         # TODO: delete once unnormalized payoffs are used throughout
         # self.payoff_min = self.payoffs[self.payoff_mask].min()
@@ -118,36 +117,35 @@ class SGame():
         if isinstance(discount_factors, (list, tuple, np.ndarray)):
             self.discount_factors = np.array(discount_factors, dtype=np.float64)
         else:
-            self.discount_factors = discount_factors * np.ones(self.num_players, dtype=np.float64)
+            self.discount_factors = discount_factors * np.ones(self.num_players)
 
         # define scale for adjusting tracking parameters
         # TODO
 
         # bring transition_matrices to list of np.ndarray, one array for each state
         if transition_matrices is not None:
-            self.transition_matrices = [np.array(transition_matrices[s], dtype=np.float64)
-                                        for s in range(self.num_states)]
+            transition_matrices = [np.array(transition_matrices[s], dtype=np.float64)
+                                   for s in range(self.num_states)]
         else:
             # If no transitions are specified, specification will default to separated repeated games:
             # phi(s,s') = 1 if s==s' and 0 else, for all action profiles.
-            self.transition_matrices = []
+            transition_matrices = []
             for s in self.num_states:
-                phi_s = np.zeros((*self.nums_actions[s], self.num_states), dtype=np.float64)
+                phi_s = np.zeros((*self.nums_actions[s], self.num_states))
                 phi_s[..., s] = 1
-                self.transition_matrices.append(phi_s)
+                transition_matrices.append(phi_s)
 
         # build big transition matrix [s,A,s'] from list of small transition matrices [A,s'] for each s
-        transition_matrix = np.zeros((self.num_states, *[self.num_actions_max]*self.num_players, self.num_states),
-                                     dtype=np.float64)
+        transition_matrix = np.zeros((self.num_states, *[self.num_actions_max]*self.num_players, self.num_states))
         for s0 in range(self.num_states):
             for A in np.ndindex(*self.nums_actions[s0]):
                 for s1 in range(self.num_states):
-                    transition_matrix[(s0,)+A+(s1,)] = self.transition_matrices[s0][A+(s1,)]
+                    transition_matrix[(s0,)+A+(s1,)] = transition_matrices[s0][A+(s1,)]
 
         # generate array representing transitions, including discounting: delta * phi [s,p,A,s']
         # (player index due to potentially player-specific discount factors)
         self.transitions = np.zeros((self.num_states, self.num_players, *[self.num_actions_max]*self.num_players,
-                                     self.num_states), dtype=np.float64)
+                                     self.num_states))
         for p in range(self.num_players):
             self.transitions[:, p] = self.discount_factors[p] * transition_matrix
 
@@ -172,8 +170,7 @@ class SGame():
     def random_strategy(self) -> np.ndarray:
         """Generate a random strategy profile."""
 
-        strategy_profile = np.nan * np.empty((self.num_states, self.num_players, self.num_actions_max),
-                                             dtype=np.float64)
+        strategy_profile = np.nan * np.empty((self.num_states, self.num_players, self.num_actions_max))
         for s in range(self.num_states):
             for p in range(self.num_players):
                 sigma = np.random.exponential(scale=1, size=self.nums_actions[s, p])
@@ -185,8 +182,7 @@ class SGame():
     def centroid_strategy(self) -> np.ndarray:
         """Generate the centroid strategy profile."""
 
-        strategy_profile = np.nan * np.empty((self.num_states, self.num_players, self.num_actions_max),
-                                             dtype=np.float64)
+        strategy_profile = np.nan * np.empty((self.num_states, self.num_players, self.num_actions_max))
         for s in range(self.num_states):
             for p in range(self.num_players):
                 strategy_profile[s, p, :self.nums_actions[s, p]] = 1 / self.nums_actions[s, p]
@@ -204,9 +200,9 @@ class SGame():
         with shape (num_states, num_players, num_actions_max), padded with NaNs (or zeros under the respective option.)
         """
         if zeros:
-            strategies = np.zeros((self.num_states, self.num_players, self.num_actions_max), dtype=np.float64)
+            strategies = np.zeros((self.num_states, self.num_players, self.num_actions_max))
         else:
-            strategies = np.nan * np.empty((self.num_states, self.num_players, self.num_actions_max), dtype=np.float64)
+            strategies = np.nan * np.empty((self.num_states, self.num_players, self.num_actions_max))
         np.place(strategies, self.action_mask, strategies_flat)
         return strategies
 
@@ -231,7 +227,7 @@ class SGame():
         u = np.einsum(einsum_eq_u, self.payoffs, *sigma_list)
         phi = np.einsum(einsum_eq_phi, self.transitions, *sigma_list)
 
-        values = np.empty((self.num_states, self.num_players), dtype=np.float64)
+        values = np.empty((self.num_states, self.num_players))
         try:
             for p in range(self.num_players):
                 A = np.eye(self.num_states) - phi[:, p, :]
@@ -267,7 +263,7 @@ class SGame():
         # u_tilde: payoffs of normal form games that include continuation values.
         u_tilde = self.payoffs + np.einsum('sp...S,Sp->sp...', self.transitions, values)
 
-        losses = np.empty((self.num_states, self.num_players), dtype=np.float64)
+        losses = np.empty((self.num_states, self.num_players))
 
         for p in range(self.num_players):
             others = [q for q in range(self.num_players) if q != p]
@@ -288,7 +284,11 @@ class SGame():
 
 
 class SGameHomotopy:
-    """General homotopy class for some sGame."""
+    """General homotopy class for some sGame.
+
+    TODO: document order of (sigma, V, T) in y
+    TODO: document order of equations in H (and thus J)
+    """
 
     def __init__(self, game: SGame) -> None:
         self.game = game

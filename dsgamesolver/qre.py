@@ -16,7 +16,7 @@ Added type hints.
 QRE_np:
 -------
 
-
+TODO: play with einsum_path
 
 
 QRE_ct:
@@ -153,24 +153,24 @@ class QRE_np(QRE):
         self.J_mask = J_mask
 
         # tensors to assemble H_qre
-        T_H_qre_0 = np.zeros(shape=(num_s, num_p, num_a_max), dtype=np.float64)
+        T_H_qre_0 = np.zeros(shape=(num_s, num_p, num_a_max))
         for s in range(num_s):
             for p in range(num_p):
                 T_H_qre_0[s, p, 0] = 1
 
-        T_H_qre_1 = np.zeros(shape=(num_s, num_p, num_a_max, num_s, num_p, num_a_max), dtype=np.float64)
+        T_H_qre_1 = np.zeros(shape=(num_s, num_p, num_a_max, num_s, num_p, num_a_max))
         for s in range(num_s):
             for p in range(num_p):
                 T_H_qre_1[s, p, 0, s, p, :] = -1
 
-        T_H_qre_2 = np.zeros(shape=(num_s, num_p, num_a_max, num_s, num_p, num_a_max), dtype=np.float64)
+        T_H_qre_2 = np.zeros(shape=(num_s, num_p, num_a_max, num_s, num_p, num_a_max))
         for s in range(num_s):
             for p in range(num_p):
                 for a in range(1, nums_a[s, p]):
                     T_H_qre_2[s, p, a, s, p, a] = -1
                     T_H_qre_2[s, p, a, s, p, 0] = 1
 
-        T_H_qre_3 = np.zeros(shape=(num_s, num_p, num_s, num_p), dtype=np.float64)
+        T_H_qre_3 = np.zeros(shape=(num_s, num_p, num_s, num_p))
         for s in range(num_s):
             for p in range(num_p):
                 T_H_qre_3[s, p, s, p] = -1
@@ -178,7 +178,7 @@ class QRE_np(QRE):
         self.T_H = {0: T_H_qre_0, 1: T_H_qre_1, 2: T_H_qre_2, 3: T_H_qre_3}
 
         # tensors to assemble J_qre
-        T_J_qre_temp = np.zeros(shape=(num_s, num_p, num_a_max, num_s, num_p, num_a_max), dtype=np.float64)
+        T_J_qre_temp = np.zeros(shape=(num_s, num_p, num_a_max, num_s, num_p, num_a_max))
         for s in range(num_s):
             for p in range(num_p):
                 for a in range(nums_a[s, p]):
@@ -188,7 +188,7 @@ class QRE_np(QRE):
 
         T_J_qre_1 = np.einsum('spatqb,tqbSPA->spaSPA', T_H_qre_1, T_J_qre_temp)
 
-        T_J_qre_temp = np.zeros(shape=(num_s, num_p, num_s, num_p), dtype=np.float64)
+        T_J_qre_temp = np.zeros(shape=(num_s, num_p, num_s, num_p))
         for s in range(num_s):
             for p in range(num_p):
                 T_J_qre_temp[s, p, s, p] = 1
@@ -197,8 +197,7 @@ class QRE_np(QRE):
 
         T_J_qre_5 = np.einsum('sptq,tqSP->spSP', T_H_qre_3, T_J_qre_temp)
 
-        T_J_qre_2 = np.zeros(shape=(num_s, num_p, *[num_a_max] * (num_p - 1), num_s, num_p, num_a_max),
-                             dtype=np.float64)
+        T_J_qre_2 = np.zeros(shape=(num_s, num_p, *[num_a_max] * (num_p - 1), num_s, num_p, num_a_max))
         for s in range(num_s):
             for p in range(num_p):
                 a_profiles_without_p = list(np.ndindex(tuple(nums_a[s, :p]) + tuple(nums_a[s, (p + 1) :])))
@@ -208,7 +207,7 @@ class QRE_np(QRE):
                             a_ = A[p_] if p_ < p else A[p_ - 1]
                             T_J_qre_2[(s, p) + A + (s, p_, a_)] = 1
 
-        T_J_qre_4 = np.zeros(shape=(num_s, num_p, *[num_a_max] * num_p, num_s, num_p, num_a_max), dtype=np.float64)
+        T_J_qre_4 = np.zeros(shape=(num_s, num_p, *[num_a_max] * num_p, num_s, num_p, num_a_max))
         for s in range(num_s):
             for p in range(num_p):
                 a_profiles = list(np.ndindex(tuple(nums_a[s, :])))
@@ -238,6 +237,11 @@ class QRE_np(QRE):
                                for p in range(num_p)],
             'dEu_tilde_dbeta': 'sp' + ABC[0:num_p] + ',sp' + ABC[0:num_p] + 'tqb->sptqb',
         }
+
+        # TODO: einsum_path
+        # sigma = self.game.centroid_strategy()
+        # V = self.game.get_values(sigma)
+        # ...
 
     def H(self, y: np.ndarray) -> np.ndarray:
         """Homotopy function."""
