@@ -1,36 +1,12 @@
-# TODO: is there a canonical way in which strategies, values are ordered in y?
-# TODO: in which the equations are ordered in H?
-# TODO (if so, this should be documented; and could be used for symmetry helpers etc.)
-"""CHANGELOG (to be deleted after approval)
+"""(Markov logit) quantal response equilibrium (QRE) homotopy."""
 
+# TODO: play with einsum_path
+# TODO: adjust tracking parameters
 
-QRE:
-----
-
-ABC as constant outside of class.
-
-Added type hints.
-
-
-
-QRE_np:
--------
-
-TODO: play with einsum_path
-
-
-QRE_ct:
--------
-
-Implemented.
-
-Compilation complains about depreciated Numpy API.
-Could be suppressed in general setup.py with 'define_macros': [('NPY_NO_DEPRECATED_API', 'NPY_1_7_API_VERSION')].
-Seemingly cannot be suppressed with pxyimport.
-TODO: Stick to pxyimport?
-
-
-"""
+# Cython compilation complains about depreciated Numpy API.
+# Could be suppressed in general setup.py with 'define_macros': [('NPY_NO_DEPRECATED_API', 'NPY_1_7_API_VERSION')].
+# Seemingly cannot be suppressed with pxyimport.
+# TODO: Stick to pxyimport?
 
 import numpy as np
 
@@ -88,10 +64,6 @@ class QRE(SGameHomotopy):
         self.solver = HomCont(self.H, self.y0, self.J, t_target=target_lambda,
                               parameters=self.tracking_parameters['normal'],
                               x_transformer=self.x_transformer, store_path=True)
-        # TODO: delete normalization
-        # self.solver = HomCont(self.H, self.y0, self.J, parameters=self.tracking_parameters["normal"],
-        #                       x_transformer=self.x_transformer, store_path=True)
-        # self.solver.t_target = target_lambda * (self.game.payoff_max-self.game.payoff_min)
 
     def find_y0(self) -> np.ndarray:
         sigma = self.game.centroid_strategy()
@@ -130,7 +102,7 @@ class QRE_np(QRE):
         flat_index = 0
         for s in range(num_s):
             for p in range(num_p):
-                for a in range(nums_a[s, p]):
+                for _ in range(nums_a[s, p]):
                     H_mask.append(flat_index)
                     flat_index += 1
                 flat_index += num_a_max - nums_a[s, p]
@@ -228,10 +200,10 @@ class QRE_np(QRE):
         self.einsum_eqs = {
             'sigma_prod': 's' + ',s'.join(ABC[0:num_p]) + '->s' + ABC[0:num_p],
             'sigma_prod_with_p': ['s' + ',s'.join(ABC[0:num_p]) + '->s' + ABC[0:num_p] for p in range(num_p)],
-            'Eu_tilde_a_H': ['s' + ABC[0:num_p] + ',s' + ',s'.join([ABC[p_] for p_ in range(num_p) if p_ != p])
+            'Eu_tilde_a_H': ['s' + ABC[0:num_p] + ',s' + ',s'.join(ABC[p_] for p_ in range(num_p) if p_ != p)
                              + '->s' + ABC[p] for p in range(num_p)],
             'Eu_tilde_a_J': ['s' + ABC[0:num_p] + ',s' + ABC[0:num_p] + '->s' + ABC[p] for p in range(num_p)],
-            'dEu_tilde_a_dbeta': ['s' + ABC[0:num_p] + ',s' + ''.join([ABC[p_] for p_ in range(num_p) if p_ != p])
+            'dEu_tilde_a_dbeta': ['s' + ABC[0:num_p] + ',s' + ''.join(ABC[p_] for p_ in range(num_p) if p_ != p)
                                   + 'tqb->s' + ABC[p] + 'tqb' for p in range(num_p)],
             'dEu_tilde_a_dV': ['s' + ABC[0:num_p] + 'tp,s' + ABC[0:num_p] + '->s' + ABC[p] + 'tp'
                                for p in range(num_p)],

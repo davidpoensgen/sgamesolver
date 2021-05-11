@@ -2,6 +2,7 @@ import numpy as np
 
 from dsgamesolver.sgame import SGame
 from dsgamesolver.qre import QRE_np, QRE_ct  # , QRE_np_numba
+from tests.timings import HomotopyTimer
 
 # random game
 
@@ -55,6 +56,11 @@ print(sol)
 qre2 = QRE_ct(game)
 qre2.initialize()
 sol2 = qre2.solver.solve()
+
+
+# timings:
+timer = HomotopyTimer('QRE_np')
+timer.timing()
 
 
 # numba test:

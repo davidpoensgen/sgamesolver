@@ -1,46 +1,8 @@
-"""CHANGELOG (to be deleted after approval)
+"""Classes for stochastic game and corresponding homotopy."""
 
-
-sGame:
-------
-
-Variable names:
-    - inputs, also saved as class attributes:
-        payoff_matrices, transition_matrices, discount_factors
-    - class attributes, for computation of homotopy:
-        payoffs, payoffs_normalized, payoffs_with_nan, payoffs_normalized_with_nan, transitions, etc.
-    - short notation for internal computation within functions, never used by user:
-        u, phi, delta, etc.
-
-Allow array-like inputs.
-
-Use np.nan_to_num instead of custom function copy_without_nan, as suggested.
-
-Attribute transitions_with_nan removed, as suggested.
-
-Transitions include discounting, as before.
-Having discount factors separately would result in unnecessary multiplications with every call of H and J.
-
-ABC as constant outside of class.
-
-Normalization and de-normalization of payoffs without nan placeholders, using payoff_mask.
-
-Added type hints.
-
-Added unit tests.
-
-
-
-sGameHomotopy:
---------------
-
-sGameHomotopy into this file.
-
-Added type hints.
-
-Question: Will y always consist of sigma, V and t?
-
-"""
+# TODO: finalize method check_equilibriumness
+# TODO: document ordering of variables in y and equations in H and J
+# TODO: symmetry
 
 from typing import List, Tuple, Union, Optional
 
@@ -94,12 +56,12 @@ class SGame():
                 self.action_mask[s, p, 0:self.nums_actions[s, p]] = 1
 
         # payoff_mask allows to normalize and de-normalize payoffs
-        # self.payoff_mask = np.zeros((self.num_states, self.num_players, *[self.num_actions_max]*self.num_players),
-        #                             dtype=bool)
-        # for s in range(self.num_states):
-        #     for p in range(self.num_players):
-        #         for A in np.ndindex(*self.nums_actions[s]):
-        #             self.payoff_mask[(s, p) + A] = 1
+        self.payoff_mask = np.zeros((self.num_states, self.num_players, *[self.num_actions_max]*self.num_players),
+                                    dtype=bool)
+        for s in range(self.num_states):
+            for p in range(self.num_players):
+                for A in np.ndindex(*self.nums_actions[s]):
+                    self.payoff_mask[(s, p) + A] = 1
 
         # generate array representing payoffs [s,p,A]
         self.payoffs = np.zeros((self.num_states, self.num_players, *[self.num_actions_max]*self.num_players))
@@ -108,11 +70,6 @@ class SGame():
                 for A in np.ndindex(*self.nums_actions[s]):
                     self.payoffs[(s, p) + A] = payoff_matrices[s][(p,) + A]
 
-        # TODO: delete once unnormalized payoffs are used throughout
-        # self.payoff_min = self.payoffs[self.payoff_mask].min()
-        # self.payoff_max = self.payoffs[self.payoff_mask].max()
-        # self.payoffs_normalized = self.normalize_payoffs(self.payoffs)
-
         # generate array representing discount factors [p]
         if isinstance(discount_factors, (list, tuple, np.ndarray)):
             self.discount_factors = np.array(discount_factors, dtype=np.float64)
@@ -120,6 +77,8 @@ class SGame():
             self.discount_factors = discount_factors * np.ones(self.num_players)
 
         # define scale for adjusting tracking parameters
+        self.payoff_min = self.payoffs[self.payoff_mask].min()
+        self.payoff_max = self.payoffs[self.payoff_mask].max()
         # TODO
 
         # bring transition_matrices to list of np.ndarray, one array for each state
@@ -151,21 +110,8 @@ class SGame():
 
     def detect_symmetries(self) -> None:
         """Detect symmetries between agents."""
-        # TODO: tbd
+        # TODO
         pass
-
-    # TODO: delete once unnormalized payoffs are used throughout
-    # def normalize_payoffs(self, payoffs: ArrayLike) -> np.ndarray:
-    #     """Normalize payoffs to values between 0 and 1. Keep zeros for nonexisting actions."""
-    #     payoffs_normalized = (np.array(payoffs)-self.payoff_min) / (self.payoff_max-self.payoff_min)
-    #     payoffs_normalized[~self.payoff_mask] = 0.0
-    #     return payoffs_normalized
-    #
-    # def denormalize_payoffs(self, payoffs_normalized: ArrayLike) -> np.ndarray:
-    #     """Calculate de-normalized payoffs. Keep zeros for nonexisting actions."""
-    #     payoffs = self.payoff_min + np.array(payoffs_normalized) * (self.payoff_max-self.payoff_min)
-    #     payoffs[~self.payoff_mask] = 0.0
-    #     return payoffs
 
     def random_strategy(self) -> np.ndarray:
         """Generate a random strategy profile."""
@@ -206,24 +152,17 @@ class SGame():
         np.place(strategies, self.action_mask, strategies_flat)
         return strategies
 
-    # TODO: delete once unnormalized payoffs are used throughout
-    # def get_values(self, strategy_profile: ArrayLike, normalized: bool = False) -> np.ndarray:
     def get_values(self, strategy_profile: ArrayLike) -> np.ndarray:
         """Calculate state-player values for a given strategy profile."""
 
         sigma = np.nan_to_num(strategy_profile)
         sigma_list = [sigma[:, p, :] for p in range(self.num_players)]
 
-        # TODO: delete once unnormalized payoffs are used throughout
-        # payoffs = self.payoffs_normalized if normalized else self.payoffs
-
         einsum_eq_u = ('sp' + ABC[0:self.num_players] + ',s' +
                        ',s'.join(ABC[p] for p in range(self.num_players)) + '->sp')
         einsum_eq_phi = ('sp' + ABC[0:self.num_players] + 't,s' +
                          ',s'.join(ABC[p] for p in range(self.num_players)) + '->spt')
 
-        # TODO: delete once unnormalized payoffs are used throughout
-        # u = np.einsum(einsum_eq_u, payoffs, *sigma_list)
         u = np.einsum(einsum_eq_u, self.payoffs, *sigma_list)
         phi = np.einsum(einsum_eq_phi, self.transitions, *sigma_list)
 
@@ -235,15 +174,6 @@ class SGame():
         except np.linalg.LinAlgError:
             raise("Failed to solve for state-player values: Transition matrix not invertible.")
         return values
-
-    # TODO: delete once unnormalized payoffs are used throughout
-    # def normalize_values(self, values: Union[ArrayLike, float, int]) -> Union[np.ndarray, float]:
-    #     """Normalize values to [0,1]."""
-    #     return (np.array(values)-self.payoff_min) / (self.payoff_max-self.payoff_min)
-    #
-    # def denormalize_values(self, values_normalized: Union[ArrayLike, float, int]) -> Union[np.ndarray, float]:
-    #     """Calculate de-normalized values. Argument may be a scalar or np.ndarray."""
-    #     return self.payoff_min + np.array(values_normalized) * (self.payoff_max-self.payoff_min)
 
     def flatten_values(self, values: ArrayLike) -> np.ndarray:
         """Flatten an array with shape (num_states, num_players), e.g. state-player values."""

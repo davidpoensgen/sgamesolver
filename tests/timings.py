@@ -233,22 +233,22 @@ if __name__ == '__main__':
 
     # timings for default specification
 
-    homotopy_timer = HomotopyTimer()
-    homotopy_timer.timing()
+    timer = HomotopyTimer()
+    timer.timing()
 
     # check unsolved games
 
-    game = homotopy_timer.game_memory.current_game
+    game = timer.game_memory.current_game
     # game = homotopy_timer.game_memory.unsolved_games[0]
 
-    hom = homotopy_timer.Homotopy(game)
+    hom = timer.Homotopy(game)
     hom.initialize()
     hom.solver.solve()
 
     # batch timings
 
     np.random.seed(42)
-    homotopy_timer = HomotopyTimer('QRE_np')
+    timer = HomotopyTimer('QRE_np')
 
-    # homotopy_timer.batch_timings(nums_s=[2,3], nums_p=[2], nums_a=[2,3], reps=2)
-    # homotopy_timer.batch_timings()
+    # timer.batch_timings(nums_s=[2,3], nums_p=[2], nums_a=[2,3], reps=2)
+    # timer.batch_timings()
