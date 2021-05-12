@@ -367,21 +367,25 @@ class QRE_np(QRE):
 class QRE_ct(QRE):
     """QRE homotopy: Cython implementation"""
 
-    try:
-        import pyximport
-        pyximport.install(build_dir='./dsgamesolver/__build__/', build_in_temp=False, language_level=3,
-                          setup_args={'include_dirs': [np.get_include()]})
-        import dsgamesolver.qre_ct as qre_ct
-    except ImportError:
-        raise("Cython implementation of QRE homotopy could not be imported. ",
-              "Make sure your system has the relevant C compilers installed. ",
-              "For Windows, check https://wiki.python.org/moin/WindowsCompilers ",
-              "to find the right Microsoft Visual C++ compiler for your Python version. ",
-              "Standalone compilers are sufficient, there is no need to install Visual Studio. ",
-              "For Linux, make sure the Python package gxx_linux-64 is installed in your environment.")
-
     def __init__(self, game: SGame):
         super().__init__(game)
+
+        try:
+            import pyximport
+            pyximport.install(build_dir='./dsgamesolver/__build__/', build_in_temp=False, language_level=3,
+                              setup_args={'include_dirs': [np.get_include()]})
+            import dsgamesolver.qre_ct as qre_ct
+
+        except ImportError:
+            print("Cython implementation of QRE homotopy could not be imported. ",
+                  "Make sure your system has the relevant C compilers installed. ",
+                  "For Windows, check https://wiki.python.org/moin/WindowsCompilers ",
+                  "to find the right Microsoft Visual C++ compiler for your Python version. ",
+                  "Standalone compilers are sufficient, there is no need to install Visual Studio. ",
+                  "For Linux, make sure the Python package gxx_linux-64 is installed in your environment.")
+            raise
+
+        self.qre_ct = qre_ct
 
     def H(self, y: np.ndarray) -> np.ndarray:
         return self.qre_ct.H(y, self.game.payoffs, self.game.transitions, self.game.num_states, self.game.num_players,
@@ -417,13 +421,22 @@ class QRE_ct(QRE):
 
 
 if __name__ == '__main__':
-    from tests.random_game import create_random_game
 
+    from tests.random_game import create_random_game
     game = SGame(*create_random_game())
 
     # numpy
-    QRE_np(game)
+    qre_np = QRE_np(game)
+    y0 = qre_np.find_y0()
+    """
+    %timeit qre_np.H(y0)
+    %timeit qre_np.J(y0)
+    """
 
     # cython
-    qre = QRE_ct(game)
-    print(qre.H(qre.find_y0()))
+    qre_ct = QRE_ct(game)
+    print(qre_ct.H(qre_ct.find_y0()))
+    """
+    %timeit qre_ct.H(y0)
+    %timeit qre_ct.J(y0)
+    """

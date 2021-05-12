@@ -1,6 +1,6 @@
-python=3.9
+python=3.8
 numpy
-scipy
+scipy         # optional
 matplotlib    # optional
 numdifftools  # optional
 cython        # optional
