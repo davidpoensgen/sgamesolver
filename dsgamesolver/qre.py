@@ -75,9 +75,9 @@ class QRE(SGameHomotopy):
         """Reverts logarithmization of strategies in vector y:
         Transformed values are needed to check whether sigmas have converged.
         """
-        out = y.copy()
-        out[0:self.game.num_actions_total] = np.exp(out[0:self.game.num_actions_total])
-        return out
+        x = y.copy()
+        x[0:self.game.num_actions_total] = np.exp(x[0:self.game.num_actions_total])
+        return x
 
 
 # %% Numpy implementation of QRE
@@ -87,7 +87,7 @@ class QRE_np(QRE):
     """QRE homotopy: Numpy implementation"""
 
     def __init__(self, game: SGame) -> None:
-        """prepares the following:
+        """Prepares the following:
             - H_mask, J_mask
             - T_H, T_J
             - einsum_eqs

@@ -5,7 +5,6 @@ import itertools
 import sys
 
 import numpy as np
-import matplotlib.pyplot as plt
 
 from dsgamesolver.sgame import SGame
 from dsgamesolver.qre import QRE_np, QRE_ct
@@ -58,7 +57,7 @@ class HomotopyTimer:
         return timings
 
     def timing(self, num_s: int = 3, num_p: int = 3, num_a: int = 3, delta: float = 0.95,
-               reps: int = 10, verbose: bool = True, printout: bool = True, plot: bool = True) -> np.ndarray:
+               reps: int = 10, verbose: bool = True, printout: bool = True, plot: bool = False) -> np.ndarray:
 
         result = self.batch_solve_random_games(num_s, num_p, num_a, delta, reps, verbose)
         timing = self.compute_timing(result)
@@ -117,7 +116,8 @@ class HomotopyTimer:
                 'parameter': sol['y'][-1]}
 
     @staticmethod
-    def plot_result(result: np.ndarray, show: bool = True) -> plt.figure:
+    def plot_result(result: np.ndarray, show: bool = True):
+        import matplotlib.pyplot as plt
         fig = plt.figure(figsize=(10, 7))
         ax1 = fig.add_subplot(221)
         ax1.set_title('Time')
@@ -250,5 +250,6 @@ if __name__ == '__main__':
     np.random.seed(42)
     timer = HomotopyTimer('QRE_np')
 
-    # timer.batch_timings(nums_s=[2,3], nums_p=[2], nums_a=[2,3], reps=2)
+    # takes some time...
     # timer.batch_timings()
+    # timer.batch_timings(nums_s=[2,3], nums_p=[2], nums_a=[2,3], reps=2)

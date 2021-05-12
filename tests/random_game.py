@@ -31,3 +31,11 @@ def create_random_game(
         low=discount_factor_min, high=discount_factor_max, size=num_players
     )
     return payoff_matrices, transition_matrices, discount_factors
+
+
+# %% testing
+
+
+if __name__ == '__main__':
+
+    u, phi, delta = create_random_game()

@@ -42,9 +42,6 @@ class TestSGame:
         assert (np.array(cls.game.payoffs.shape[2:]) <= cls.num_actions_max).all()
         # sum:
         assert np.allclose(sum(matrix.sum() for matrix in cls.payoff_matrices), cls.game.payoffs.sum())
-        # TODO: delete normalization:
-        # assert (cls.game.payoffs_normalized >= 0.0).all()
-        # assert (cls.game.payoffs_normalized <= 1.0).all()
 
     def test_transitions(cls):
         assert isinstance(cls.game.transitions, np.ndarray)
@@ -87,17 +84,9 @@ class TestSGame:
     def test_values(cls):
         random_strategy = cls.game.random_strategy()
         values = cls.game.get_values(random_strategy)
-        # TODO: delete normalization
-        # values = cls.game.get_values(random_strategy, normalized=False)
-        # values_normalized = cls.game.normalize_values(values)
-        # values_denormalized = cls.game.denormalize_values(values_normalized)
         values_flattened = cls.game.flatten_values(values)
         values_unflattened = cls.game.unflatten_values(values_flattened)
         assert values.shape == (cls.num_states, cls.num_players)
-        # TODO: delete normalization
-        # assert np.allclose(values, values_denormalized)
-        # assert (values_normalized >= 0.0).all()
-        # assert (values_normalized <= 1.0 / (1-cls.discount_factor_max)).all()
         assert values_flattened.shape == (cls.num_states*cls.num_players,)
         assert np.allclose(values_unflattened, values)
 
