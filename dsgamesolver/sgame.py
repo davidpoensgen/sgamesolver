@@ -1,5 +1,6 @@
 """Classes for stochastic game and corresponding homotopy."""
 
+# TODO: define scale of game for adjusting tracking parameters
 # TODO: finalize method check_equilibriumness
 # TODO: document ordering of variables in y and equations in H and J
 # TODO: symmetry

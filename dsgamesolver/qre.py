@@ -76,7 +76,7 @@ class QRE(SGameHomotopy):
         Transformed values are needed to check whether sigmas have converged.
         """
         out = y.copy()
-        out[0 : self.game.num_actions_total] = np.exp(out[0 : self.game.num_actions_total])
+        out[0:self.game.num_actions_total] = np.exp(out[0:self.game.num_actions_total])
         return out
 
 
@@ -115,7 +115,7 @@ class QRE_np(QRE):
         J_mask = tuple(
             np.meshgrid(
                 H_mask,
-                np.append(H_mask, [num_s*num_p*num_a_max + num_s*num_p]),
+                np.append(H_mask, [num_s * num_p * num_a_max + num_s * num_p]),
                 indexing="ij",
                 sparse=True,
             )
@@ -172,7 +172,7 @@ class QRE_np(QRE):
         T_J_qre_2 = np.zeros(shape=(num_s, num_p, *[num_a_max] * (num_p - 1), num_s, num_p, num_a_max))
         for s in range(num_s):
             for p in range(num_p):
-                a_profiles_without_p = list(np.ndindex(tuple(nums_a[s, :p]) + tuple(nums_a[s, (p + 1) :])))
+                a_profiles_without_p = list(np.ndindex(tuple(nums_a[s, :p]) + tuple(nums_a[s, (p + 1):])))
                 for A in a_profiles_without_p:
                     for p_ in range(num_p):
                         if p_ != p:
@@ -236,19 +236,21 @@ class QRE_np(QRE):
             Eu_tilde_a = np.empty((num_s, num_p, num_a_max))
             for p in range(num_p):
                 Eu_tilde_a[:, p] = np.einsum(self.einsum_eqs['Eu_tilde_a_H'][p], u_tilde[:, p],
-                                             *(sigma_p_list[:p] + sigma_p_list[(p+1):]))
+                                             *(sigma_p_list[:p] + sigma_p_list[(p + 1):]))
         else:
             Eu_tilde_a = u_tilde
 
         Eu_tilde = np.einsum('spa,spa->sp', sigma, Eu_tilde_a)
 
-        # assemble H
+        # assemble H # TODO: Time this
+        # H_strat = (self.T_H[0] + np.einsum('spaSPA,SPA->spa', self.T_H[1], sigma)
+        #            + np.einsum('spaSPA,SPA->spa', self.T_H[2], beta)
+        #            + gamma * np.einsum('spaSPA,SPA->spa', -self.T_H[2], Eu_tilde_a))
+        # H_val = np.einsum('spSP,SP->sp', self.T_H[3], V) + np.einsum('spSP,SP->sp', -self.T_H[3], Eu_tilde)
 
         H_strat = (self.T_H[0] + np.einsum('spaSPA,SPA->spa', self.T_H[1], sigma)
-                   + np.einsum('spaSPA,SPA->spa', self.T_H[2], beta)
-                   + gamma * np.einsum('spaSPA,SPA->spa', -self.T_H[2], Eu_tilde_a))
-
-        H_val = np.einsum('spSP,SP->sp', self.T_H[3], V) + np.einsum('spSP,SP->sp', -self.T_H[3], Eu_tilde)
+                   + np.einsum('spaSPA,SPA->spa', self.T_H[2], beta - gamma * Eu_tilde_a))
+        H_val = np.einsum('spSP,SP->sp', self.T_H[3], V - Eu_tilde)
 
         return np.append(H_strat.ravel(), H_val.ravel())[self.H_mask]
 
@@ -268,20 +270,11 @@ class QRE_np(QRE):
 
         sigma_prod = np.einsum(self.einsum_eqs['sigma_prod'], *sigma_p_list)
 
-        # TODO: replace this pattern:
-        # sigma_prod_with_p = []
-        # for p in range(num_p):
-        #     sigma_p_list_with_p = sigma_p_list[:p] + [np.ones_like(sigma[:, p, :])] \
-        #                           + sigma_p_list[(p + 1):]
-        #     sigma_prod_with_p.append(np.einsum(self.einsum_eqs['sigma_prod_with_p'][p], *sigma_p_list_with_p))
-        # sigma_prod_with_p = np.stack(sigma_prod_with_p, axis=1)
-        # TODO: with this:
-        sigma_prod_with_p = np.empty((num_s, num_p, *[num_a_max]*num_p))
+        sigma_prod_with_p = np.empty((num_s, num_p, *[num_a_max] * num_p))
         for p in range(num_p):
             sigma_p_list_with_p = sigma_p_list[:p] + [np.ones_like(sigma[:, p, :])] \
                                   + sigma_p_list[(p + 1):]
             sigma_prod_with_p[:, p] = np.einsum(self.einsum_eqs['sigma_prod_with_p'][p], *sigma_p_list_with_p)
-        # TODO (done within qre)
 
         if num_p > 1:
             Eu_tilde_a = np.empty((num_s, num_p, num_a_max))
@@ -302,9 +295,7 @@ class QRE_np(QRE):
             dEu_tilde_a_dV = self.T_J[3]
 
         T_temp = np.einsum("sp...,s...->sp...", u_tilde, sigma_prod)
-        dEu_tilde_dbeta = np.einsum(
-            self.einsum_eqs['dEu_tilde_dbeta'], T_temp, self.T_J[4]
-        )
+        dEu_tilde_dbeta = np.einsum(self.einsum_eqs['dEu_tilde_dbeta'], T_temp, self.T_J[4])
 
         dEu_tilde_dV = np.einsum('spa,spaSP->spSP', sigma, dEu_tilde_a_dV)
 
@@ -317,7 +308,7 @@ class QRE_np(QRE):
             dH_strat_dlambda = np.einsum('spatqb,tqb->spa', -self.T_H[2], Eu_tilde_a)
             dH_val_dbeta = np.einsum('sptq,tqSPA->spSPA', -self.T_H[3], dEu_tilde_dbeta)
             dH_val_dV = self.T_J[5] + np.einsum('sptq,tqSP->spSP', -self.T_H[3], dEu_tilde_dV)
-            dH_val_dlambda = np.zeros(shape=(num_s, num_p), dtype=np.float64)
+            dH_val_dlambda = np.zeros((num_s, num_p))
 
             spa = num_s * num_p * num_a_max
             sp = num_s * num_p
@@ -339,26 +330,25 @@ class QRE_np(QRE):
             # assemble J
             spa = num_s * num_p * num_a_max
             sp = num_s * num_p
-            J = np.empty((spa+sp, spa+sp+1))
+            J = np.empty((spa + sp, spa + sp + 1))
 
             # dH_strat_dbeta
-            J[0:spa, 0:spa] = (self.T_J[0] + np.einsum('spaSPA,SPA->spaSPA', self.T_J[1], sigma)
-                               + gamma * np.einsum('spatqb,tqbSPA->spaSPA', -self.T_H[2], dEu_tilde_a_dbeta)
-                               ).reshape((spa, spa))
+            J[0:spa, 0:spa] = (self.T_J[0] + np.einsum('spaSPA,SPA->spaSPA', self.T_J[1], sigma) + gamma *
+                               np.einsum('spatqb,tqbSPA->spaSPA', -self.T_H[2], dEu_tilde_a_dbeta)).reshape((spa, spa))
             # dH_strat_dV
-            J[0:spa, spa:spa+sp] = gamma * np.einsum('spatqb,tqbSP->spaSP', -self.T_H[2],
-                                                     dEu_tilde_a_dV).reshape((spa, sp))
+            J[0:spa, spa:spa + sp] = gamma * np.einsum('spatqb,tqbSP->spaSP',
+                                                       -self.T_H[2], dEu_tilde_a_dV).reshape((spa, sp))
             # dH_strat_dlambda
-            J[0:spa, spa+sp] = np.einsum('spatqb,tqb->spa', -self.T_H[2], Eu_tilde_a).reshape((spa))
+            J[0:spa, spa + sp] = np.einsum('spatqb,tqb->spa', -self.T_H[2], Eu_tilde_a).reshape((spa))
             # dH_val_dbeta
-            J[spa:spa+sp, 0:spa] = np.einsum('sptq,tqSPA->spSPA', -self.T_H[3], dEu_tilde_dbeta).reshape((sp, spa))
+            J[spa:spa + sp, 0:spa] = np.einsum('sptq,tqSPA->spSPA', -self.T_H[3], dEu_tilde_dbeta).reshape((sp, spa))
             # dH_val_dV
-            J[spa:spa+sp, spa:spa+sp] = (self.T_J[5] + np.einsum('sptq,tqSP->spSP', -self.T_H[3],
-                                                                 dEu_tilde_dV)).reshape((sp, sp))
+            J[spa:spa + sp, spa:spa + sp] = (self.T_J[5] + np.einsum('sptq,tqSP->spSP', -self.T_H[3],
+                                                                     dEu_tilde_dV)).reshape((sp, sp))
             # dH_val_dlambda
-            J[spa:spa+sp, spa+sp] = 0
+            J[spa:spa + sp, spa + sp] = 0
 
-            return J[self.J_mask]
+        return J[self.J_mask]
 
 
 # %% Cython implementation of QRE
@@ -377,13 +367,12 @@ class QRE_ct(QRE):
             import dsgamesolver.qre_ct as qre_ct
 
         except ImportError:
-            print("Cython implementation of QRE homotopy could not be imported. ",
-                  "Make sure your system has the relevant C compilers installed. ",
-                  "For Windows, check https://wiki.python.org/moin/WindowsCompilers ",
-                  "to find the right Microsoft Visual C++ compiler for your Python version. ",
-                  "Standalone compilers are sufficient, there is no need to install Visual Studio. ",
-                  "For Linux, make sure the Python package gxx_linux-64 is installed in your environment.")
-            raise
+            raise ImportError("Cython implementation of QRE homotopy could not be imported. ",
+                              "Make sure your system has the relevant C compilers installed. ",
+                              "For Windows, check https://wiki.python.org/moin/WindowsCompilers ",
+                              "to find the right Microsoft Visual C++ compiler for your Python version. ",
+                              "Standalone compilers are sufficient, there is no need to install Visual Studio. ",
+                              "For Linux, make sure the Python package gxx_linux-64 is installed in your environment.")
 
         self.qre_ct = qre_ct
 

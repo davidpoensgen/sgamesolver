@@ -1,7 +1,8 @@
 import numpy as np
 
 from dsgamesolver.sgame import SGame
-from dsgamesolver.qre import QRE_np, QRE_ct  # , QRE_np_numba
+from dsgamesolver.qre import QRE_np
+#from tests.timings import HomotopyTimer
 
 # random game
 
@@ -36,6 +37,15 @@ si = game.centroid_strategy()
 
 qre = QRE_np(game)
 qre.initialize()
+
+import timeit
+
+# timeit.timeit("qre.H(qre.y0, old=True)", number=100000, globals=globals())
+# timeit.timeit("qre.H(qre.y0, old=False)", number=100000, globals=globals())
+
+%timeit qre.H(qre.y0, old=True)
+%timeit qre.H(qre.y0, old=False)
+
 qre.solver.verbose = 2
 # qre.solver.max_steps = 50
 sol = qre.solver.solve()
@@ -53,6 +63,11 @@ print(sol)
 qre2 = QRE_ct(game)
 qre2.initialize()
 sol2 = qre2.solver.solve()
+
+
+# timings:
+timer = HomotopyTimer('QRE_np')
+timer.timing()
 
 
 # numba test:

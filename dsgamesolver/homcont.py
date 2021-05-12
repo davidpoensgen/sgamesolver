@@ -1,5 +1,3 @@
-# TODO: add ds to path? (might be useful for debugging)
-
 import numpy as np
 import time
 from datetime import timedelta
@@ -330,7 +328,7 @@ class HomCont:
                         'steps': self.step,
                         'sign': self.sign,
                         'time': time_sec,
-                        'failed': self.failed,
+                        'failure reason': False,
                         }
 
             if self.step >= self.max_steps:
@@ -362,23 +360,22 @@ class HomCont:
                         'steps': self.step,
                         'sign': self.sign,
                         'time': time_sec,
-                        'failed': self.failed,
+                        'failure reason': self.failed,
                         }
 
     def predict(self):
         """Compute predictor point y_pred, starting at y."""
         self.y_pred = self.y + self.sign * self.ds * self.tangent
 
-        # Check if H contains any NaN at prediction point (which indicates
-        # that the predictor step leaves the domain of H). In this case,
-        # deflate and try again. If ds is already minimal, stop continuation.
+        # Check if H contains any NaN at prediction point (which indicates that the predictor step leaves the
+        # domain of H). In this case, deflate and try again. If ds is already minimal, stop continuation.
         self.H_pred = self.H_func(self.y_pred)
         if np.isnan(self.H_pred).any():
             if self.ds > self.ds_min:
                 self.ds = max(self.ds_defl*self.ds, self.ds_min)
                 self.predict()
             else:
-                self.failed = "predictor"
+                self.failed = 'predictor'
 
     def correct(self):
         """Perform corrector iteration.
@@ -470,7 +467,7 @@ class HomCont:
             if np.abs(self.y_corr[-1] - self.t_target) < self.t_tol:
                 self.converged = True
             # also check whether t_target was accidentally crossed.
-            elif (self.t - self.t_target)*(self.y_corr[-1] - self.t_target) < 0:
+            elif (self.t - self.t_target) * (self.y_corr[-1] - self.t_target) < 0:
                 self.corrector_success = False
 
         # Case b): t_target is infinite
@@ -617,10 +614,10 @@ class HomCont:
     def load_state(self, y: np.ndarray, sign: int = None,  s: float = None, step: int = 0, ds: float = None, **kwargs):
         """Load y, and potentially other state variables. Prepare to start continuation at this point."""
         self.y = y
-        if sign is not None and sign != 0 and not np.isnan(sign):
-            self.sign = np.sign(sign)
-        else:
+        if sign is None or sign == 0 or np.isnan(sign):
             self.set_greedy_sign()
+        else:
+            self.sign = np.sign(sign)
 
         if s is not None and not np.isnan(s):
             self.s = s
@@ -672,7 +669,7 @@ class HomCont:
             print(f'Current state saved as {filename}.')
 
     def load_file(self, filename):
-        """Load state from a file created by save_file()."""
+        """Load solver state from a file created by save_file()."""
         import os
         import json
         if not os.path.isfile(filename):
@@ -688,8 +685,8 @@ class HomCont:
 def qr_inv(array):
     """Calculate Moore-Penrose pseudo-inverse of a 2D-array using QR decomposition.
 
-   Note: Appears to be significantly faster than the equivalent, built-in numpy method
-   np.linalg.pinv, which is based on SVD.
+    Note: Appears to be significantly faster than the equivalent, built-in numpy method
+    np.linalg.pinv, which is based on SVD.
     """
     Q, R = np.linalg.qr(array.transpose(), mode='complete')
     return np.dot(Q, np.vstack((np.linalg.inv(np.delete(R, -1, axis=0).transpose()), np.zeros(R.shape[1]))))
@@ -819,7 +816,7 @@ class HomPath:
 
     def get_step(self, step_no: int):
         """Returns data for step_no if possible.
-           If step_no is not present, the last step preceding it is returned instead.
+        If step_no is not present, the last step preceding it is returned instead.
         """
         try:
             index = np.where(self.step == self.step[self.step <= step_no].max())[0]

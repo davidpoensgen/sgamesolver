@@ -38,7 +38,7 @@ class TestQRE:
     def test_solve(cls):
         sol = cls.hom_np.solver.solve()
         assert sol['success']
-        assert not sol['failed']
+        assert not sol['failure reason']
         assert np.max(np.abs(cls.hom_np.H(sol['y']))) < cls.hom_np.tracking_parameters['normal']['H_tol']
         sigma, V, t = cls.hom_np.y_to_sigma_V_t(sol['y'])
         assert np.max(cls.game.check_equilibrium(sigma)) < 0.01
