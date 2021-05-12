@@ -1,5 +1,3 @@
-# TODO: add ds to path? (might be useful for debugging)
-
 import numpy as np
 import time
 from datetime import timedelta
@@ -330,7 +328,7 @@ class HomCont:
                         'steps': self.step,
                         'sign': self.sign,
                         'time': time_sec,
-                        'failed': self.failed,
+                        'failure reason': False,
                         }
 
             if self.step >= self.max_steps:
@@ -362,16 +360,15 @@ class HomCont:
                         'steps': self.step,
                         'sign': self.sign,
                         'time': time_sec,
-                        'failed': self.failed,
+                        'failure reason': self.failed,
                         }
 
     def predict(self):
         """Compute predictor point y_pred, starting at y."""
         self.y_pred = self.y + self.sign * self.ds * self.tangent
 
-        # Check if H contains any NaN at prediction point (which indicates
-        # that the predictor step leaves the domain of H). In this case,
-        # deflate and try again. If ds is already minimal, stop continuation.
+        # Check if H contains any NaN at prediction point (which indicates that the predictor step leaves the
+        # domain of H). In this case, deflate and try again. If ds is already minimal, stop continuation.
         self.H_pred = self.H_func(self.y_pred)
         if np.isnan(self.H_pred).any():
             if self.ds > self.ds_min:
@@ -470,7 +467,7 @@ class HomCont:
             if np.abs(self.y_corr[-1] - self.t_target) < self.t_tol:
                 self.converged = True
             # also check whether t_target was accidentally crossed.
-            elif (self.t - self.t_target)*(self.y_corr[-1] - self.t_target) < 0:
+            elif (self.t - self.t_target) * (self.y_corr[-1] - self.t_target) < 0:
                 self.corrector_success = False
 
         # Case b): t_target is infinite
@@ -617,10 +614,10 @@ class HomCont:
     def load_state(self, y: np.ndarray, sign: int = None,  s: float = None, step: int = 0, ds: float = None, **kwargs):
         """Load y, and potentially other state variables. Prepare to start continuation at this point."""
         self.y = y
-        if sign is not None and sign != 0 and not np.isnan(sign):
-            self.sign = np.sign(sign)
-        else:
+        if sign is None or sign == 0 or np.isnan(sign):
             self.set_greedy_sign()
+        else:
+            self.sign = np.sign(sign)
 
         if s is not None and not np.isnan(s):
             self.s = s
