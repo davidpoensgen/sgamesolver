@@ -211,11 +211,13 @@ class QRE_np(QRE):
         }
 
         # TODO: einsum_path
-        # sigma = self.game.centroid_strategy()
-        # V = self.game.get_values(sigma)
-        # ...
+        sigma = self.game.centroid_strategy()
+        V = self.game.get_values(sigma)
+        self.einsum_paths = {
+            'u_tilde': np.einsum_path("sp...S,Sp->sp...", self.game.transitions, V, optimize='optimal')[0]
+        }
 
-    def H(self, y: np.ndarray) -> np.ndarray:
+    def H(self, y: np.ndarray, old: bool = True) -> np.ndarray:
         """Homotopy function."""
 
         num_s, num_p = self.game.num_states, self.game.num_players
@@ -228,9 +230,11 @@ class QRE_np(QRE):
         # generate building blocks of H
 
         sigma_p_list = [sigma[:, p, :] for p in range(num_p)]
-        # TODO: delete normalization
-        # u_tilde = self.game.payoffs_normalized + np.einsum("sp...S,Sp->sp...", self.game.transitions, V)
-        u_tilde = self.game.payoffs + np.einsum("sp...S,Sp->sp...", self.game.transitions, V)
+        if old:
+            u_tilde = self.game.payoffs + np.einsum("sp...S,Sp->sp...", self.game.transitions, V)
+        else:
+            u_tilde = self.game.payoffs + np.einsum("sp...S,Sp->sp...", self.game.transitions, V,
+                                                    optimize=self.einsum_paths['u_tilde'])
 
         if num_p > 1:
             Eu_tilde_a = np.empty((num_s, num_p, num_a_max))
@@ -241,12 +245,6 @@ class QRE_np(QRE):
             Eu_tilde_a = u_tilde
 
         Eu_tilde = np.einsum('spa,spa->sp', sigma, Eu_tilde_a)
-
-        # assemble H # TODO: Time this
-        # H_strat = (self.T_H[0] + np.einsum('spaSPA,SPA->spa', self.T_H[1], sigma)
-        #            + np.einsum('spaSPA,SPA->spa', self.T_H[2], beta)
-        #            + gamma * np.einsum('spaSPA,SPA->spa', -self.T_H[2], Eu_tilde_a))
-        # H_val = np.einsum('spSP,SP->sp', self.T_H[3], V) + np.einsum('spSP,SP->sp', -self.T_H[3], Eu_tilde)
 
         H_strat = (self.T_H[0] + np.einsum('spaSPA,SPA->spa', self.T_H[1], sigma)
                    + np.einsum('spaSPA,SPA->spa', self.T_H[2], beta - gamma * Eu_tilde_a))

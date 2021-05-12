@@ -41,6 +41,9 @@ sol = qre.solver.solve()
 """
 import timeit
 
+%timeit -n 1000 -r 10 qre.H(qre.y0, old=True)
+%timeit -n 1000 -r 10 qre.H(qre.y0, old=False)
+
 %timeit -n 100 -r 10 qre.J(qre.y0, old=True)
 %timeit -n 100 -r 10 qre.J(qre.y0, old=False)
 """
@@ -52,4 +55,4 @@ import timeit
 np.random.seed(42)
 
 timer = HomotopyTimer()
-timer.timing()
+# timer.timing()
