@@ -3132,7 +3132,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_4u_tilde_sia_partial_beta(CYTHO
  *                 for player_j in range(num_p):
  *                     if player_j == player:             # <<<<<<<<<<<<<<
  *                         continue
- *                     out_[state, player, loop_profile[player+1], player_j, loop_profile[player_j+1]] += temp_prob * u_tilde_ravel[flat_index]
+ *                     out_[state, player, loop_profile[player+1], player_j, loop_profile[player_j+1]] += (
  */
           __pyx_t_17 = ((__pyx_v_player_j == __pyx_v_player) != 0);
           if (__pyx_t_17) {
@@ -3141,8 +3141,8 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_4u_tilde_sia_partial_beta(CYTHO
  *                 for player_j in range(num_p):
  *                     if player_j == player:
  *                         continue             # <<<<<<<<<<<<<<
- *                     out_[state, player, loop_profile[player+1], player_j, loop_profile[player_j+1]] += temp_prob * u_tilde_ravel[flat_index]
- *                 flat_index += 1
+ *                     out_[state, player, loop_profile[player+1], player_j, loop_profile[player_j+1]] += (
+ *                         temp_prob * u_tilde_ravel[flat_index]
  */
             goto __pyx_L12_continue;
 
@@ -3151,18 +3151,26 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_4u_tilde_sia_partial_beta(CYTHO
  *                 for player_j in range(num_p):
  *                     if player_j == player:             # <<<<<<<<<<<<<<
  *                         continue
- *                     out_[state, player, loop_profile[player+1], player_j, loop_profile[player_j+1]] += temp_prob * u_tilde_ravel[flat_index]
+ *                     out_[state, player, loop_profile[player+1], player_j, loop_profile[player_j+1]] += (
  */
           }
+
+          /* "dsgamesolver/qre_ct.pyx":93
+ *                         continue
+ *                     out_[state, player, loop_profile[player+1], player_j, loop_profile[player_j+1]] += (
+ *                         temp_prob * u_tilde_ravel[flat_index]             # <<<<<<<<<<<<<<
+ *                         )
+ *                 flat_index += 1
+ */
+          __pyx_t_16 = __pyx_v_flat_index;
 
           /* "dsgamesolver/qre_ct.pyx":92
  *                     if player_j == player:
  *                         continue
- *                     out_[state, player, loop_profile[player+1], player_j, loop_profile[player_j+1]] += temp_prob * u_tilde_ravel[flat_index]             # <<<<<<<<<<<<<<
- *                 flat_index += 1
- * 
+ *                     out_[state, player, loop_profile[player+1], player_j, loop_profile[player_j+1]] += (             # <<<<<<<<<<<<<<
+ *                         temp_prob * u_tilde_ravel[flat_index]
+ *                         )
  */
-          __pyx_t_16 = __pyx_v_flat_index;
           __pyx_t_23 = (__pyx_v_player + 1);
           __pyx_t_22 = (__pyx_v_player_j + 1);
           __pyx_t_21 = __pyx_v_state;
@@ -3174,16 +3182,16 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_4u_tilde_sia_partial_beta(CYTHO
           __pyx_L12_continue:;
         }
 
-        /* "dsgamesolver/qre_ct.pyx":93
- *                         continue
- *                     out_[state, player, loop_profile[player+1], player_j, loop_profile[player_j+1]] += temp_prob * u_tilde_ravel[flat_index]
+        /* "dsgamesolver/qre_ct.pyx":95
+ *                         temp_prob * u_tilde_ravel[flat_index]
+ *                         )
  *                 flat_index += 1             # <<<<<<<<<<<<<<
  * 
  *                 loop_profile[num_p] += 1
  */
         __pyx_v_flat_index = (__pyx_v_flat_index + 1);
 
-        /* "dsgamesolver/qre_ct.pyx":95
+        /* "dsgamesolver/qre_ct.pyx":97
  *                 flat_index += 1
  * 
  *                 loop_profile[num_p] += 1             # <<<<<<<<<<<<<<
@@ -3193,7 +3201,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_4u_tilde_sia_partial_beta(CYTHO
         __pyx_t_16 = __pyx_v_num_p;
         *__Pyx_BufPtrStrided1d(__pyx_t_5numpy_int32_t *, __pyx_pybuffernd_loop_profile.rcbuffer->pybuffer.buf, __pyx_t_16, __pyx_pybuffernd_loop_profile.diminfo[0].strides) += 1;
 
-        /* "dsgamesolver/qre_ct.pyx":96
+        /* "dsgamesolver/qre_ct.pyx":98
  * 
  *                 loop_profile[num_p] += 1
  *                 for n in range(num_p):             # <<<<<<<<<<<<<<
@@ -3205,7 +3213,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_4u_tilde_sia_partial_beta(CYTHO
         for (__pyx_t_20 = 0; __pyx_t_20 < __pyx_t_19; __pyx_t_20+=1) {
           __pyx_v_n = __pyx_t_20;
 
-          /* "dsgamesolver/qre_ct.pyx":97
+          /* "dsgamesolver/qre_ct.pyx":99
  *                 loop_profile[num_p] += 1
  *                 for n in range(num_p):
  *                     if loop_profile[num_p-n] == nums_a[state, num_p-n-1]:             # <<<<<<<<<<<<<<
@@ -3218,7 +3226,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_4u_tilde_sia_partial_beta(CYTHO
           __pyx_t_17 = (((*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_int32_t *, __pyx_pybuffernd_loop_profile.rcbuffer->pybuffer.buf, __pyx_t_16, __pyx_pybuffernd_loop_profile.diminfo[0].strides)) == (*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_int32_t *, __pyx_pybuffernd_nums_a.rcbuffer->pybuffer.buf, __pyx_t_22, __pyx_pybuffernd_nums_a.diminfo[0].strides, __pyx_t_23, __pyx_pybuffernd_nums_a.diminfo[1].strides))) != 0);
           if (__pyx_t_17) {
 
-            /* "dsgamesolver/qre_ct.pyx":98
+            /* "dsgamesolver/qre_ct.pyx":100
  *                 for n in range(num_p):
  *                     if loop_profile[num_p-n] == nums_a[state, num_p-n-1]:
  *                         loop_profile[num_p-n-1] += 1             # <<<<<<<<<<<<<<
@@ -3228,7 +3236,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_4u_tilde_sia_partial_beta(CYTHO
             __pyx_t_23 = ((__pyx_v_num_p - __pyx_v_n) - 1);
             *__Pyx_BufPtrStrided1d(__pyx_t_5numpy_int32_t *, __pyx_pybuffernd_loop_profile.rcbuffer->pybuffer.buf, __pyx_t_23, __pyx_pybuffernd_loop_profile.diminfo[0].strides) += 1;
 
-            /* "dsgamesolver/qre_ct.pyx":99
+            /* "dsgamesolver/qre_ct.pyx":101
  *                     if loop_profile[num_p-n] == nums_a[state, num_p-n-1]:
  *                         loop_profile[num_p-n-1] += 1
  *                         loop_profile[num_p-n] = 0             # <<<<<<<<<<<<<<
@@ -3238,7 +3246,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_4u_tilde_sia_partial_beta(CYTHO
             __pyx_t_23 = (__pyx_v_num_p - __pyx_v_n);
             *__Pyx_BufPtrStrided1d(__pyx_t_5numpy_int32_t *, __pyx_pybuffernd_loop_profile.rcbuffer->pybuffer.buf, __pyx_t_23, __pyx_pybuffernd_loop_profile.diminfo[0].strides) = 0;
 
-            /* "dsgamesolver/qre_ct.pyx":100
+            /* "dsgamesolver/qre_ct.pyx":102
  *                         loop_profile[num_p-n-1] += 1
  *                         loop_profile[num_p-n] = 0
  *                         flat_index += (num_a_max - nums_a[state,num_p-n-1]) * num_a_max**n             # <<<<<<<<<<<<<<
@@ -3249,7 +3257,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_4u_tilde_sia_partial_beta(CYTHO
             __pyx_t_22 = ((__pyx_v_num_p - __pyx_v_n) - 1);
             __pyx_v_flat_index = (__pyx_v_flat_index + ((__pyx_v_num_a_max - (*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_int32_t *, __pyx_pybuffernd_nums_a.rcbuffer->pybuffer.buf, __pyx_t_23, __pyx_pybuffernd_nums_a.diminfo[0].strides, __pyx_t_22, __pyx_pybuffernd_nums_a.diminfo[1].strides))) * __Pyx_pow_int(__pyx_v_num_a_max, __pyx_v_n)));
 
-            /* "dsgamesolver/qre_ct.pyx":97
+            /* "dsgamesolver/qre_ct.pyx":99
  *                 loop_profile[num_p] += 1
  *                 for n in range(num_p):
  *                     if loop_profile[num_p-n] == nums_a[state, num_p-n-1]:             # <<<<<<<<<<<<<<
@@ -3262,7 +3270,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_4u_tilde_sia_partial_beta(CYTHO
     }
   }
 
-  /* "dsgamesolver/qre_ct.pyx":102
+  /* "dsgamesolver/qre_ct.pyx":104
  *                         flat_index += (num_a_max - nums_a[state,num_p-n-1]) * num_a_max**n
  * 
  *     return out_             # <<<<<<<<<<<<<<
@@ -3318,7 +3326,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_4u_tilde_sia_partial_beta(CYTHO
   return __pyx_r;
 }
 
-/* "dsgamesolver/qre_ct.pyx":107
+/* "dsgamesolver/qre_ct.pyx":109
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * def u_tilde_sia_partial_V(np.ndarray[np.float64_t, ndim=1] phi_ravel, np.ndarray[np.float64_t, ndim=3] sigma,             # <<<<<<<<<<<<<<
@@ -3374,35 +3382,35 @@ static PyObject *__pyx_pw_12dsgamesolver_6qre_ct_7u_tilde_sia_partial_V(PyObject
         case  1:
         if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_sigma)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("u_tilde_sia_partial_V", 1, 6, 6, 1); __PYX_ERR(0, 107, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("u_tilde_sia_partial_V", 1, 6, 6, 1); __PYX_ERR(0, 109, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_num_s)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("u_tilde_sia_partial_V", 1, 6, 6, 2); __PYX_ERR(0, 107, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("u_tilde_sia_partial_V", 1, 6, 6, 2); __PYX_ERR(0, 109, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  3:
         if (likely((values[3] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_num_p)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("u_tilde_sia_partial_V", 1, 6, 6, 3); __PYX_ERR(0, 107, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("u_tilde_sia_partial_V", 1, 6, 6, 3); __PYX_ERR(0, 109, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  4:
         if (likely((values[4] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_num_a_max)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("u_tilde_sia_partial_V", 1, 6, 6, 4); __PYX_ERR(0, 107, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("u_tilde_sia_partial_V", 1, 6, 6, 4); __PYX_ERR(0, 109, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  5:
         if (likely((values[5] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_nums_a)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("u_tilde_sia_partial_V", 1, 6, 6, 5); __PYX_ERR(0, 107, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("u_tilde_sia_partial_V", 1, 6, 6, 5); __PYX_ERR(0, 109, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "u_tilde_sia_partial_V") < 0)) __PYX_ERR(0, 107, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "u_tilde_sia_partial_V") < 0)) __PYX_ERR(0, 109, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 6) {
       goto __pyx_L5_argtuple_error;
@@ -3416,22 +3424,22 @@ static PyObject *__pyx_pw_12dsgamesolver_6qre_ct_7u_tilde_sia_partial_V(PyObject
     }
     __pyx_v_phi_ravel = ((PyArrayObject *)values[0]);
     __pyx_v_sigma = ((PyArrayObject *)values[1]);
-    __pyx_v_num_s = __Pyx_PyInt_As_int(values[2]); if (unlikely((__pyx_v_num_s == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 108, __pyx_L3_error)
-    __pyx_v_num_p = __Pyx_PyInt_As_int(values[3]); if (unlikely((__pyx_v_num_p == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 108, __pyx_L3_error)
-    __pyx_v_num_a_max = __Pyx_PyInt_As_int(values[4]); if (unlikely((__pyx_v_num_a_max == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 108, __pyx_L3_error)
+    __pyx_v_num_s = __Pyx_PyInt_As_int(values[2]); if (unlikely((__pyx_v_num_s == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 110, __pyx_L3_error)
+    __pyx_v_num_p = __Pyx_PyInt_As_int(values[3]); if (unlikely((__pyx_v_num_p == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 110, __pyx_L3_error)
+    __pyx_v_num_a_max = __Pyx_PyInt_As_int(values[4]); if (unlikely((__pyx_v_num_a_max == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 110, __pyx_L3_error)
     __pyx_v_nums_a = ((PyArrayObject *)values[5]);
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("u_tilde_sia_partial_V", 1, 6, 6, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 107, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("u_tilde_sia_partial_V", 1, 6, 6, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 109, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("dsgamesolver.qre_ct.u_tilde_sia_partial_V", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_phi_ravel), __pyx_ptype_5numpy_ndarray, 1, "phi_ravel", 0))) __PYX_ERR(0, 107, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_sigma), __pyx_ptype_5numpy_ndarray, 1, "sigma", 0))) __PYX_ERR(0, 107, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_nums_a), __pyx_ptype_5numpy_ndarray, 1, "nums_a", 0))) __PYX_ERR(0, 108, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_phi_ravel), __pyx_ptype_5numpy_ndarray, 1, "phi_ravel", 0))) __PYX_ERR(0, 109, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_sigma), __pyx_ptype_5numpy_ndarray, 1, "sigma", 0))) __PYX_ERR(0, 109, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_nums_a), __pyx_ptype_5numpy_ndarray, 1, "nums_a", 0))) __PYX_ERR(0, 110, __pyx_L1_error)
   __pyx_r = __pyx_pf_12dsgamesolver_6qre_ct_6u_tilde_sia_partial_V(__pyx_self, __pyx_v_phi_ravel, __pyx_v_sigma, __pyx_v_num_s, __pyx_v_num_p, __pyx_v_num_a_max, __pyx_v_nums_a);
 
   /* function exit code */
@@ -3517,43 +3525,43 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_6u_tilde_sia_partial_V(CYTHON_U
   __pyx_pybuffernd_nums_a.rcbuffer = &__pyx_pybuffer_nums_a;
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_phi_ravel.rcbuffer->pybuffer, (PyObject*)__pyx_v_phi_ravel, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 107, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_phi_ravel.rcbuffer->pybuffer, (PyObject*)__pyx_v_phi_ravel, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 109, __pyx_L1_error)
   }
   __pyx_pybuffernd_phi_ravel.diminfo[0].strides = __pyx_pybuffernd_phi_ravel.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_phi_ravel.diminfo[0].shape = __pyx_pybuffernd_phi_ravel.rcbuffer->pybuffer.shape[0];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_sigma.rcbuffer->pybuffer, (PyObject*)__pyx_v_sigma, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES, 3, 0, __pyx_stack) == -1)) __PYX_ERR(0, 107, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_sigma.rcbuffer->pybuffer, (PyObject*)__pyx_v_sigma, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES, 3, 0, __pyx_stack) == -1)) __PYX_ERR(0, 109, __pyx_L1_error)
   }
   __pyx_pybuffernd_sigma.diminfo[0].strides = __pyx_pybuffernd_sigma.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_sigma.diminfo[0].shape = __pyx_pybuffernd_sigma.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_sigma.diminfo[1].strides = __pyx_pybuffernd_sigma.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_sigma.diminfo[1].shape = __pyx_pybuffernd_sigma.rcbuffer->pybuffer.shape[1]; __pyx_pybuffernd_sigma.diminfo[2].strides = __pyx_pybuffernd_sigma.rcbuffer->pybuffer.strides[2]; __pyx_pybuffernd_sigma.diminfo[2].shape = __pyx_pybuffernd_sigma.rcbuffer->pybuffer.shape[2];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_nums_a.rcbuffer->pybuffer, (PyObject*)__pyx_v_nums_a, &__Pyx_TypeInfo_nn___pyx_t_5numpy_int32_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 107, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_nums_a.rcbuffer->pybuffer, (PyObject*)__pyx_v_nums_a, &__Pyx_TypeInfo_nn___pyx_t_5numpy_int32_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 109, __pyx_L1_error)
   }
   __pyx_pybuffernd_nums_a.diminfo[0].strides = __pyx_pybuffernd_nums_a.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_nums_a.diminfo[0].shape = __pyx_pybuffernd_nums_a.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_nums_a.diminfo[1].strides = __pyx_pybuffernd_nums_a.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_nums_a.diminfo[1].shape = __pyx_pybuffernd_nums_a.rcbuffer->pybuffer.shape[1];
 
-  /* "dsgamesolver/qre_ct.pyx":112
+  /* "dsgamesolver/qre_ct.pyx":114
  * 
  *     cdef:
  *         np.ndarray[np.float64_t, ndim=5] out_ = np.zeros((num_s, num_p, num_a_max, num_s, num_p), dtype=np.float64)             # <<<<<<<<<<<<<<
  *         np.ndarray[np.int32_t, ndim=1] loop_profile = np.zeros(num_p+1, dtype=np.int32)
  *         double temp_prob
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 112, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 114, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_zeros); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 112, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_zeros); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 114, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_num_s); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 112, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_num_s); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 114, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_num_p); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 112, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_num_p); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 114, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_num_a_max); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 112, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_num_a_max); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 114, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_5 = __Pyx_PyInt_From_int(__pyx_v_num_s); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 112, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyInt_From_int(__pyx_v_num_s); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 114, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_6 = __Pyx_PyInt_From_int(__pyx_v_num_p); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 112, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyInt_From_int(__pyx_v_num_p); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 114, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
-  __pyx_t_7 = PyTuple_New(5); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 112, __pyx_L1_error)
+  __pyx_t_7 = PyTuple_New(5); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 114, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
   __Pyx_GIVEREF(__pyx_t_1);
   PyTuple_SET_ITEM(__pyx_t_7, 0, __pyx_t_1);
@@ -3570,32 +3578,32 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_6u_tilde_sia_partial_V(CYTHON_U
   __pyx_t_4 = 0;
   __pyx_t_5 = 0;
   __pyx_t_6 = 0;
-  __pyx_t_6 = PyTuple_New(1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 112, __pyx_L1_error)
+  __pyx_t_6 = PyTuple_New(1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 114, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
   __Pyx_GIVEREF(__pyx_t_7);
   PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_t_7);
   __pyx_t_7 = 0;
-  __pyx_t_7 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 112, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 114, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
-  __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_n_s_np); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 112, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_n_s_np); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 114, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_float64); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 112, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_float64); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 114, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  if (PyDict_SetItem(__pyx_t_7, __pyx_n_s_dtype, __pyx_t_4) < 0) __PYX_ERR(0, 112, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_7, __pyx_n_s_dtype, __pyx_t_4) < 0) __PYX_ERR(0, 114, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_6, __pyx_t_7); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 112, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_6, __pyx_t_7); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 114, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-  if (!(likely(((__pyx_t_4) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_4, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 112, __pyx_L1_error)
+  if (!(likely(((__pyx_t_4) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_4, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 114, __pyx_L1_error)
   __pyx_t_8 = ((PyArrayObject *)__pyx_t_4);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_out_.rcbuffer->pybuffer, (PyObject*)__pyx_t_8, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 5, 0, __pyx_stack) == -1)) {
       __pyx_v_out_ = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_out_.rcbuffer->pybuffer.buf = NULL;
-      __PYX_ERR(0, 112, __pyx_L1_error)
+      __PYX_ERR(0, 114, __pyx_L1_error)
     } else {__pyx_pybuffernd_out_.diminfo[0].strides = __pyx_pybuffernd_out_.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_out_.diminfo[0].shape = __pyx_pybuffernd_out_.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_out_.diminfo[1].strides = __pyx_pybuffernd_out_.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_out_.diminfo[1].shape = __pyx_pybuffernd_out_.rcbuffer->pybuffer.shape[1]; __pyx_pybuffernd_out_.diminfo[2].strides = __pyx_pybuffernd_out_.rcbuffer->pybuffer.strides[2]; __pyx_pybuffernd_out_.diminfo[2].shape = __pyx_pybuffernd_out_.rcbuffer->pybuffer.shape[2]; __pyx_pybuffernd_out_.diminfo[3].strides = __pyx_pybuffernd_out_.rcbuffer->pybuffer.strides[3]; __pyx_pybuffernd_out_.diminfo[3].shape = __pyx_pybuffernd_out_.rcbuffer->pybuffer.shape[3]; __pyx_pybuffernd_out_.diminfo[4].strides = __pyx_pybuffernd_out_.rcbuffer->pybuffer.strides[4]; __pyx_pybuffernd_out_.diminfo[4].shape = __pyx_pybuffernd_out_.rcbuffer->pybuffer.shape[4];
     }
   }
@@ -3603,46 +3611,46 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_6u_tilde_sia_partial_V(CYTHON_U
   __pyx_v_out_ = ((PyArrayObject *)__pyx_t_4);
   __pyx_t_4 = 0;
 
-  /* "dsgamesolver/qre_ct.pyx":113
+  /* "dsgamesolver/qre_ct.pyx":115
  *     cdef:
  *         np.ndarray[np.float64_t, ndim=5] out_ = np.zeros((num_s, num_p, num_a_max, num_s, num_p), dtype=np.float64)
  *         np.ndarray[np.int32_t, ndim=1] loop_profile = np.zeros(num_p+1, dtype=np.int32)             # <<<<<<<<<<<<<<
  *         double temp_prob
  *         int state, player, other, to_state, n
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_np); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 113, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_np); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 115, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_7 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_zeros); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 113, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_zeros); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 115, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_4 = __Pyx_PyInt_From_long((__pyx_v_num_p + 1)); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 113, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyInt_From_long((__pyx_v_num_p + 1)); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 115, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_6 = PyTuple_New(1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 113, __pyx_L1_error)
+  __pyx_t_6 = PyTuple_New(1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 115, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
   __Pyx_GIVEREF(__pyx_t_4);
   PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_t_4);
   __pyx_t_4 = 0;
-  __pyx_t_4 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 113, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 115, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 113, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 115, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_int32); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 113, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_int32); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 115, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_dtype, __pyx_t_5) < 0) __PYX_ERR(0, 113, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_dtype, __pyx_t_5) < 0) __PYX_ERR(0, 115, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_7, __pyx_t_6, __pyx_t_4); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 113, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_7, __pyx_t_6, __pyx_t_4); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 115, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (!(likely(((__pyx_t_5) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_5, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 113, __pyx_L1_error)
+  if (!(likely(((__pyx_t_5) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_5, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 115, __pyx_L1_error)
   __pyx_t_9 = ((PyArrayObject *)__pyx_t_5);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_loop_profile.rcbuffer->pybuffer, (PyObject*)__pyx_t_9, &__Pyx_TypeInfo_nn___pyx_t_5numpy_int32_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 1, 0, __pyx_stack) == -1)) {
       __pyx_v_loop_profile = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_loop_profile.rcbuffer->pybuffer.buf = NULL;
-      __PYX_ERR(0, 113, __pyx_L1_error)
+      __PYX_ERR(0, 115, __pyx_L1_error)
     } else {__pyx_pybuffernd_loop_profile.diminfo[0].strides = __pyx_pybuffernd_loop_profile.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_loop_profile.diminfo[0].shape = __pyx_pybuffernd_loop_profile.rcbuffer->pybuffer.shape[0];
     }
   }
@@ -3650,7 +3658,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_6u_tilde_sia_partial_V(CYTHON_U
   __pyx_v_loop_profile = ((PyArrayObject *)__pyx_t_5);
   __pyx_t_5 = 0;
 
-  /* "dsgamesolver/qre_ct.pyx":116
+  /* "dsgamesolver/qre_ct.pyx":118
  *         double temp_prob
  *         int state, player, other, to_state, n
  *         int flat_index = 0             # <<<<<<<<<<<<<<
@@ -3659,7 +3667,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_6u_tilde_sia_partial_V(CYTHON_U
  */
   __pyx_v_flat_index = 0;
 
-  /* "dsgamesolver/qre_ct.pyx":118
+  /* "dsgamesolver/qre_ct.pyx":120
  *         int flat_index = 0
  * 
  *     for state in range(num_s):             # <<<<<<<<<<<<<<
@@ -3671,7 +3679,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_6u_tilde_sia_partial_V(CYTHON_U
   for (__pyx_t_12 = 0; __pyx_t_12 < __pyx_t_11; __pyx_t_12+=1) {
     __pyx_v_state = __pyx_t_12;
 
-    /* "dsgamesolver/qre_ct.pyx":119
+    /* "dsgamesolver/qre_ct.pyx":121
  * 
  *     for state in range(num_s):
  *         for player in range(num_p):             # <<<<<<<<<<<<<<
@@ -3683,22 +3691,22 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_6u_tilde_sia_partial_V(CYTHON_U
     for (__pyx_t_15 = 0; __pyx_t_15 < __pyx_t_14; __pyx_t_15+=1) {
       __pyx_v_player = __pyx_t_15;
 
-      /* "dsgamesolver/qre_ct.pyx":120
+      /* "dsgamesolver/qre_ct.pyx":122
  *     for state in range(num_s):
  *         for player in range(num_p):
  *             loop_profile[0 : num_p+1] = 0             # <<<<<<<<<<<<<<
  *             while loop_profile[0] == 0:
  * 
  */
-      __pyx_t_5 = __Pyx_PyInt_From_long((__pyx_v_num_p + 1)); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 120, __pyx_L1_error)
+      __pyx_t_5 = __Pyx_PyInt_From_long((__pyx_v_num_p + 1)); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 122, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_5);
-      __pyx_t_4 = PySlice_New(__pyx_int_0, __pyx_t_5, Py_None); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 120, __pyx_L1_error)
+      __pyx_t_4 = PySlice_New(__pyx_int_0, __pyx_t_5, Py_None); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 122, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_4);
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-      if (unlikely(PyObject_SetItem(((PyObject *)__pyx_v_loop_profile), __pyx_t_4, __pyx_int_0) < 0)) __PYX_ERR(0, 120, __pyx_L1_error)
+      if (unlikely(PyObject_SetItem(((PyObject *)__pyx_v_loop_profile), __pyx_t_4, __pyx_int_0) < 0)) __PYX_ERR(0, 122, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-      /* "dsgamesolver/qre_ct.pyx":121
+      /* "dsgamesolver/qre_ct.pyx":123
  *         for player in range(num_p):
  *             loop_profile[0 : num_p+1] = 0
  *             while loop_profile[0] == 0:             # <<<<<<<<<<<<<<
@@ -3710,7 +3718,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_6u_tilde_sia_partial_V(CYTHON_U
         __pyx_t_17 = (((*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_int32_t *, __pyx_pybuffernd_loop_profile.rcbuffer->pybuffer.buf, __pyx_t_16, __pyx_pybuffernd_loop_profile.diminfo[0].strides)) == 0) != 0);
         if (!__pyx_t_17) break;
 
-        /* "dsgamesolver/qre_ct.pyx":123
+        /* "dsgamesolver/qre_ct.pyx":125
  *             while loop_profile[0] == 0:
  * 
  *                 temp_prob = 1             # <<<<<<<<<<<<<<
@@ -3719,7 +3727,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_6u_tilde_sia_partial_V(CYTHON_U
  */
         __pyx_v_temp_prob = 1.0;
 
-        /* "dsgamesolver/qre_ct.pyx":124
+        /* "dsgamesolver/qre_ct.pyx":126
  * 
  *                 temp_prob = 1
  *                 for other in range(num_p):             # <<<<<<<<<<<<<<
@@ -3731,7 +3739,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_6u_tilde_sia_partial_V(CYTHON_U
         for (__pyx_t_20 = 0; __pyx_t_20 < __pyx_t_19; __pyx_t_20+=1) {
           __pyx_v_other = __pyx_t_20;
 
-          /* "dsgamesolver/qre_ct.pyx":125
+          /* "dsgamesolver/qre_ct.pyx":127
  *                 temp_prob = 1
  *                 for other in range(num_p):
  *                     if other == player:             # <<<<<<<<<<<<<<
@@ -3741,7 +3749,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_6u_tilde_sia_partial_V(CYTHON_U
           __pyx_t_17 = ((__pyx_v_other == __pyx_v_player) != 0);
           if (__pyx_t_17) {
 
-            /* "dsgamesolver/qre_ct.pyx":126
+            /* "dsgamesolver/qre_ct.pyx":128
  *                 for other in range(num_p):
  *                     if other == player:
  *                         continue             # <<<<<<<<<<<<<<
@@ -3750,7 +3758,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_6u_tilde_sia_partial_V(CYTHON_U
  */
             goto __pyx_L9_continue;
 
-            /* "dsgamesolver/qre_ct.pyx":125
+            /* "dsgamesolver/qre_ct.pyx":127
  *                 temp_prob = 1
  *                 for other in range(num_p):
  *                     if other == player:             # <<<<<<<<<<<<<<
@@ -3759,7 +3767,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_6u_tilde_sia_partial_V(CYTHON_U
  */
           }
 
-          /* "dsgamesolver/qre_ct.pyx":127
+          /* "dsgamesolver/qre_ct.pyx":129
  *                     if other == player:
  *                         continue
  *                     temp_prob *= sigma[state, other, loop_profile[other+1]]             # <<<<<<<<<<<<<<
@@ -3774,7 +3782,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_6u_tilde_sia_partial_V(CYTHON_U
           __pyx_L9_continue:;
         }
 
-        /* "dsgamesolver/qre_ct.pyx":129
+        /* "dsgamesolver/qre_ct.pyx":131
  *                     temp_prob *= sigma[state, other, loop_profile[other+1]]
  * 
  *                 for to_state in range(num_s):             # <<<<<<<<<<<<<<
@@ -3786,7 +3794,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_6u_tilde_sia_partial_V(CYTHON_U
         for (__pyx_t_20 = 0; __pyx_t_20 < __pyx_t_19; __pyx_t_20+=1) {
           __pyx_v_to_state = __pyx_t_20;
 
-          /* "dsgamesolver/qre_ct.pyx":130
+          /* "dsgamesolver/qre_ct.pyx":132
  * 
  *                 for to_state in range(num_s):
  *                     out_[state, player, loop_profile[player+1], to_state, player] += temp_prob * phi_ravel[flat_index]             # <<<<<<<<<<<<<<
@@ -3802,7 +3810,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_6u_tilde_sia_partial_V(CYTHON_U
           __pyx_t_26 = __pyx_v_player;
           *__Pyx_BufPtrStrided5d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_out_.rcbuffer->pybuffer.buf, __pyx_t_22, __pyx_pybuffernd_out_.diminfo[0].strides, __pyx_t_21, __pyx_pybuffernd_out_.diminfo[1].strides, __pyx_t_24, __pyx_pybuffernd_out_.diminfo[2].strides, __pyx_t_25, __pyx_pybuffernd_out_.diminfo[3].strides, __pyx_t_26, __pyx_pybuffernd_out_.diminfo[4].strides) += (__pyx_v_temp_prob * (*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_phi_ravel.rcbuffer->pybuffer.buf, __pyx_t_16, __pyx_pybuffernd_phi_ravel.diminfo[0].strides)));
 
-          /* "dsgamesolver/qre_ct.pyx":131
+          /* "dsgamesolver/qre_ct.pyx":133
  *                 for to_state in range(num_s):
  *                     out_[state, player, loop_profile[player+1], to_state, player] += temp_prob * phi_ravel[flat_index]
  *                     flat_index += 1             # <<<<<<<<<<<<<<
@@ -3812,7 +3820,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_6u_tilde_sia_partial_V(CYTHON_U
           __pyx_v_flat_index = (__pyx_v_flat_index + 1);
         }
 
-        /* "dsgamesolver/qre_ct.pyx":133
+        /* "dsgamesolver/qre_ct.pyx":135
  *                     flat_index += 1
  * 
  *                 loop_profile[num_p] += 1             # <<<<<<<<<<<<<<
@@ -3822,7 +3830,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_6u_tilde_sia_partial_V(CYTHON_U
         __pyx_t_16 = __pyx_v_num_p;
         *__Pyx_BufPtrStrided1d(__pyx_t_5numpy_int32_t *, __pyx_pybuffernd_loop_profile.rcbuffer->pybuffer.buf, __pyx_t_16, __pyx_pybuffernd_loop_profile.diminfo[0].strides) += 1;
 
-        /* "dsgamesolver/qre_ct.pyx":134
+        /* "dsgamesolver/qre_ct.pyx":136
  * 
  *                 loop_profile[num_p] += 1
  *                 for n in range(num_p):             # <<<<<<<<<<<<<<
@@ -3834,7 +3842,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_6u_tilde_sia_partial_V(CYTHON_U
         for (__pyx_t_20 = 0; __pyx_t_20 < __pyx_t_19; __pyx_t_20+=1) {
           __pyx_v_n = __pyx_t_20;
 
-          /* "dsgamesolver/qre_ct.pyx":135
+          /* "dsgamesolver/qre_ct.pyx":137
  *                 loop_profile[num_p] += 1
  *                 for n in range(num_p):
  *                     if loop_profile[num_p-n] == nums_a[state, num_p-n-1]:             # <<<<<<<<<<<<<<
@@ -3847,7 +3855,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_6u_tilde_sia_partial_V(CYTHON_U
           __pyx_t_17 = (((*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_int32_t *, __pyx_pybuffernd_loop_profile.rcbuffer->pybuffer.buf, __pyx_t_16, __pyx_pybuffernd_loop_profile.diminfo[0].strides)) == (*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_int32_t *, __pyx_pybuffernd_nums_a.rcbuffer->pybuffer.buf, __pyx_t_23, __pyx_pybuffernd_nums_a.diminfo[0].strides, __pyx_t_26, __pyx_pybuffernd_nums_a.diminfo[1].strides))) != 0);
           if (__pyx_t_17) {
 
-            /* "dsgamesolver/qre_ct.pyx":136
+            /* "dsgamesolver/qre_ct.pyx":138
  *                 for n in range(num_p):
  *                     if loop_profile[num_p-n] == nums_a[state, num_p-n-1]:
  *                         loop_profile[num_p-n-1] += 1             # <<<<<<<<<<<<<<
@@ -3857,7 +3865,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_6u_tilde_sia_partial_V(CYTHON_U
             __pyx_t_26 = ((__pyx_v_num_p - __pyx_v_n) - 1);
             *__Pyx_BufPtrStrided1d(__pyx_t_5numpy_int32_t *, __pyx_pybuffernd_loop_profile.rcbuffer->pybuffer.buf, __pyx_t_26, __pyx_pybuffernd_loop_profile.diminfo[0].strides) += 1;
 
-            /* "dsgamesolver/qre_ct.pyx":137
+            /* "dsgamesolver/qre_ct.pyx":139
  *                     if loop_profile[num_p-n] == nums_a[state, num_p-n-1]:
  *                         loop_profile[num_p-n-1] += 1
  *                         loop_profile[num_p-n] = 0             # <<<<<<<<<<<<<<
@@ -3867,7 +3875,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_6u_tilde_sia_partial_V(CYTHON_U
             __pyx_t_26 = (__pyx_v_num_p - __pyx_v_n);
             *__Pyx_BufPtrStrided1d(__pyx_t_5numpy_int32_t *, __pyx_pybuffernd_loop_profile.rcbuffer->pybuffer.buf, __pyx_t_26, __pyx_pybuffernd_loop_profile.diminfo[0].strides) = 0;
 
-            /* "dsgamesolver/qre_ct.pyx":138
+            /* "dsgamesolver/qre_ct.pyx":140
  *                         loop_profile[num_p-n-1] += 1
  *                         loop_profile[num_p-n] = 0
  *                         flat_index += num_s * (num_a_max - nums_a[state,num_p-n-1]) * num_a_max**n             # <<<<<<<<<<<<<<
@@ -3878,7 +3886,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_6u_tilde_sia_partial_V(CYTHON_U
             __pyx_t_23 = ((__pyx_v_num_p - __pyx_v_n) - 1);
             __pyx_v_flat_index = (__pyx_v_flat_index + ((__pyx_v_num_s * (__pyx_v_num_a_max - (*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_int32_t *, __pyx_pybuffernd_nums_a.rcbuffer->pybuffer.buf, __pyx_t_26, __pyx_pybuffernd_nums_a.diminfo[0].strides, __pyx_t_23, __pyx_pybuffernd_nums_a.diminfo[1].strides)))) * __Pyx_pow_int(__pyx_v_num_a_max, __pyx_v_n)));
 
-            /* "dsgamesolver/qre_ct.pyx":135
+            /* "dsgamesolver/qre_ct.pyx":137
  *                 loop_profile[num_p] += 1
  *                 for n in range(num_p):
  *                     if loop_profile[num_p-n] == nums_a[state, num_p-n-1]:             # <<<<<<<<<<<<<<
@@ -3891,7 +3899,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_6u_tilde_sia_partial_V(CYTHON_U
     }
   }
 
-  /* "dsgamesolver/qre_ct.pyx":140
+  /* "dsgamesolver/qre_ct.pyx":142
  *                         flat_index += num_s * (num_a_max - nums_a[state,num_p-n-1]) * num_a_max**n
  * 
  *     return out_             # <<<<<<<<<<<<<<
@@ -3903,7 +3911,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_6u_tilde_sia_partial_V(CYTHON_U
   __pyx_r = ((PyObject *)__pyx_v_out_);
   goto __pyx_L0;
 
-  /* "dsgamesolver/qre_ct.pyx":107
+  /* "dsgamesolver/qre_ct.pyx":109
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * def u_tilde_sia_partial_V(np.ndarray[np.float64_t, ndim=1] phi_ravel, np.ndarray[np.float64_t, ndim=3] sigma,             # <<<<<<<<<<<<<<
@@ -3947,7 +3955,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_6u_tilde_sia_partial_V(CYTHON_U
   return __pyx_r;
 }
 
-/* "dsgamesolver/qre_ct.pyx":148
+/* "dsgamesolver/qre_ct.pyx":150
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * def H(np.ndarray[np.float64_t, ndim=1] y, u, phi, int num_s, int num_p,             # <<<<<<<<<<<<<<
@@ -4009,47 +4017,47 @@ static PyObject *__pyx_pw_12dsgamesolver_6qre_ct_9H(PyObject *__pyx_self, PyObje
         case  1:
         if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_u)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("H", 1, 8, 8, 1); __PYX_ERR(0, 148, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("H", 1, 8, 8, 1); __PYX_ERR(0, 150, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_phi)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("H", 1, 8, 8, 2); __PYX_ERR(0, 148, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("H", 1, 8, 8, 2); __PYX_ERR(0, 150, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  3:
         if (likely((values[3] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_num_s)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("H", 1, 8, 8, 3); __PYX_ERR(0, 148, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("H", 1, 8, 8, 3); __PYX_ERR(0, 150, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  4:
         if (likely((values[4] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_num_p)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("H", 1, 8, 8, 4); __PYX_ERR(0, 148, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("H", 1, 8, 8, 4); __PYX_ERR(0, 150, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  5:
         if (likely((values[5] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_nums_a)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("H", 1, 8, 8, 5); __PYX_ERR(0, 148, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("H", 1, 8, 8, 5); __PYX_ERR(0, 150, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  6:
         if (likely((values[6] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_num_a_max)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("H", 1, 8, 8, 6); __PYX_ERR(0, 148, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("H", 1, 8, 8, 6); __PYX_ERR(0, 150, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  7:
         if (likely((values[7] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_num_a_tot)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("H", 1, 8, 8, 7); __PYX_ERR(0, 148, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("H", 1, 8, 8, 7); __PYX_ERR(0, 150, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "H") < 0)) __PYX_ERR(0, 148, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "H") < 0)) __PYX_ERR(0, 150, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 8) {
       goto __pyx_L5_argtuple_error;
@@ -4066,22 +4074,22 @@ static PyObject *__pyx_pw_12dsgamesolver_6qre_ct_9H(PyObject *__pyx_self, PyObje
     __pyx_v_y = ((PyArrayObject *)values[0]);
     __pyx_v_u = values[1];
     __pyx_v_phi = values[2];
-    __pyx_v_num_s = __Pyx_PyInt_As_int(values[3]); if (unlikely((__pyx_v_num_s == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 148, __pyx_L3_error)
-    __pyx_v_num_p = __Pyx_PyInt_As_int(values[4]); if (unlikely((__pyx_v_num_p == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 148, __pyx_L3_error)
+    __pyx_v_num_s = __Pyx_PyInt_As_int(values[3]); if (unlikely((__pyx_v_num_s == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 150, __pyx_L3_error)
+    __pyx_v_num_p = __Pyx_PyInt_As_int(values[4]); if (unlikely((__pyx_v_num_p == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 150, __pyx_L3_error)
     __pyx_v_nums_a = ((PyArrayObject *)values[5]);
-    __pyx_v_num_a_max = __Pyx_PyInt_As_int(values[6]); if (unlikely((__pyx_v_num_a_max == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 149, __pyx_L3_error)
-    __pyx_v_num_a_tot = __Pyx_PyInt_As_int(values[7]); if (unlikely((__pyx_v_num_a_tot == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 149, __pyx_L3_error)
+    __pyx_v_num_a_max = __Pyx_PyInt_As_int(values[6]); if (unlikely((__pyx_v_num_a_max == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 151, __pyx_L3_error)
+    __pyx_v_num_a_tot = __Pyx_PyInt_As_int(values[7]); if (unlikely((__pyx_v_num_a_tot == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 151, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("H", 1, 8, 8, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 148, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("H", 1, 8, 8, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 150, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("dsgamesolver.qre_ct.H", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_y), __pyx_ptype_5numpy_ndarray, 1, "y", 0))) __PYX_ERR(0, 148, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_nums_a), __pyx_ptype_5numpy_ndarray, 1, "nums_a", 0))) __PYX_ERR(0, 149, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_y), __pyx_ptype_5numpy_ndarray, 1, "y", 0))) __PYX_ERR(0, 150, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_nums_a), __pyx_ptype_5numpy_ndarray, 1, "nums_a", 0))) __PYX_ERR(0, 151, __pyx_L1_error)
   __pyx_r = __pyx_pf_12dsgamesolver_6qre_ct_8H(__pyx_self, __pyx_v_y, __pyx_v_u, __pyx_v_phi, __pyx_v_num_s, __pyx_v_num_p, __pyx_v_nums_a, __pyx_v_num_a_max, __pyx_v_num_a_tot);
 
   /* function exit code */
@@ -4201,55 +4209,55 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
   __pyx_pybuffernd_nums_a.rcbuffer = &__pyx_pybuffer_nums_a;
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_y.rcbuffer->pybuffer, (PyObject*)__pyx_v_y, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 148, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_y.rcbuffer->pybuffer, (PyObject*)__pyx_v_y, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 150, __pyx_L1_error)
   }
   __pyx_pybuffernd_y.diminfo[0].strides = __pyx_pybuffernd_y.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_y.diminfo[0].shape = __pyx_pybuffernd_y.rcbuffer->pybuffer.shape[0];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_nums_a.rcbuffer->pybuffer, (PyObject*)__pyx_v_nums_a, &__Pyx_TypeInfo_nn___pyx_t_5numpy_int32_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 148, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_nums_a.rcbuffer->pybuffer, (PyObject*)__pyx_v_nums_a, &__Pyx_TypeInfo_nn___pyx_t_5numpy_int32_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 150, __pyx_L1_error)
   }
   __pyx_pybuffernd_nums_a.diminfo[0].strides = __pyx_pybuffernd_nums_a.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_nums_a.diminfo[0].shape = __pyx_pybuffernd_nums_a.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_nums_a.diminfo[1].strides = __pyx_pybuffernd_nums_a.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_nums_a.diminfo[1].shape = __pyx_pybuffernd_nums_a.rcbuffer->pybuffer.shape[1];
 
-  /* "dsgamesolver/qre_ct.pyx":159
+  /* "dsgamesolver/qre_ct.pyx":161
  * 
  *     cdef:
  *         np.ndarray[np.float64_t, ndim=1] out_ = np.zeros(num_a_tot+num_s*num_p, dtype=np.float64)             # <<<<<<<<<<<<<<
  *         np.ndarray[np.float64_t, ndim=3] beta = np.zeros((num_s, num_p, num_a_max), dtype=np.float64)
  *         int state, player, action, a
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 159, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 161, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_zeros); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 159, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_zeros); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 161, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyInt_From_int((__pyx_v_num_a_tot + (__pyx_v_num_s * __pyx_v_num_p))); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 159, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_From_int((__pyx_v_num_a_tot + (__pyx_v_num_s * __pyx_v_num_p))); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 161, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 159, __pyx_L1_error)
+  __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 161, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_GIVEREF(__pyx_t_1);
   PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_1);
   __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 159, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 161, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_np); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 159, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_np); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 161, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_float64); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 159, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_float64); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 161, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_dtype, __pyx_t_5) < 0) __PYX_ERR(0, 159, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_dtype, __pyx_t_5) < 0) __PYX_ERR(0, 161, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_3, __pyx_t_1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 159, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_3, __pyx_t_1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 161, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  if (!(likely(((__pyx_t_5) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_5, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 159, __pyx_L1_error)
+  if (!(likely(((__pyx_t_5) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_5, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 161, __pyx_L1_error)
   __pyx_t_6 = ((PyArrayObject *)__pyx_t_5);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_out_.rcbuffer->pybuffer, (PyObject*)__pyx_t_6, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 1, 0, __pyx_stack) == -1)) {
       __pyx_v_out_ = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_out_.rcbuffer->pybuffer.buf = NULL;
-      __PYX_ERR(0, 159, __pyx_L1_error)
+      __PYX_ERR(0, 161, __pyx_L1_error)
     } else {__pyx_pybuffernd_out_.diminfo[0].strides = __pyx_pybuffernd_out_.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_out_.diminfo[0].shape = __pyx_pybuffernd_out_.rcbuffer->pybuffer.shape[0];
     }
   }
@@ -4257,25 +4265,25 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
   __pyx_v_out_ = ((PyArrayObject *)__pyx_t_5);
   __pyx_t_5 = 0;
 
-  /* "dsgamesolver/qre_ct.pyx":160
+  /* "dsgamesolver/qre_ct.pyx":162
  *     cdef:
  *         np.ndarray[np.float64_t, ndim=1] out_ = np.zeros(num_a_tot+num_s*num_p, dtype=np.float64)
  *         np.ndarray[np.float64_t, ndim=3] beta = np.zeros((num_s, num_p, num_a_max), dtype=np.float64)             # <<<<<<<<<<<<<<
  *         int state, player, action, a
  *         int flat_index = 0
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_n_s_np); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 160, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_n_s_np); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 162, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_zeros); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 160, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_zeros); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 162, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  __pyx_t_5 = __Pyx_PyInt_From_int(__pyx_v_num_s); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 160, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyInt_From_int(__pyx_v_num_s); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 162, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_num_p); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 160, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_num_p); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 162, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_num_a_max); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 160, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_num_a_max); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 162, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_4 = PyTuple_New(3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 160, __pyx_L1_error)
+  __pyx_t_4 = PyTuple_New(3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 162, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_GIVEREF(__pyx_t_5);
   PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_5);
@@ -4286,32 +4294,32 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
   __pyx_t_5 = 0;
   __pyx_t_3 = 0;
   __pyx_t_2 = 0;
-  __pyx_t_2 = PyTuple_New(1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 160, __pyx_L1_error)
+  __pyx_t_2 = PyTuple_New(1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 162, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_GIVEREF(__pyx_t_4);
   PyTuple_SET_ITEM(__pyx_t_2, 0, __pyx_t_4);
   __pyx_t_4 = 0;
-  __pyx_t_4 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 160, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 162, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 160, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 162, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_float64); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 160, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_float64); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 162, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_dtype, __pyx_t_5) < 0) __PYX_ERR(0, 160, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_dtype, __pyx_t_5) < 0) __PYX_ERR(0, 162, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_t_2, __pyx_t_4); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 160, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_t_2, __pyx_t_4); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 162, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (!(likely(((__pyx_t_5) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_5, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 160, __pyx_L1_error)
+  if (!(likely(((__pyx_t_5) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_5, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 162, __pyx_L1_error)
   __pyx_t_7 = ((PyArrayObject *)__pyx_t_5);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_beta.rcbuffer->pybuffer, (PyObject*)__pyx_t_7, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 3, 0, __pyx_stack) == -1)) {
       __pyx_v_beta = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_beta.rcbuffer->pybuffer.buf = NULL;
-      __PYX_ERR(0, 160, __pyx_L1_error)
+      __PYX_ERR(0, 162, __pyx_L1_error)
     } else {__pyx_pybuffernd_beta.diminfo[0].strides = __pyx_pybuffernd_beta.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_beta.diminfo[0].shape = __pyx_pybuffernd_beta.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_beta.diminfo[1].strides = __pyx_pybuffernd_beta.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_beta.diminfo[1].shape = __pyx_pybuffernd_beta.rcbuffer->pybuffer.shape[1]; __pyx_pybuffernd_beta.diminfo[2].strides = __pyx_pybuffernd_beta.rcbuffer->pybuffer.strides[2]; __pyx_pybuffernd_beta.diminfo[2].shape = __pyx_pybuffernd_beta.rcbuffer->pybuffer.shape[2];
     }
   }
@@ -4319,7 +4327,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
   __pyx_v_beta = ((PyArrayObject *)__pyx_t_5);
   __pyx_t_5 = 0;
 
-  /* "dsgamesolver/qre_ct.pyx":162
+  /* "dsgamesolver/qre_ct.pyx":164
  *         np.ndarray[np.float64_t, ndim=3] beta = np.zeros((num_s, num_p, num_a_max), dtype=np.float64)
  *         int state, player, action, a
  *         int flat_index = 0             # <<<<<<<<<<<<<<
@@ -4328,7 +4336,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
  */
   __pyx_v_flat_index = 0;
 
-  /* "dsgamesolver/qre_ct.pyx":164
+  /* "dsgamesolver/qre_ct.pyx":166
  *         int flat_index = 0
  * 
  *     for state in range(num_s):             # <<<<<<<<<<<<<<
@@ -4340,7 +4348,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
   for (__pyx_t_10 = 0; __pyx_t_10 < __pyx_t_9; __pyx_t_10+=1) {
     __pyx_v_state = __pyx_t_10;
 
-    /* "dsgamesolver/qre_ct.pyx":165
+    /* "dsgamesolver/qre_ct.pyx":167
  * 
  *     for state in range(num_s):
  *         for player in range(num_p):             # <<<<<<<<<<<<<<
@@ -4352,7 +4360,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
     for (__pyx_t_13 = 0; __pyx_t_13 < __pyx_t_12; __pyx_t_13+=1) {
       __pyx_v_player = __pyx_t_13;
 
-      /* "dsgamesolver/qre_ct.pyx":166
+      /* "dsgamesolver/qre_ct.pyx":168
  *     for state in range(num_s):
  *         for player in range(num_p):
  *             for action in range(nums_a[state, player]):             # <<<<<<<<<<<<<<
@@ -4366,7 +4374,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
       for (__pyx_t_18 = 0; __pyx_t_18 < __pyx_t_17; __pyx_t_18+=1) {
         __pyx_v_action = __pyx_t_18;
 
-        /* "dsgamesolver/qre_ct.pyx":167
+        /* "dsgamesolver/qre_ct.pyx":169
  *         for player in range(num_p):
  *             for action in range(nums_a[state, player]):
  *                 beta[state, player, action] = y[flat_index]             # <<<<<<<<<<<<<<
@@ -4379,7 +4387,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
         __pyx_t_20 = __pyx_v_action;
         *__Pyx_BufPtrStrided3d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_beta.rcbuffer->pybuffer.buf, __pyx_t_14, __pyx_pybuffernd_beta.diminfo[0].strides, __pyx_t_19, __pyx_pybuffernd_beta.diminfo[1].strides, __pyx_t_20, __pyx_pybuffernd_beta.diminfo[2].strides) = (*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_y.rcbuffer->pybuffer.buf, __pyx_t_15, __pyx_pybuffernd_y.diminfo[0].strides));
 
-        /* "dsgamesolver/qre_ct.pyx":168
+        /* "dsgamesolver/qre_ct.pyx":170
  *             for action in range(nums_a[state, player]):
  *                 beta[state, player, action] = y[flat_index]
  *                 flat_index += 1             # <<<<<<<<<<<<<<
@@ -4391,16 +4399,16 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
     }
   }
 
-  /* "dsgamesolver/qre_ct.pyx":171
+  /* "dsgamesolver/qre_ct.pyx":173
  * 
  *     cdef:
  *         np.ndarray[np.float64_t, ndim=3] sigma = np.exp(beta)             # <<<<<<<<<<<<<<
  *         np.ndarray[np.float64_t, ndim=2] V = y[num_a_tot : num_a_tot + num_s*num_p].reshape(num_s, num_p)
  *         double lambda_ = y[num_a_tot + num_s*num_p]
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_np); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 171, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_np); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 173, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_exp); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 171, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_exp); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 173, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __pyx_t_4 = NULL;
@@ -4415,16 +4423,16 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
   }
   __pyx_t_5 = (__pyx_t_4) ? __Pyx_PyObject_Call2Args(__pyx_t_2, __pyx_t_4, ((PyObject *)__pyx_v_beta)) : __Pyx_PyObject_CallOneArg(__pyx_t_2, ((PyObject *)__pyx_v_beta));
   __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 171, __pyx_L1_error)
+  if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 173, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  if (!(likely(((__pyx_t_5) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_5, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 171, __pyx_L1_error)
+  if (!(likely(((__pyx_t_5) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_5, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 173, __pyx_L1_error)
   __pyx_t_21 = ((PyArrayObject *)__pyx_t_5);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_sigma.rcbuffer->pybuffer, (PyObject*)__pyx_t_21, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES, 3, 0, __pyx_stack) == -1)) {
       __pyx_v_sigma = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_sigma.rcbuffer->pybuffer.buf = NULL;
-      __PYX_ERR(0, 171, __pyx_L1_error)
+      __PYX_ERR(0, 173, __pyx_L1_error)
     } else {__pyx_pybuffernd_sigma.diminfo[0].strides = __pyx_pybuffernd_sigma.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_sigma.diminfo[0].shape = __pyx_pybuffernd_sigma.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_sigma.diminfo[1].strides = __pyx_pybuffernd_sigma.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_sigma.diminfo[1].shape = __pyx_pybuffernd_sigma.rcbuffer->pybuffer.shape[1]; __pyx_pybuffernd_sigma.diminfo[2].strides = __pyx_pybuffernd_sigma.rcbuffer->pybuffer.strides[2]; __pyx_pybuffernd_sigma.diminfo[2].shape = __pyx_pybuffernd_sigma.rcbuffer->pybuffer.shape[2];
     }
   }
@@ -4432,30 +4440,30 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
   __pyx_v_sigma = ((PyArrayObject *)__pyx_t_5);
   __pyx_t_5 = 0;
 
-  /* "dsgamesolver/qre_ct.pyx":172
+  /* "dsgamesolver/qre_ct.pyx":174
  *     cdef:
  *         np.ndarray[np.float64_t, ndim=3] sigma = np.exp(beta)
  *         np.ndarray[np.float64_t, ndim=2] V = y[num_a_tot : num_a_tot + num_s*num_p].reshape(num_s, num_p)             # <<<<<<<<<<<<<<
  *         double lambda_ = y[num_a_tot + num_s*num_p]
  *         np.ndarray[np.float64_t, ndim=1] u_tilde_ev_ravel = u_tilde(u, V, phi).ravel()
  */
-  __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_num_a_tot); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 172, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_num_a_tot); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 174, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_4 = __Pyx_PyInt_From_int((__pyx_v_num_a_tot + (__pyx_v_num_s * __pyx_v_num_p))); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 172, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyInt_From_int((__pyx_v_num_a_tot + (__pyx_v_num_s * __pyx_v_num_p))); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 174, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_1 = PySlice_New(__pyx_t_2, __pyx_t_4, Py_None); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 172, __pyx_L1_error)
+  __pyx_t_1 = PySlice_New(__pyx_t_2, __pyx_t_4, Py_None); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 174, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_4 = __Pyx_PyObject_GetItem(((PyObject *)__pyx_v_y), __pyx_t_1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 172, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_GetItem(((PyObject *)__pyx_v_y), __pyx_t_1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 174, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_reshape); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 172, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_reshape); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 174, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_num_s); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 172, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_num_s); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 174, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_num_p); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 172, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_num_p); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 174, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_t_3 = NULL;
   __pyx_t_8 = 0;
@@ -4472,7 +4480,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
   #if CYTHON_FAST_PYCALL
   if (PyFunction_Check(__pyx_t_1)) {
     PyObject *__pyx_temp[3] = {__pyx_t_3, __pyx_t_4, __pyx_t_2};
-    __pyx_t_5 = __Pyx_PyFunction_FastCall(__pyx_t_1, __pyx_temp+1-__pyx_t_8, 2+__pyx_t_8); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 172, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyFunction_FastCall(__pyx_t_1, __pyx_temp+1-__pyx_t_8, 2+__pyx_t_8); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 174, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
@@ -4482,7 +4490,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
   #if CYTHON_FAST_PYCCALL
   if (__Pyx_PyFastCFunction_Check(__pyx_t_1)) {
     PyObject *__pyx_temp[3] = {__pyx_t_3, __pyx_t_4, __pyx_t_2};
-    __pyx_t_5 = __Pyx_PyCFunction_FastCall(__pyx_t_1, __pyx_temp+1-__pyx_t_8, 2+__pyx_t_8); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 172, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyCFunction_FastCall(__pyx_t_1, __pyx_temp+1-__pyx_t_8, 2+__pyx_t_8); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 174, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
@@ -4490,7 +4498,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
   } else
   #endif
   {
-    __pyx_t_22 = PyTuple_New(2+__pyx_t_8); if (unlikely(!__pyx_t_22)) __PYX_ERR(0, 172, __pyx_L1_error)
+    __pyx_t_22 = PyTuple_New(2+__pyx_t_8); if (unlikely(!__pyx_t_22)) __PYX_ERR(0, 174, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_22);
     if (__pyx_t_3) {
       __Pyx_GIVEREF(__pyx_t_3); PyTuple_SET_ITEM(__pyx_t_22, 0, __pyx_t_3); __pyx_t_3 = NULL;
@@ -4501,18 +4509,18 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
     PyTuple_SET_ITEM(__pyx_t_22, 1+__pyx_t_8, __pyx_t_2);
     __pyx_t_4 = 0;
     __pyx_t_2 = 0;
-    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_t_22, NULL); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 172, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_t_22, NULL); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 174, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_22); __pyx_t_22 = 0;
   }
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  if (!(likely(((__pyx_t_5) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_5, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 172, __pyx_L1_error)
+  if (!(likely(((__pyx_t_5) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_5, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 174, __pyx_L1_error)
   __pyx_t_23 = ((PyArrayObject *)__pyx_t_5);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_V.rcbuffer->pybuffer, (PyObject*)__pyx_t_23, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) {
       __pyx_v_V = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_V.rcbuffer->pybuffer.buf = NULL;
-      __PYX_ERR(0, 172, __pyx_L1_error)
+      __PYX_ERR(0, 174, __pyx_L1_error)
     } else {__pyx_pybuffernd_V.diminfo[0].strides = __pyx_pybuffernd_V.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_V.diminfo[0].shape = __pyx_pybuffernd_V.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_V.diminfo[1].strides = __pyx_pybuffernd_V.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_V.diminfo[1].shape = __pyx_pybuffernd_V.rcbuffer->pybuffer.shape[1];
     }
   }
@@ -4520,24 +4528,24 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
   __pyx_v_V = ((PyArrayObject *)__pyx_t_5);
   __pyx_t_5 = 0;
 
-  /* "dsgamesolver/qre_ct.pyx":173
+  /* "dsgamesolver/qre_ct.pyx":175
  *         np.ndarray[np.float64_t, ndim=3] sigma = np.exp(beta)
  *         np.ndarray[np.float64_t, ndim=2] V = y[num_a_tot : num_a_tot + num_s*num_p].reshape(num_s, num_p)
  *         double lambda_ = y[num_a_tot + num_s*num_p]             # <<<<<<<<<<<<<<
  *         np.ndarray[np.float64_t, ndim=1] u_tilde_ev_ravel = u_tilde(u, V, phi).ravel()
- *         np.ndarray[np.float64_t, ndim=3] u_tilde_sia_ev = u_tilde_sia(u_tilde_ev_ravel, sigma, num_s, num_p, num_a_max, nums_a)
+ *         np.ndarray[np.float64_t, ndim=3] u_tilde_sia_ev = u_tilde_sia(u_tilde_ev_ravel, sigma, num_s, num_p,
  */
   __pyx_t_15 = (__pyx_v_num_a_tot + (__pyx_v_num_s * __pyx_v_num_p));
   __pyx_v_lambda_ = (*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_y.rcbuffer->pybuffer.buf, __pyx_t_15, __pyx_pybuffernd_y.diminfo[0].strides));
 
-  /* "dsgamesolver/qre_ct.pyx":174
+  /* "dsgamesolver/qre_ct.pyx":176
  *         np.ndarray[np.float64_t, ndim=2] V = y[num_a_tot : num_a_tot + num_s*num_p].reshape(num_s, num_p)
  *         double lambda_ = y[num_a_tot + num_s*num_p]
  *         np.ndarray[np.float64_t, ndim=1] u_tilde_ev_ravel = u_tilde(u, V, phi).ravel()             # <<<<<<<<<<<<<<
- *         np.ndarray[np.float64_t, ndim=3] u_tilde_sia_ev = u_tilde_sia(u_tilde_ev_ravel, sigma, num_s, num_p, num_a_max, nums_a)
- * 
+ *         np.ndarray[np.float64_t, ndim=3] u_tilde_sia_ev = u_tilde_sia(u_tilde_ev_ravel, sigma, num_s, num_p,
+ *                                                                       num_a_max, nums_a)
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_22, __pyx_n_s_u_tilde); if (unlikely(!__pyx_t_22)) __PYX_ERR(0, 174, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_22, __pyx_n_s_u_tilde); if (unlikely(!__pyx_t_22)) __PYX_ERR(0, 176, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_22);
   __pyx_t_2 = NULL;
   __pyx_t_8 = 0;
@@ -4554,7 +4562,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
   #if CYTHON_FAST_PYCALL
   if (PyFunction_Check(__pyx_t_22)) {
     PyObject *__pyx_temp[4] = {__pyx_t_2, __pyx_v_u, ((PyObject *)__pyx_v_V), __pyx_v_phi};
-    __pyx_t_1 = __Pyx_PyFunction_FastCall(__pyx_t_22, __pyx_temp+1-__pyx_t_8, 3+__pyx_t_8); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 174, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyFunction_FastCall(__pyx_t_22, __pyx_temp+1-__pyx_t_8, 3+__pyx_t_8); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 176, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
     __Pyx_GOTREF(__pyx_t_1);
   } else
@@ -4562,13 +4570,13 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
   #if CYTHON_FAST_PYCCALL
   if (__Pyx_PyFastCFunction_Check(__pyx_t_22)) {
     PyObject *__pyx_temp[4] = {__pyx_t_2, __pyx_v_u, ((PyObject *)__pyx_v_V), __pyx_v_phi};
-    __pyx_t_1 = __Pyx_PyCFunction_FastCall(__pyx_t_22, __pyx_temp+1-__pyx_t_8, 3+__pyx_t_8); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 174, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyCFunction_FastCall(__pyx_t_22, __pyx_temp+1-__pyx_t_8, 3+__pyx_t_8); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 176, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
     __Pyx_GOTREF(__pyx_t_1);
   } else
   #endif
   {
-    __pyx_t_4 = PyTuple_New(3+__pyx_t_8); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 174, __pyx_L1_error)
+    __pyx_t_4 = PyTuple_New(3+__pyx_t_8); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 176, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     if (__pyx_t_2) {
       __Pyx_GIVEREF(__pyx_t_2); PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_2); __pyx_t_2 = NULL;
@@ -4582,12 +4590,12 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
     __Pyx_INCREF(__pyx_v_phi);
     __Pyx_GIVEREF(__pyx_v_phi);
     PyTuple_SET_ITEM(__pyx_t_4, 2+__pyx_t_8, __pyx_v_phi);
-    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_22, __pyx_t_4, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 174, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_22, __pyx_t_4, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 176, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   }
   __Pyx_DECREF(__pyx_t_22); __pyx_t_22 = 0;
-  __pyx_t_22 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_ravel); if (unlikely(!__pyx_t_22)) __PYX_ERR(0, 174, __pyx_L1_error)
+  __pyx_t_22 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_ravel); if (unlikely(!__pyx_t_22)) __PYX_ERR(0, 176, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_22);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_t_1 = NULL;
@@ -4602,16 +4610,16 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
   }
   __pyx_t_5 = (__pyx_t_1) ? __Pyx_PyObject_CallOneArg(__pyx_t_22, __pyx_t_1) : __Pyx_PyObject_CallNoArg(__pyx_t_22);
   __Pyx_XDECREF(__pyx_t_1); __pyx_t_1 = 0;
-  if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 174, __pyx_L1_error)
+  if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 176, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_22); __pyx_t_22 = 0;
-  if (!(likely(((__pyx_t_5) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_5, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 174, __pyx_L1_error)
+  if (!(likely(((__pyx_t_5) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_5, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 176, __pyx_L1_error)
   __pyx_t_24 = ((PyArrayObject *)__pyx_t_5);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_u_tilde_ev_ravel.rcbuffer->pybuffer, (PyObject*)__pyx_t_24, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) {
       __pyx_v_u_tilde_ev_ravel = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_u_tilde_ev_ravel.rcbuffer->pybuffer.buf = NULL;
-      __PYX_ERR(0, 174, __pyx_L1_error)
+      __PYX_ERR(0, 176, __pyx_L1_error)
     } else {__pyx_pybuffernd_u_tilde_ev_ravel.diminfo[0].strides = __pyx_pybuffernd_u_tilde_ev_ravel.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_u_tilde_ev_ravel.diminfo[0].shape = __pyx_pybuffernd_u_tilde_ev_ravel.rcbuffer->pybuffer.shape[0];
     }
   }
@@ -4619,20 +4627,28 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
   __pyx_v_u_tilde_ev_ravel = ((PyArrayObject *)__pyx_t_5);
   __pyx_t_5 = 0;
 
-  /* "dsgamesolver/qre_ct.pyx":175
+  /* "dsgamesolver/qre_ct.pyx":177
  *         double lambda_ = y[num_a_tot + num_s*num_p]
  *         np.ndarray[np.float64_t, ndim=1] u_tilde_ev_ravel = u_tilde(u, V, phi).ravel()
- *         np.ndarray[np.float64_t, ndim=3] u_tilde_sia_ev = u_tilde_sia(u_tilde_ev_ravel, sigma, num_s, num_p, num_a_max, nums_a)             # <<<<<<<<<<<<<<
+ *         np.ndarray[np.float64_t, ndim=3] u_tilde_sia_ev = u_tilde_sia(u_tilde_ev_ravel, sigma, num_s, num_p,             # <<<<<<<<<<<<<<
+ *                                                                       num_a_max, nums_a)
+ * 
+ */
+  __Pyx_GetModuleGlobalName(__pyx_t_22, __pyx_n_s_u_tilde_sia); if (unlikely(!__pyx_t_22)) __PYX_ERR(0, 177, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_22);
+  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_num_s); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 177, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_num_p); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 177, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_4);
+
+  /* "dsgamesolver/qre_ct.pyx":178
+ *         np.ndarray[np.float64_t, ndim=1] u_tilde_ev_ravel = u_tilde(u, V, phi).ravel()
+ *         np.ndarray[np.float64_t, ndim=3] u_tilde_sia_ev = u_tilde_sia(u_tilde_ev_ravel, sigma, num_s, num_p,
+ *                                                                       num_a_max, nums_a)             # <<<<<<<<<<<<<<
  * 
  *     flat_index = 0
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_22, __pyx_n_s_u_tilde_sia); if (unlikely(!__pyx_t_22)) __PYX_ERR(0, 175, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_22);
-  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_num_s); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 175, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_num_p); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 175, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_num_a_max); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 175, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_num_a_max); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 178, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_t_3 = NULL;
   __pyx_t_8 = 0;
@@ -4649,7 +4665,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
   #if CYTHON_FAST_PYCALL
   if (PyFunction_Check(__pyx_t_22)) {
     PyObject *__pyx_temp[7] = {__pyx_t_3, ((PyObject *)__pyx_v_u_tilde_ev_ravel), ((PyObject *)__pyx_v_sigma), __pyx_t_1, __pyx_t_4, __pyx_t_2, ((PyObject *)__pyx_v_nums_a)};
-    __pyx_t_5 = __Pyx_PyFunction_FastCall(__pyx_t_22, __pyx_temp+1-__pyx_t_8, 6+__pyx_t_8); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 175, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyFunction_FastCall(__pyx_t_22, __pyx_temp+1-__pyx_t_8, 6+__pyx_t_8); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 177, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
@@ -4660,7 +4676,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
   #if CYTHON_FAST_PYCCALL
   if (__Pyx_PyFastCFunction_Check(__pyx_t_22)) {
     PyObject *__pyx_temp[7] = {__pyx_t_3, ((PyObject *)__pyx_v_u_tilde_ev_ravel), ((PyObject *)__pyx_v_sigma), __pyx_t_1, __pyx_t_4, __pyx_t_2, ((PyObject *)__pyx_v_nums_a)};
-    __pyx_t_5 = __Pyx_PyCFunction_FastCall(__pyx_t_22, __pyx_temp+1-__pyx_t_8, 6+__pyx_t_8); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 175, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyCFunction_FastCall(__pyx_t_22, __pyx_temp+1-__pyx_t_8, 6+__pyx_t_8); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 177, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
@@ -4669,7 +4685,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
   } else
   #endif
   {
-    __pyx_t_25 = PyTuple_New(6+__pyx_t_8); if (unlikely(!__pyx_t_25)) __PYX_ERR(0, 175, __pyx_L1_error)
+    __pyx_t_25 = PyTuple_New(6+__pyx_t_8); if (unlikely(!__pyx_t_25)) __PYX_ERR(0, 177, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_25);
     if (__pyx_t_3) {
       __Pyx_GIVEREF(__pyx_t_3); PyTuple_SET_ITEM(__pyx_t_25, 0, __pyx_t_3); __pyx_t_3 = NULL;
@@ -4692,18 +4708,26 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
     __pyx_t_1 = 0;
     __pyx_t_4 = 0;
     __pyx_t_2 = 0;
-    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_22, __pyx_t_25, NULL); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 175, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_22, __pyx_t_25, NULL); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 177, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_25); __pyx_t_25 = 0;
   }
   __Pyx_DECREF(__pyx_t_22); __pyx_t_22 = 0;
-  if (!(likely(((__pyx_t_5) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_5, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 175, __pyx_L1_error)
+
+  /* "dsgamesolver/qre_ct.pyx":177
+ *         double lambda_ = y[num_a_tot + num_s*num_p]
+ *         np.ndarray[np.float64_t, ndim=1] u_tilde_ev_ravel = u_tilde(u, V, phi).ravel()
+ *         np.ndarray[np.float64_t, ndim=3] u_tilde_sia_ev = u_tilde_sia(u_tilde_ev_ravel, sigma, num_s, num_p,             # <<<<<<<<<<<<<<
+ *                                                                       num_a_max, nums_a)
+ * 
+ */
+  if (!(likely(((__pyx_t_5) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_5, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 177, __pyx_L1_error)
   __pyx_t_26 = ((PyArrayObject *)__pyx_t_5);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_u_tilde_sia_ev.rcbuffer->pybuffer, (PyObject*)__pyx_t_26, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES, 3, 0, __pyx_stack) == -1)) {
       __pyx_v_u_tilde_sia_ev = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_u_tilde_sia_ev.rcbuffer->pybuffer.buf = NULL;
-      __PYX_ERR(0, 175, __pyx_L1_error)
+      __PYX_ERR(0, 177, __pyx_L1_error)
     } else {__pyx_pybuffernd_u_tilde_sia_ev.diminfo[0].strides = __pyx_pybuffernd_u_tilde_sia_ev.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_u_tilde_sia_ev.diminfo[0].shape = __pyx_pybuffernd_u_tilde_sia_ev.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_u_tilde_sia_ev.diminfo[1].strides = __pyx_pybuffernd_u_tilde_sia_ev.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_u_tilde_sia_ev.diminfo[1].shape = __pyx_pybuffernd_u_tilde_sia_ev.rcbuffer->pybuffer.shape[1]; __pyx_pybuffernd_u_tilde_sia_ev.diminfo[2].strides = __pyx_pybuffernd_u_tilde_sia_ev.rcbuffer->pybuffer.strides[2]; __pyx_pybuffernd_u_tilde_sia_ev.diminfo[2].shape = __pyx_pybuffernd_u_tilde_sia_ev.rcbuffer->pybuffer.shape[2];
     }
   }
@@ -4711,8 +4735,8 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
   __pyx_v_u_tilde_sia_ev = ((PyArrayObject *)__pyx_t_5);
   __pyx_t_5 = 0;
 
-  /* "dsgamesolver/qre_ct.pyx":177
- *         np.ndarray[np.float64_t, ndim=3] u_tilde_sia_ev = u_tilde_sia(u_tilde_ev_ravel, sigma, num_s, num_p, num_a_max, nums_a)
+  /* "dsgamesolver/qre_ct.pyx":180
+ *                                                                       num_a_max, nums_a)
  * 
  *     flat_index = 0             # <<<<<<<<<<<<<<
  *     for state in range(num_s):
@@ -4720,7 +4744,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
  */
   __pyx_v_flat_index = 0;
 
-  /* "dsgamesolver/qre_ct.pyx":178
+  /* "dsgamesolver/qre_ct.pyx":181
  * 
  *     flat_index = 0
  *     for state in range(num_s):             # <<<<<<<<<<<<<<
@@ -4732,7 +4756,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
   for (__pyx_t_10 = 0; __pyx_t_10 < __pyx_t_9; __pyx_t_10+=1) {
     __pyx_v_state = __pyx_t_10;
 
-    /* "dsgamesolver/qre_ct.pyx":179
+    /* "dsgamesolver/qre_ct.pyx":182
  *     flat_index = 0
  *     for state in range(num_s):
  *         for player in range(num_p):             # <<<<<<<<<<<<<<
@@ -4744,7 +4768,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
     for (__pyx_t_13 = 0; __pyx_t_13 < __pyx_t_12; __pyx_t_13+=1) {
       __pyx_v_player = __pyx_t_13;
 
-      /* "dsgamesolver/qre_ct.pyx":180
+      /* "dsgamesolver/qre_ct.pyx":183
  *     for state in range(num_s):
  *         for player in range(num_p):
  *             for action in range(nums_a[state, player]):             # <<<<<<<<<<<<<<
@@ -4758,7 +4782,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
       for (__pyx_t_18 = 0; __pyx_t_18 < __pyx_t_17; __pyx_t_18+=1) {
         __pyx_v_action = __pyx_t_18;
 
-        /* "dsgamesolver/qre_ct.pyx":182
+        /* "dsgamesolver/qre_ct.pyx":185
  *             for action in range(nums_a[state, player]):
  * 
  *                 if action == 0:             # <<<<<<<<<<<<<<
@@ -4768,7 +4792,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
         __pyx_t_27 = ((__pyx_v_action == 0) != 0);
         if (__pyx_t_27) {
 
-          /* "dsgamesolver/qre_ct.pyx":183
+          /* "dsgamesolver/qre_ct.pyx":186
  * 
  *                 if action == 0:
  *                     out_[flat_index] += 1             # <<<<<<<<<<<<<<
@@ -4778,7 +4802,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
           __pyx_t_20 = __pyx_v_flat_index;
           *__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_out_.rcbuffer->pybuffer.buf, __pyx_t_20, __pyx_pybuffernd_out_.diminfo[0].strides) += 1.0;
 
-          /* "dsgamesolver/qre_ct.pyx":184
+          /* "dsgamesolver/qre_ct.pyx":187
  *                 if action == 0:
  *                     out_[flat_index] += 1
  *                     for a in range(nums_a[state, player]):             # <<<<<<<<<<<<<<
@@ -4792,12 +4816,12 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
           for (__pyx_t_30 = 0; __pyx_t_30 < __pyx_t_29; __pyx_t_30+=1) {
             __pyx_v_a = __pyx_t_30;
 
-            /* "dsgamesolver/qre_ct.pyx":185
+            /* "dsgamesolver/qre_ct.pyx":188
  *                     out_[flat_index] += 1
  *                     for a in range(nums_a[state, player]):
  *                         out_[flat_index] -= sigma[state, player, a]             # <<<<<<<<<<<<<<
  *                 else:
- *                     out_[flat_index] = beta[state, player, 0] - beta[state, player, action] + lambda_ * (u_tilde_sia_ev[state,player,action] - u_tilde_sia_ev[state,player,0])
+ *                     out_[flat_index] = (beta[state, player, 0] - beta[state, player, action] + lambda_ *
  */
             __pyx_t_15 = __pyx_v_state;
             __pyx_t_20 = __pyx_v_player;
@@ -4806,7 +4830,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
             *__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_out_.rcbuffer->pybuffer.buf, __pyx_t_14, __pyx_pybuffernd_out_.diminfo[0].strides) -= (*__Pyx_BufPtrStrided3d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_sigma.rcbuffer->pybuffer.buf, __pyx_t_15, __pyx_pybuffernd_sigma.diminfo[0].strides, __pyx_t_20, __pyx_pybuffernd_sigma.diminfo[1].strides, __pyx_t_19, __pyx_pybuffernd_sigma.diminfo[2].strides));
           }
 
-          /* "dsgamesolver/qre_ct.pyx":182
+          /* "dsgamesolver/qre_ct.pyx":185
  *             for action in range(nums_a[state, player]):
  * 
  *                 if action == 0:             # <<<<<<<<<<<<<<
@@ -4816,12 +4840,12 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
           goto __pyx_L15;
         }
 
-        /* "dsgamesolver/qre_ct.pyx":187
+        /* "dsgamesolver/qre_ct.pyx":190
  *                         out_[flat_index] -= sigma[state, player, a]
  *                 else:
- *                     out_[flat_index] = beta[state, player, 0] - beta[state, player, action] + lambda_ * (u_tilde_sia_ev[state,player,action] - u_tilde_sia_ev[state,player,0])             # <<<<<<<<<<<<<<
+ *                     out_[flat_index] = (beta[state, player, 0] - beta[state, player, action] + lambda_ *             # <<<<<<<<<<<<<<
+ *                                         (u_tilde_sia_ev[state,player,action] - u_tilde_sia_ev[state,player,0]))
  * 
- *                 flat_index += 1
  */
         /*else*/ {
           __pyx_t_19 = __pyx_v_state;
@@ -4830,19 +4854,35 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
           __pyx_t_14 = __pyx_v_state;
           __pyx_t_31 = __pyx_v_player;
           __pyx_t_32 = __pyx_v_action;
+
+          /* "dsgamesolver/qre_ct.pyx":191
+ *                 else:
+ *                     out_[flat_index] = (beta[state, player, 0] - beta[state, player, action] + lambda_ *
+ *                                         (u_tilde_sia_ev[state,player,action] - u_tilde_sia_ev[state,player,0]))             # <<<<<<<<<<<<<<
+ * 
+ *                 flat_index += 1
+ */
           __pyx_t_33 = __pyx_v_state;
           __pyx_t_34 = __pyx_v_player;
           __pyx_t_35 = __pyx_v_action;
           __pyx_t_36 = __pyx_v_state;
           __pyx_t_37 = __pyx_v_player;
           __pyx_t_38 = 0;
+
+          /* "dsgamesolver/qre_ct.pyx":190
+ *                         out_[flat_index] -= sigma[state, player, a]
+ *                 else:
+ *                     out_[flat_index] = (beta[state, player, 0] - beta[state, player, action] + lambda_ *             # <<<<<<<<<<<<<<
+ *                                         (u_tilde_sia_ev[state,player,action] - u_tilde_sia_ev[state,player,0]))
+ * 
+ */
           __pyx_t_39 = __pyx_v_flat_index;
           *__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_out_.rcbuffer->pybuffer.buf, __pyx_t_39, __pyx_pybuffernd_out_.diminfo[0].strides) = (((*__Pyx_BufPtrStrided3d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_beta.rcbuffer->pybuffer.buf, __pyx_t_19, __pyx_pybuffernd_beta.diminfo[0].strides, __pyx_t_20, __pyx_pybuffernd_beta.diminfo[1].strides, __pyx_t_15, __pyx_pybuffernd_beta.diminfo[2].strides)) - (*__Pyx_BufPtrStrided3d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_beta.rcbuffer->pybuffer.buf, __pyx_t_14, __pyx_pybuffernd_beta.diminfo[0].strides, __pyx_t_31, __pyx_pybuffernd_beta.diminfo[1].strides, __pyx_t_32, __pyx_pybuffernd_beta.diminfo[2].strides))) + (__pyx_v_lambda_ * ((*__Pyx_BufPtrStrided3d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_u_tilde_sia_ev.rcbuffer->pybuffer.buf, __pyx_t_33, __pyx_pybuffernd_u_tilde_sia_ev.diminfo[0].strides, __pyx_t_34, __pyx_pybuffernd_u_tilde_sia_ev.diminfo[1].strides, __pyx_t_35, __pyx_pybuffernd_u_tilde_sia_ev.diminfo[2].strides)) - (*__Pyx_BufPtrStrided3d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_u_tilde_sia_ev.rcbuffer->pybuffer.buf, __pyx_t_36, __pyx_pybuffernd_u_tilde_sia_ev.diminfo[0].strides, __pyx_t_37, __pyx_pybuffernd_u_tilde_sia_ev.diminfo[1].strides, __pyx_t_38, __pyx_pybuffernd_u_tilde_sia_ev.diminfo[2].strides)))));
         }
         __pyx_L15:;
 
-        /* "dsgamesolver/qre_ct.pyx":189
- *                     out_[flat_index] = beta[state, player, 0] - beta[state, player, action] + lambda_ * (u_tilde_sia_ev[state,player,action] - u_tilde_sia_ev[state,player,0])
+        /* "dsgamesolver/qre_ct.pyx":193
+ *                                         (u_tilde_sia_ev[state,player,action] - u_tilde_sia_ev[state,player,0]))
  * 
  *                 flat_index += 1             # <<<<<<<<<<<<<<
  * 
@@ -4853,7 +4893,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
     }
   }
 
-  /* "dsgamesolver/qre_ct.pyx":191
+  /* "dsgamesolver/qre_ct.pyx":195
  *                 flat_index += 1
  * 
  *     for state in range(num_s):             # <<<<<<<<<<<<<<
@@ -4865,7 +4905,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
   for (__pyx_t_10 = 0; __pyx_t_10 < __pyx_t_9; __pyx_t_10+=1) {
     __pyx_v_state = __pyx_t_10;
 
-    /* "dsgamesolver/qre_ct.pyx":192
+    /* "dsgamesolver/qre_ct.pyx":196
  * 
  *     for state in range(num_s):
  *         for player in range(num_p):             # <<<<<<<<<<<<<<
@@ -4877,7 +4917,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
     for (__pyx_t_13 = 0; __pyx_t_13 < __pyx_t_12; __pyx_t_13+=1) {
       __pyx_v_player = __pyx_t_13;
 
-      /* "dsgamesolver/qre_ct.pyx":193
+      /* "dsgamesolver/qre_ct.pyx":197
  *     for state in range(num_s):
  *         for player in range(num_p):
  *             out_[flat_index] -= V[state, player]             # <<<<<<<<<<<<<<
@@ -4889,7 +4929,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
       __pyx_t_36 = __pyx_v_flat_index;
       *__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_out_.rcbuffer->pybuffer.buf, __pyx_t_36, __pyx_pybuffernd_out_.diminfo[0].strides) -= (*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_V.rcbuffer->pybuffer.buf, __pyx_t_38, __pyx_pybuffernd_V.diminfo[0].strides, __pyx_t_37, __pyx_pybuffernd_V.diminfo[1].strides));
 
-      /* "dsgamesolver/qre_ct.pyx":194
+      /* "dsgamesolver/qre_ct.pyx":198
  *         for player in range(num_p):
  *             out_[flat_index] -= V[state, player]
  *             for action in range(nums_a[state, player]):             # <<<<<<<<<<<<<<
@@ -4903,7 +4943,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
       for (__pyx_t_18 = 0; __pyx_t_18 < __pyx_t_17; __pyx_t_18+=1) {
         __pyx_v_action = __pyx_t_18;
 
-        /* "dsgamesolver/qre_ct.pyx":195
+        /* "dsgamesolver/qre_ct.pyx":199
  *             out_[flat_index] -= V[state, player]
  *             for action in range(nums_a[state, player]):
  *                 out_[flat_index] += sigma[state, player, action] * u_tilde_sia_ev[state, player, action]             # <<<<<<<<<<<<<<
@@ -4920,7 +4960,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
         *__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_out_.rcbuffer->pybuffer.buf, __pyx_t_32, __pyx_pybuffernd_out_.diminfo[0].strides) += ((*__Pyx_BufPtrStrided3d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_sigma.rcbuffer->pybuffer.buf, __pyx_t_38, __pyx_pybuffernd_sigma.diminfo[0].strides, __pyx_t_37, __pyx_pybuffernd_sigma.diminfo[1].strides, __pyx_t_36, __pyx_pybuffernd_sigma.diminfo[2].strides)) * (*__Pyx_BufPtrStrided3d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_u_tilde_sia_ev.rcbuffer->pybuffer.buf, __pyx_t_35, __pyx_pybuffernd_u_tilde_sia_ev.diminfo[0].strides, __pyx_t_34, __pyx_pybuffernd_u_tilde_sia_ev.diminfo[1].strides, __pyx_t_33, __pyx_pybuffernd_u_tilde_sia_ev.diminfo[2].strides)));
       }
 
-      /* "dsgamesolver/qre_ct.pyx":196
+      /* "dsgamesolver/qre_ct.pyx":200
  *             for action in range(nums_a[state, player]):
  *                 out_[flat_index] += sigma[state, player, action] * u_tilde_sia_ev[state, player, action]
  *             flat_index += 1             # <<<<<<<<<<<<<<
@@ -4931,7 +4971,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
     }
   }
 
-  /* "dsgamesolver/qre_ct.pyx":198
+  /* "dsgamesolver/qre_ct.pyx":202
  *             flat_index += 1
  * 
  *     return out_             # <<<<<<<<<<<<<<
@@ -4943,7 +4983,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
   __pyx_r = ((PyObject *)__pyx_v_out_);
   goto __pyx_L0;
 
-  /* "dsgamesolver/qre_ct.pyx":148
+  /* "dsgamesolver/qre_ct.pyx":150
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * def H(np.ndarray[np.float64_t, ndim=1] y, u, phi, int num_s, int num_p,             # <<<<<<<<<<<<<<
@@ -4997,7 +5037,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_8H(CYTHON_UNUSED PyObject *__py
   return __pyx_r;
 }
 
-/* "dsgamesolver/qre_ct.pyx":206
+/* "dsgamesolver/qre_ct.pyx":210
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * def J(np.ndarray[np.float64_t, ndim=1] y, u, phi, int num_s, int num_p,             # <<<<<<<<<<<<<<
@@ -5059,47 +5099,47 @@ static PyObject *__pyx_pw_12dsgamesolver_6qre_ct_11J(PyObject *__pyx_self, PyObj
         case  1:
         if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_u)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("J", 1, 8, 8, 1); __PYX_ERR(0, 206, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("J", 1, 8, 8, 1); __PYX_ERR(0, 210, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_phi)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("J", 1, 8, 8, 2); __PYX_ERR(0, 206, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("J", 1, 8, 8, 2); __PYX_ERR(0, 210, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  3:
         if (likely((values[3] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_num_s)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("J", 1, 8, 8, 3); __PYX_ERR(0, 206, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("J", 1, 8, 8, 3); __PYX_ERR(0, 210, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  4:
         if (likely((values[4] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_num_p)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("J", 1, 8, 8, 4); __PYX_ERR(0, 206, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("J", 1, 8, 8, 4); __PYX_ERR(0, 210, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  5:
         if (likely((values[5] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_nums_a)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("J", 1, 8, 8, 5); __PYX_ERR(0, 206, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("J", 1, 8, 8, 5); __PYX_ERR(0, 210, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  6:
         if (likely((values[6] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_num_a_max)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("J", 1, 8, 8, 6); __PYX_ERR(0, 206, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("J", 1, 8, 8, 6); __PYX_ERR(0, 210, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  7:
         if (likely((values[7] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_num_a_tot)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("J", 1, 8, 8, 7); __PYX_ERR(0, 206, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("J", 1, 8, 8, 7); __PYX_ERR(0, 210, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "J") < 0)) __PYX_ERR(0, 206, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "J") < 0)) __PYX_ERR(0, 210, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 8) {
       goto __pyx_L5_argtuple_error;
@@ -5116,22 +5156,22 @@ static PyObject *__pyx_pw_12dsgamesolver_6qre_ct_11J(PyObject *__pyx_self, PyObj
     __pyx_v_y = ((PyArrayObject *)values[0]);
     __pyx_v_u = values[1];
     __pyx_v_phi = values[2];
-    __pyx_v_num_s = __Pyx_PyInt_As_int(values[3]); if (unlikely((__pyx_v_num_s == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 206, __pyx_L3_error)
-    __pyx_v_num_p = __Pyx_PyInt_As_int(values[4]); if (unlikely((__pyx_v_num_p == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 206, __pyx_L3_error)
+    __pyx_v_num_s = __Pyx_PyInt_As_int(values[3]); if (unlikely((__pyx_v_num_s == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 210, __pyx_L3_error)
+    __pyx_v_num_p = __Pyx_PyInt_As_int(values[4]); if (unlikely((__pyx_v_num_p == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 210, __pyx_L3_error)
     __pyx_v_nums_a = ((PyArrayObject *)values[5]);
-    __pyx_v_num_a_max = __Pyx_PyInt_As_int(values[6]); if (unlikely((__pyx_v_num_a_max == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 207, __pyx_L3_error)
-    __pyx_v_num_a_tot = __Pyx_PyInt_As_int(values[7]); if (unlikely((__pyx_v_num_a_tot == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 207, __pyx_L3_error)
+    __pyx_v_num_a_max = __Pyx_PyInt_As_int(values[6]); if (unlikely((__pyx_v_num_a_max == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 211, __pyx_L3_error)
+    __pyx_v_num_a_tot = __Pyx_PyInt_As_int(values[7]); if (unlikely((__pyx_v_num_a_tot == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 211, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("J", 1, 8, 8, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 206, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("J", 1, 8, 8, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 210, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("dsgamesolver.qre_ct.J", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_y), __pyx_ptype_5numpy_ndarray, 1, "y", 0))) __PYX_ERR(0, 206, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_nums_a), __pyx_ptype_5numpy_ndarray, 1, "nums_a", 0))) __PYX_ERR(0, 207, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_y), __pyx_ptype_5numpy_ndarray, 1, "y", 0))) __PYX_ERR(0, 210, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_nums_a), __pyx_ptype_5numpy_ndarray, 1, "nums_a", 0))) __PYX_ERR(0, 211, __pyx_L1_error)
   __pyx_r = __pyx_pf_12dsgamesolver_6qre_ct_10J(__pyx_self, __pyx_v_y, __pyx_v_u, __pyx_v_phi, __pyx_v_num_s, __pyx_v_num_p, __pyx_v_nums_a, __pyx_v_num_a_max, __pyx_v_num_a_tot);
 
   /* function exit code */
@@ -5281,32 +5321,32 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
   __pyx_pybuffernd_nums_a.rcbuffer = &__pyx_pybuffer_nums_a;
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_y.rcbuffer->pybuffer, (PyObject*)__pyx_v_y, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 206, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_y.rcbuffer->pybuffer, (PyObject*)__pyx_v_y, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 210, __pyx_L1_error)
   }
   __pyx_pybuffernd_y.diminfo[0].strides = __pyx_pybuffernd_y.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_y.diminfo[0].shape = __pyx_pybuffernd_y.rcbuffer->pybuffer.shape[0];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_nums_a.rcbuffer->pybuffer, (PyObject*)__pyx_v_nums_a, &__Pyx_TypeInfo_nn___pyx_t_5numpy_int32_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 206, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_nums_a.rcbuffer->pybuffer, (PyObject*)__pyx_v_nums_a, &__Pyx_TypeInfo_nn___pyx_t_5numpy_int32_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 210, __pyx_L1_error)
   }
   __pyx_pybuffernd_nums_a.diminfo[0].strides = __pyx_pybuffernd_nums_a.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_nums_a.diminfo[0].shape = __pyx_pybuffernd_nums_a.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_nums_a.diminfo[1].strides = __pyx_pybuffernd_nums_a.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_nums_a.diminfo[1].shape = __pyx_pybuffernd_nums_a.rcbuffer->pybuffer.shape[1];
 
-  /* "dsgamesolver/qre_ct.pyx":217
+  /* "dsgamesolver/qre_ct.pyx":221
  * 
  *     cdef:
- *         np.ndarray[np.float64_t, ndim=2] out_ = np.zeros((num_a_tot + num_s*num_p, num_a_tot + num_s*num_p + 1), dtype=np.float64)             # <<<<<<<<<<<<<<
+ *         np.ndarray[np.float64_t, ndim=2] out_ = np.zeros((num_a_tot + num_s*num_p, num_a_tot + num_s*num_p + 1),             # <<<<<<<<<<<<<<
+ *                                                          dtype=np.float64)
  *         np.ndarray[np.float64_t, ndim=3] beta = np.zeros((num_s, num_p, num_a_max), dtype=np.float64)
- *         int state, player, action
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 217, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 221, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_zeros); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 217, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_zeros); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 221, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyInt_From_int((__pyx_v_num_a_tot + (__pyx_v_num_s * __pyx_v_num_p))); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 217, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_From_int((__pyx_v_num_a_tot + (__pyx_v_num_s * __pyx_v_num_p))); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 221, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = __Pyx_PyInt_From_long(((__pyx_v_num_a_tot + (__pyx_v_num_s * __pyx_v_num_p)) + 1)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 217, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyInt_From_long(((__pyx_v_num_a_tot + (__pyx_v_num_s * __pyx_v_num_p)) + 1)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 221, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 217, __pyx_L1_error)
+  __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 221, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_GIVEREF(__pyx_t_1);
   PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_1);
@@ -5314,32 +5354,48 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
   PyTuple_SET_ITEM(__pyx_t_4, 1, __pyx_t_3);
   __pyx_t_1 = 0;
   __pyx_t_3 = 0;
-  __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 217, __pyx_L1_error)
+  __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 221, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_GIVEREF(__pyx_t_4);
   PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_4);
   __pyx_t_4 = 0;
-  __pyx_t_4 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 217, __pyx_L1_error)
+
+  /* "dsgamesolver/qre_ct.pyx":222
+ *     cdef:
+ *         np.ndarray[np.float64_t, ndim=2] out_ = np.zeros((num_a_tot + num_s*num_p, num_a_tot + num_s*num_p + 1),
+ *                                                          dtype=np.float64)             # <<<<<<<<<<<<<<
+ *         np.ndarray[np.float64_t, ndim=3] beta = np.zeros((num_s, num_p, num_a_max), dtype=np.float64)
+ *         int state, player, action
+ */
+  __pyx_t_4 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 222, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 217, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 222, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_float64); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 217, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_float64); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 222, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_dtype, __pyx_t_5) < 0) __PYX_ERR(0, 217, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_dtype, __pyx_t_5) < 0) __PYX_ERR(0, 222, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_3, __pyx_t_4); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 217, __pyx_L1_error)
+
+  /* "dsgamesolver/qre_ct.pyx":221
+ * 
+ *     cdef:
+ *         np.ndarray[np.float64_t, ndim=2] out_ = np.zeros((num_a_tot + num_s*num_p, num_a_tot + num_s*num_p + 1),             # <<<<<<<<<<<<<<
+ *                                                          dtype=np.float64)
+ *         np.ndarray[np.float64_t, ndim=3] beta = np.zeros((num_s, num_p, num_a_max), dtype=np.float64)
+ */
+  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_3, __pyx_t_4); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 221, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (!(likely(((__pyx_t_5) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_5, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 217, __pyx_L1_error)
+  if (!(likely(((__pyx_t_5) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_5, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 221, __pyx_L1_error)
   __pyx_t_6 = ((PyArrayObject *)__pyx_t_5);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_out_.rcbuffer->pybuffer, (PyObject*)__pyx_t_6, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 2, 0, __pyx_stack) == -1)) {
       __pyx_v_out_ = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_out_.rcbuffer->pybuffer.buf = NULL;
-      __PYX_ERR(0, 217, __pyx_L1_error)
+      __PYX_ERR(0, 221, __pyx_L1_error)
     } else {__pyx_pybuffernd_out_.diminfo[0].strides = __pyx_pybuffernd_out_.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_out_.diminfo[0].shape = __pyx_pybuffernd_out_.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_out_.diminfo[1].strides = __pyx_pybuffernd_out_.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_out_.diminfo[1].shape = __pyx_pybuffernd_out_.rcbuffer->pybuffer.shape[1];
     }
   }
@@ -5347,25 +5403,25 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
   __pyx_v_out_ = ((PyArrayObject *)__pyx_t_5);
   __pyx_t_5 = 0;
 
-  /* "dsgamesolver/qre_ct.pyx":218
- *     cdef:
- *         np.ndarray[np.float64_t, ndim=2] out_ = np.zeros((num_a_tot + num_s*num_p, num_a_tot + num_s*num_p + 1), dtype=np.float64)
+  /* "dsgamesolver/qre_ct.pyx":223
+ *         np.ndarray[np.float64_t, ndim=2] out_ = np.zeros((num_a_tot + num_s*num_p, num_a_tot + num_s*num_p + 1),
+ *                                                          dtype=np.float64)
  *         np.ndarray[np.float64_t, ndim=3] beta = np.zeros((num_s, num_p, num_a_max), dtype=np.float64)             # <<<<<<<<<<<<<<
  *         int state, player, action
  *         int flat_index = 0
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_n_s_np); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 218, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_n_s_np); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 223, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_zeros); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 218, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_zeros); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 223, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  __pyx_t_5 = __Pyx_PyInt_From_int(__pyx_v_num_s); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 218, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyInt_From_int(__pyx_v_num_s); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 223, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_num_p); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 218, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_num_p); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 223, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_num_a_max); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 218, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_num_a_max); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 223, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_1 = PyTuple_New(3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 218, __pyx_L1_error)
+  __pyx_t_1 = PyTuple_New(3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 223, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_GIVEREF(__pyx_t_5);
   PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_t_5);
@@ -5376,32 +5432,32 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
   __pyx_t_5 = 0;
   __pyx_t_3 = 0;
   __pyx_t_2 = 0;
-  __pyx_t_2 = PyTuple_New(1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 218, __pyx_L1_error)
+  __pyx_t_2 = PyTuple_New(1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 223, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_GIVEREF(__pyx_t_1);
   PyTuple_SET_ITEM(__pyx_t_2, 0, __pyx_t_1);
   __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 218, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 223, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 218, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 223, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_float64); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 218, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_float64); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 223, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_dtype, __pyx_t_5) < 0) __PYX_ERR(0, 218, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_dtype, __pyx_t_5) < 0) __PYX_ERR(0, 223, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_2, __pyx_t_1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 218, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_2, __pyx_t_1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 223, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  if (!(likely(((__pyx_t_5) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_5, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 218, __pyx_L1_error)
+  if (!(likely(((__pyx_t_5) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_5, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 223, __pyx_L1_error)
   __pyx_t_7 = ((PyArrayObject *)__pyx_t_5);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_beta.rcbuffer->pybuffer, (PyObject*)__pyx_t_7, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 3, 0, __pyx_stack) == -1)) {
       __pyx_v_beta = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_beta.rcbuffer->pybuffer.buf = NULL;
-      __PYX_ERR(0, 218, __pyx_L1_error)
+      __PYX_ERR(0, 223, __pyx_L1_error)
     } else {__pyx_pybuffernd_beta.diminfo[0].strides = __pyx_pybuffernd_beta.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_beta.diminfo[0].shape = __pyx_pybuffernd_beta.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_beta.diminfo[1].strides = __pyx_pybuffernd_beta.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_beta.diminfo[1].shape = __pyx_pybuffernd_beta.rcbuffer->pybuffer.shape[1]; __pyx_pybuffernd_beta.diminfo[2].strides = __pyx_pybuffernd_beta.rcbuffer->pybuffer.strides[2]; __pyx_pybuffernd_beta.diminfo[2].shape = __pyx_pybuffernd_beta.rcbuffer->pybuffer.shape[2];
     }
   }
@@ -5409,7 +5465,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
   __pyx_v_beta = ((PyArrayObject *)__pyx_t_5);
   __pyx_t_5 = 0;
 
-  /* "dsgamesolver/qre_ct.pyx":220
+  /* "dsgamesolver/qre_ct.pyx":225
  *         np.ndarray[np.float64_t, ndim=3] beta = np.zeros((num_s, num_p, num_a_max), dtype=np.float64)
  *         int state, player, action
  *         int flat_index = 0             # <<<<<<<<<<<<<<
@@ -5418,7 +5474,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
  */
   __pyx_v_flat_index = 0;
 
-  /* "dsgamesolver/qre_ct.pyx":222
+  /* "dsgamesolver/qre_ct.pyx":227
  *         int flat_index = 0
  * 
  *     for state in range(num_s):             # <<<<<<<<<<<<<<
@@ -5430,7 +5486,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
   for (__pyx_t_10 = 0; __pyx_t_10 < __pyx_t_9; __pyx_t_10+=1) {
     __pyx_v_state = __pyx_t_10;
 
-    /* "dsgamesolver/qre_ct.pyx":223
+    /* "dsgamesolver/qre_ct.pyx":228
  * 
  *     for state in range(num_s):
  *         for player in range(num_p):             # <<<<<<<<<<<<<<
@@ -5442,7 +5498,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
     for (__pyx_t_13 = 0; __pyx_t_13 < __pyx_t_12; __pyx_t_13+=1) {
       __pyx_v_player = __pyx_t_13;
 
-      /* "dsgamesolver/qre_ct.pyx":224
+      /* "dsgamesolver/qre_ct.pyx":229
  *     for state in range(num_s):
  *         for player in range(num_p):
  *             for action in range(nums_a[state, player]):             # <<<<<<<<<<<<<<
@@ -5456,7 +5512,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
       for (__pyx_t_18 = 0; __pyx_t_18 < __pyx_t_17; __pyx_t_18+=1) {
         __pyx_v_action = __pyx_t_18;
 
-        /* "dsgamesolver/qre_ct.pyx":225
+        /* "dsgamesolver/qre_ct.pyx":230
  *         for player in range(num_p):
  *             for action in range(nums_a[state, player]):
  *                 beta[state, player, action] = y[flat_index]             # <<<<<<<<<<<<<<
@@ -5469,7 +5525,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
         __pyx_t_20 = __pyx_v_action;
         *__Pyx_BufPtrStrided3d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_beta.rcbuffer->pybuffer.buf, __pyx_t_14, __pyx_pybuffernd_beta.diminfo[0].strides, __pyx_t_19, __pyx_pybuffernd_beta.diminfo[1].strides, __pyx_t_20, __pyx_pybuffernd_beta.diminfo[2].strides) = (*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_y.rcbuffer->pybuffer.buf, __pyx_t_15, __pyx_pybuffernd_y.diminfo[0].strides));
 
-        /* "dsgamesolver/qre_ct.pyx":226
+        /* "dsgamesolver/qre_ct.pyx":231
  *             for action in range(nums_a[state, player]):
  *                 beta[state, player, action] = y[flat_index]
  *                 flat_index += 1             # <<<<<<<<<<<<<<
@@ -5481,16 +5537,16 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
     }
   }
 
-  /* "dsgamesolver/qre_ct.pyx":229
+  /* "dsgamesolver/qre_ct.pyx":234
  * 
  *     cdef:
  *         np.ndarray[np.float64_t, ndim=3] sigma = np.exp(beta)             # <<<<<<<<<<<<<<
  *         np.ndarray[np.float64_t, ndim=2] V = y[num_a_tot : num_a_tot + num_s*num_p].reshape(num_s, num_p)
  *         double lambda_ = y[num_a_tot + num_s*num_p]
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 229, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 234, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_exp); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 229, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_exp); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 234, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_t_1 = NULL;
@@ -5505,16 +5561,16 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
   }
   __pyx_t_5 = (__pyx_t_1) ? __Pyx_PyObject_Call2Args(__pyx_t_2, __pyx_t_1, ((PyObject *)__pyx_v_beta)) : __Pyx_PyObject_CallOneArg(__pyx_t_2, ((PyObject *)__pyx_v_beta));
   __Pyx_XDECREF(__pyx_t_1); __pyx_t_1 = 0;
-  if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 229, __pyx_L1_error)
+  if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 234, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  if (!(likely(((__pyx_t_5) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_5, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 229, __pyx_L1_error)
+  if (!(likely(((__pyx_t_5) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_5, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 234, __pyx_L1_error)
   __pyx_t_21 = ((PyArrayObject *)__pyx_t_5);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_sigma.rcbuffer->pybuffer, (PyObject*)__pyx_t_21, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES, 3, 0, __pyx_stack) == -1)) {
       __pyx_v_sigma = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_sigma.rcbuffer->pybuffer.buf = NULL;
-      __PYX_ERR(0, 229, __pyx_L1_error)
+      __PYX_ERR(0, 234, __pyx_L1_error)
     } else {__pyx_pybuffernd_sigma.diminfo[0].strides = __pyx_pybuffernd_sigma.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_sigma.diminfo[0].shape = __pyx_pybuffernd_sigma.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_sigma.diminfo[1].strides = __pyx_pybuffernd_sigma.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_sigma.diminfo[1].shape = __pyx_pybuffernd_sigma.rcbuffer->pybuffer.shape[1]; __pyx_pybuffernd_sigma.diminfo[2].strides = __pyx_pybuffernd_sigma.rcbuffer->pybuffer.strides[2]; __pyx_pybuffernd_sigma.diminfo[2].shape = __pyx_pybuffernd_sigma.rcbuffer->pybuffer.shape[2];
     }
   }
@@ -5522,30 +5578,30 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
   __pyx_v_sigma = ((PyArrayObject *)__pyx_t_5);
   __pyx_t_5 = 0;
 
-  /* "dsgamesolver/qre_ct.pyx":230
+  /* "dsgamesolver/qre_ct.pyx":235
  *     cdef:
  *         np.ndarray[np.float64_t, ndim=3] sigma = np.exp(beta)
  *         np.ndarray[np.float64_t, ndim=2] V = y[num_a_tot : num_a_tot + num_s*num_p].reshape(num_s, num_p)             # <<<<<<<<<<<<<<
  *         double lambda_ = y[num_a_tot + num_s*num_p]
  *         np.ndarray[np.float64_t, ndim=1] u_tilde_ev_ravel = u_tilde(u, V, phi).ravel()
  */
-  __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_num_a_tot); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 230, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_num_a_tot); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 235, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_1 = __Pyx_PyInt_From_int((__pyx_v_num_a_tot + (__pyx_v_num_s * __pyx_v_num_p))); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 230, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_From_int((__pyx_v_num_a_tot + (__pyx_v_num_s * __pyx_v_num_p))); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 235, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_4 = PySlice_New(__pyx_t_2, __pyx_t_1, Py_None); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 230, __pyx_L1_error)
+  __pyx_t_4 = PySlice_New(__pyx_t_2, __pyx_t_1, Py_None); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 235, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyObject_GetItem(((PyObject *)__pyx_v_y), __pyx_t_4); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 230, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetItem(((PyObject *)__pyx_v_y), __pyx_t_4); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 235, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_reshape); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 230, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_reshape); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 235, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_num_s); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 230, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_num_s); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 235, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_num_p); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 230, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_num_p); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 235, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_t_3 = NULL;
   __pyx_t_8 = 0;
@@ -5562,7 +5618,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
   #if CYTHON_FAST_PYCALL
   if (PyFunction_Check(__pyx_t_4)) {
     PyObject *__pyx_temp[3] = {__pyx_t_3, __pyx_t_1, __pyx_t_2};
-    __pyx_t_5 = __Pyx_PyFunction_FastCall(__pyx_t_4, __pyx_temp+1-__pyx_t_8, 2+__pyx_t_8); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 230, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyFunction_FastCall(__pyx_t_4, __pyx_temp+1-__pyx_t_8, 2+__pyx_t_8); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 235, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
@@ -5572,7 +5628,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
   #if CYTHON_FAST_PYCCALL
   if (__Pyx_PyFastCFunction_Check(__pyx_t_4)) {
     PyObject *__pyx_temp[3] = {__pyx_t_3, __pyx_t_1, __pyx_t_2};
-    __pyx_t_5 = __Pyx_PyCFunction_FastCall(__pyx_t_4, __pyx_temp+1-__pyx_t_8, 2+__pyx_t_8); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 230, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyCFunction_FastCall(__pyx_t_4, __pyx_temp+1-__pyx_t_8, 2+__pyx_t_8); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 235, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
@@ -5580,7 +5636,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
   } else
   #endif
   {
-    __pyx_t_22 = PyTuple_New(2+__pyx_t_8); if (unlikely(!__pyx_t_22)) __PYX_ERR(0, 230, __pyx_L1_error)
+    __pyx_t_22 = PyTuple_New(2+__pyx_t_8); if (unlikely(!__pyx_t_22)) __PYX_ERR(0, 235, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_22);
     if (__pyx_t_3) {
       __Pyx_GIVEREF(__pyx_t_3); PyTuple_SET_ITEM(__pyx_t_22, 0, __pyx_t_3); __pyx_t_3 = NULL;
@@ -5591,18 +5647,18 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
     PyTuple_SET_ITEM(__pyx_t_22, 1+__pyx_t_8, __pyx_t_2);
     __pyx_t_1 = 0;
     __pyx_t_2 = 0;
-    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_22, NULL); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 230, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_22, NULL); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 235, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_22); __pyx_t_22 = 0;
   }
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (!(likely(((__pyx_t_5) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_5, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 230, __pyx_L1_error)
+  if (!(likely(((__pyx_t_5) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_5, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 235, __pyx_L1_error)
   __pyx_t_23 = ((PyArrayObject *)__pyx_t_5);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_V.rcbuffer->pybuffer, (PyObject*)__pyx_t_23, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) {
       __pyx_v_V = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_V.rcbuffer->pybuffer.buf = NULL;
-      __PYX_ERR(0, 230, __pyx_L1_error)
+      __PYX_ERR(0, 235, __pyx_L1_error)
     } else {__pyx_pybuffernd_V.diminfo[0].strides = __pyx_pybuffernd_V.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_V.diminfo[0].shape = __pyx_pybuffernd_V.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_V.diminfo[1].strides = __pyx_pybuffernd_V.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_V.diminfo[1].shape = __pyx_pybuffernd_V.rcbuffer->pybuffer.shape[1];
     }
   }
@@ -5610,24 +5666,24 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
   __pyx_v_V = ((PyArrayObject *)__pyx_t_5);
   __pyx_t_5 = 0;
 
-  /* "dsgamesolver/qre_ct.pyx":231
+  /* "dsgamesolver/qre_ct.pyx":236
  *         np.ndarray[np.float64_t, ndim=3] sigma = np.exp(beta)
  *         np.ndarray[np.float64_t, ndim=2] V = y[num_a_tot : num_a_tot + num_s*num_p].reshape(num_s, num_p)
  *         double lambda_ = y[num_a_tot + num_s*num_p]             # <<<<<<<<<<<<<<
  *         np.ndarray[np.float64_t, ndim=1] u_tilde_ev_ravel = u_tilde(u, V, phi).ravel()
- *         np.ndarray[np.float64_t, ndim=3] u_tilde_sia_ev = u_tilde_sia(u_tilde_ev_ravel, sigma, num_s, num_p, num_a_max, nums_a)
+ *         np.ndarray[np.float64_t, ndim=3] u_tilde_sia_ev = u_tilde_sia(u_tilde_ev_ravel, sigma, num_s, num_p,
  */
   __pyx_t_15 = (__pyx_v_num_a_tot + (__pyx_v_num_s * __pyx_v_num_p));
   __pyx_v_lambda_ = (*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_y.rcbuffer->pybuffer.buf, __pyx_t_15, __pyx_pybuffernd_y.diminfo[0].strides));
 
-  /* "dsgamesolver/qre_ct.pyx":232
+  /* "dsgamesolver/qre_ct.pyx":237
  *         np.ndarray[np.float64_t, ndim=2] V = y[num_a_tot : num_a_tot + num_s*num_p].reshape(num_s, num_p)
  *         double lambda_ = y[num_a_tot + num_s*num_p]
  *         np.ndarray[np.float64_t, ndim=1] u_tilde_ev_ravel = u_tilde(u, V, phi).ravel()             # <<<<<<<<<<<<<<
- *         np.ndarray[np.float64_t, ndim=3] u_tilde_sia_ev = u_tilde_sia(u_tilde_ev_ravel, sigma, num_s, num_p, num_a_max, nums_a)
- *         np.ndarray[np.float64_t, ndim=5] u_tilde_sia_partial_beta_ev = u_tilde_sia_partial_beta(u_tilde_ev_ravel, sigma, num_s, num_p, num_a_max, nums_a)
+ *         np.ndarray[np.float64_t, ndim=3] u_tilde_sia_ev = u_tilde_sia(u_tilde_ev_ravel, sigma, num_s, num_p,
+ *                                                                       num_a_max, nums_a)
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_22, __pyx_n_s_u_tilde); if (unlikely(!__pyx_t_22)) __PYX_ERR(0, 232, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_22, __pyx_n_s_u_tilde); if (unlikely(!__pyx_t_22)) __PYX_ERR(0, 237, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_22);
   __pyx_t_2 = NULL;
   __pyx_t_8 = 0;
@@ -5644,7 +5700,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
   #if CYTHON_FAST_PYCALL
   if (PyFunction_Check(__pyx_t_22)) {
     PyObject *__pyx_temp[4] = {__pyx_t_2, __pyx_v_u, ((PyObject *)__pyx_v_V), __pyx_v_phi};
-    __pyx_t_4 = __Pyx_PyFunction_FastCall(__pyx_t_22, __pyx_temp+1-__pyx_t_8, 3+__pyx_t_8); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 232, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyFunction_FastCall(__pyx_t_22, __pyx_temp+1-__pyx_t_8, 3+__pyx_t_8); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 237, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
     __Pyx_GOTREF(__pyx_t_4);
   } else
@@ -5652,13 +5708,13 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
   #if CYTHON_FAST_PYCCALL
   if (__Pyx_PyFastCFunction_Check(__pyx_t_22)) {
     PyObject *__pyx_temp[4] = {__pyx_t_2, __pyx_v_u, ((PyObject *)__pyx_v_V), __pyx_v_phi};
-    __pyx_t_4 = __Pyx_PyCFunction_FastCall(__pyx_t_22, __pyx_temp+1-__pyx_t_8, 3+__pyx_t_8); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 232, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyCFunction_FastCall(__pyx_t_22, __pyx_temp+1-__pyx_t_8, 3+__pyx_t_8); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 237, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
     __Pyx_GOTREF(__pyx_t_4);
   } else
   #endif
   {
-    __pyx_t_1 = PyTuple_New(3+__pyx_t_8); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 232, __pyx_L1_error)
+    __pyx_t_1 = PyTuple_New(3+__pyx_t_8); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 237, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     if (__pyx_t_2) {
       __Pyx_GIVEREF(__pyx_t_2); PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_t_2); __pyx_t_2 = NULL;
@@ -5672,12 +5728,12 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
     __Pyx_INCREF(__pyx_v_phi);
     __Pyx_GIVEREF(__pyx_v_phi);
     PyTuple_SET_ITEM(__pyx_t_1, 2+__pyx_t_8, __pyx_v_phi);
-    __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_22, __pyx_t_1, NULL); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 232, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_22, __pyx_t_1, NULL); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 237, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   }
   __Pyx_DECREF(__pyx_t_22); __pyx_t_22 = 0;
-  __pyx_t_22 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_ravel); if (unlikely(!__pyx_t_22)) __PYX_ERR(0, 232, __pyx_L1_error)
+  __pyx_t_22 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_ravel); if (unlikely(!__pyx_t_22)) __PYX_ERR(0, 237, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_22);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __pyx_t_4 = NULL;
@@ -5692,16 +5748,16 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
   }
   __pyx_t_5 = (__pyx_t_4) ? __Pyx_PyObject_CallOneArg(__pyx_t_22, __pyx_t_4) : __Pyx_PyObject_CallNoArg(__pyx_t_22);
   __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 232, __pyx_L1_error)
+  if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 237, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_22); __pyx_t_22 = 0;
-  if (!(likely(((__pyx_t_5) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_5, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 232, __pyx_L1_error)
+  if (!(likely(((__pyx_t_5) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_5, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 237, __pyx_L1_error)
   __pyx_t_24 = ((PyArrayObject *)__pyx_t_5);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_u_tilde_ev_ravel.rcbuffer->pybuffer, (PyObject*)__pyx_t_24, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) {
       __pyx_v_u_tilde_ev_ravel = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_u_tilde_ev_ravel.rcbuffer->pybuffer.buf = NULL;
-      __PYX_ERR(0, 232, __pyx_L1_error)
+      __PYX_ERR(0, 237, __pyx_L1_error)
     } else {__pyx_pybuffernd_u_tilde_ev_ravel.diminfo[0].strides = __pyx_pybuffernd_u_tilde_ev_ravel.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_u_tilde_ev_ravel.diminfo[0].shape = __pyx_pybuffernd_u_tilde_ev_ravel.rcbuffer->pybuffer.shape[0];
     }
   }
@@ -5709,20 +5765,28 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
   __pyx_v_u_tilde_ev_ravel = ((PyArrayObject *)__pyx_t_5);
   __pyx_t_5 = 0;
 
-  /* "dsgamesolver/qre_ct.pyx":233
+  /* "dsgamesolver/qre_ct.pyx":238
  *         double lambda_ = y[num_a_tot + num_s*num_p]
  *         np.ndarray[np.float64_t, ndim=1] u_tilde_ev_ravel = u_tilde(u, V, phi).ravel()
- *         np.ndarray[np.float64_t, ndim=3] u_tilde_sia_ev = u_tilde_sia(u_tilde_ev_ravel, sigma, num_s, num_p, num_a_max, nums_a)             # <<<<<<<<<<<<<<
- *         np.ndarray[np.float64_t, ndim=5] u_tilde_sia_partial_beta_ev = u_tilde_sia_partial_beta(u_tilde_ev_ravel, sigma, num_s, num_p, num_a_max, nums_a)
- *         np.ndarray[np.float64_t, ndim=5] u_tilde_sia_partial_V_ev = u_tilde_sia_partial_V(phi.ravel(), sigma, num_s, num_p, num_a_max, nums_a)
+ *         np.ndarray[np.float64_t, ndim=3] u_tilde_sia_ev = u_tilde_sia(u_tilde_ev_ravel, sigma, num_s, num_p,             # <<<<<<<<<<<<<<
+ *                                                                       num_a_max, nums_a)
+ *         np.ndarray[np.float64_t, ndim=5] u_tilde_sia_partial_beta_ev = (u_tilde_sia_partial_beta(u_tilde_ev_ravel,
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_22, __pyx_n_s_u_tilde_sia); if (unlikely(!__pyx_t_22)) __PYX_ERR(0, 233, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_22, __pyx_n_s_u_tilde_sia); if (unlikely(!__pyx_t_22)) __PYX_ERR(0, 238, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_22);
-  __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_num_s); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 233, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_num_s); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 238, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_num_p); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 233, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_num_p); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 238, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_num_a_max); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 233, __pyx_L1_error)
+
+  /* "dsgamesolver/qre_ct.pyx":239
+ *         np.ndarray[np.float64_t, ndim=1] u_tilde_ev_ravel = u_tilde(u, V, phi).ravel()
+ *         np.ndarray[np.float64_t, ndim=3] u_tilde_sia_ev = u_tilde_sia(u_tilde_ev_ravel, sigma, num_s, num_p,
+ *                                                                       num_a_max, nums_a)             # <<<<<<<<<<<<<<
+ *         np.ndarray[np.float64_t, ndim=5] u_tilde_sia_partial_beta_ev = (u_tilde_sia_partial_beta(u_tilde_ev_ravel,
+ *                                                                         sigma, num_s, num_p, num_a_max, nums_a))
+ */
+  __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_num_a_max); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 239, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_t_3 = NULL;
   __pyx_t_8 = 0;
@@ -5739,7 +5803,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
   #if CYTHON_FAST_PYCALL
   if (PyFunction_Check(__pyx_t_22)) {
     PyObject *__pyx_temp[7] = {__pyx_t_3, ((PyObject *)__pyx_v_u_tilde_ev_ravel), ((PyObject *)__pyx_v_sigma), __pyx_t_4, __pyx_t_1, __pyx_t_2, ((PyObject *)__pyx_v_nums_a)};
-    __pyx_t_5 = __Pyx_PyFunction_FastCall(__pyx_t_22, __pyx_temp+1-__pyx_t_8, 6+__pyx_t_8); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 233, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyFunction_FastCall(__pyx_t_22, __pyx_temp+1-__pyx_t_8, 6+__pyx_t_8); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 238, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
@@ -5750,7 +5814,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
   #if CYTHON_FAST_PYCCALL
   if (__Pyx_PyFastCFunction_Check(__pyx_t_22)) {
     PyObject *__pyx_temp[7] = {__pyx_t_3, ((PyObject *)__pyx_v_u_tilde_ev_ravel), ((PyObject *)__pyx_v_sigma), __pyx_t_4, __pyx_t_1, __pyx_t_2, ((PyObject *)__pyx_v_nums_a)};
-    __pyx_t_5 = __Pyx_PyCFunction_FastCall(__pyx_t_22, __pyx_temp+1-__pyx_t_8, 6+__pyx_t_8); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 233, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyCFunction_FastCall(__pyx_t_22, __pyx_temp+1-__pyx_t_8, 6+__pyx_t_8); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 238, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
@@ -5759,7 +5823,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
   } else
   #endif
   {
-    __pyx_t_25 = PyTuple_New(6+__pyx_t_8); if (unlikely(!__pyx_t_25)) __PYX_ERR(0, 233, __pyx_L1_error)
+    __pyx_t_25 = PyTuple_New(6+__pyx_t_8); if (unlikely(!__pyx_t_25)) __PYX_ERR(0, 238, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_25);
     if (__pyx_t_3) {
       __Pyx_GIVEREF(__pyx_t_3); PyTuple_SET_ITEM(__pyx_t_25, 0, __pyx_t_3); __pyx_t_3 = NULL;
@@ -5782,18 +5846,26 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
     __pyx_t_4 = 0;
     __pyx_t_1 = 0;
     __pyx_t_2 = 0;
-    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_22, __pyx_t_25, NULL); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 233, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_22, __pyx_t_25, NULL); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 238, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_25); __pyx_t_25 = 0;
   }
   __Pyx_DECREF(__pyx_t_22); __pyx_t_22 = 0;
-  if (!(likely(((__pyx_t_5) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_5, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 233, __pyx_L1_error)
+
+  /* "dsgamesolver/qre_ct.pyx":238
+ *         double lambda_ = y[num_a_tot + num_s*num_p]
+ *         np.ndarray[np.float64_t, ndim=1] u_tilde_ev_ravel = u_tilde(u, V, phi).ravel()
+ *         np.ndarray[np.float64_t, ndim=3] u_tilde_sia_ev = u_tilde_sia(u_tilde_ev_ravel, sigma, num_s, num_p,             # <<<<<<<<<<<<<<
+ *                                                                       num_a_max, nums_a)
+ *         np.ndarray[np.float64_t, ndim=5] u_tilde_sia_partial_beta_ev = (u_tilde_sia_partial_beta(u_tilde_ev_ravel,
+ */
+  if (!(likely(((__pyx_t_5) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_5, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 238, __pyx_L1_error)
   __pyx_t_26 = ((PyArrayObject *)__pyx_t_5);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_u_tilde_sia_ev.rcbuffer->pybuffer, (PyObject*)__pyx_t_26, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES, 3, 0, __pyx_stack) == -1)) {
       __pyx_v_u_tilde_sia_ev = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_u_tilde_sia_ev.rcbuffer->pybuffer.buf = NULL;
-      __PYX_ERR(0, 233, __pyx_L1_error)
+      __PYX_ERR(0, 238, __pyx_L1_error)
     } else {__pyx_pybuffernd_u_tilde_sia_ev.diminfo[0].strides = __pyx_pybuffernd_u_tilde_sia_ev.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_u_tilde_sia_ev.diminfo[0].shape = __pyx_pybuffernd_u_tilde_sia_ev.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_u_tilde_sia_ev.diminfo[1].strides = __pyx_pybuffernd_u_tilde_sia_ev.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_u_tilde_sia_ev.diminfo[1].shape = __pyx_pybuffernd_u_tilde_sia_ev.rcbuffer->pybuffer.shape[1]; __pyx_pybuffernd_u_tilde_sia_ev.diminfo[2].strides = __pyx_pybuffernd_u_tilde_sia_ev.rcbuffer->pybuffer.strides[2]; __pyx_pybuffernd_u_tilde_sia_ev.diminfo[2].shape = __pyx_pybuffernd_u_tilde_sia_ev.rcbuffer->pybuffer.shape[2];
     }
   }
@@ -5801,20 +5873,28 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
   __pyx_v_u_tilde_sia_ev = ((PyArrayObject *)__pyx_t_5);
   __pyx_t_5 = 0;
 
-  /* "dsgamesolver/qre_ct.pyx":234
- *         np.ndarray[np.float64_t, ndim=1] u_tilde_ev_ravel = u_tilde(u, V, phi).ravel()
- *         np.ndarray[np.float64_t, ndim=3] u_tilde_sia_ev = u_tilde_sia(u_tilde_ev_ravel, sigma, num_s, num_p, num_a_max, nums_a)
- *         np.ndarray[np.float64_t, ndim=5] u_tilde_sia_partial_beta_ev = u_tilde_sia_partial_beta(u_tilde_ev_ravel, sigma, num_s, num_p, num_a_max, nums_a)             # <<<<<<<<<<<<<<
- *         np.ndarray[np.float64_t, ndim=5] u_tilde_sia_partial_V_ev = u_tilde_sia_partial_V(phi.ravel(), sigma, num_s, num_p, num_a_max, nums_a)
- *         int row_state, row_player, row_action
+  /* "dsgamesolver/qre_ct.pyx":240
+ *         np.ndarray[np.float64_t, ndim=3] u_tilde_sia_ev = u_tilde_sia(u_tilde_ev_ravel, sigma, num_s, num_p,
+ *                                                                       num_a_max, nums_a)
+ *         np.ndarray[np.float64_t, ndim=5] u_tilde_sia_partial_beta_ev = (u_tilde_sia_partial_beta(u_tilde_ev_ravel,             # <<<<<<<<<<<<<<
+ *                                                                         sigma, num_s, num_p, num_a_max, nums_a))
+ *         np.ndarray[np.float64_t, ndim=5] u_tilde_sia_partial_V_ev = (u_tilde_sia_partial_V(phi.ravel(),
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_22, __pyx_n_s_u_tilde_sia_partial_beta); if (unlikely(!__pyx_t_22)) __PYX_ERR(0, 234, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_22, __pyx_n_s_u_tilde_sia_partial_beta); if (unlikely(!__pyx_t_22)) __PYX_ERR(0, 240, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_22);
-  __pyx_t_25 = __Pyx_PyInt_From_int(__pyx_v_num_s); if (unlikely(!__pyx_t_25)) __PYX_ERR(0, 234, __pyx_L1_error)
+
+  /* "dsgamesolver/qre_ct.pyx":241
+ *                                                                       num_a_max, nums_a)
+ *         np.ndarray[np.float64_t, ndim=5] u_tilde_sia_partial_beta_ev = (u_tilde_sia_partial_beta(u_tilde_ev_ravel,
+ *                                                                         sigma, num_s, num_p, num_a_max, nums_a))             # <<<<<<<<<<<<<<
+ *         np.ndarray[np.float64_t, ndim=5] u_tilde_sia_partial_V_ev = (u_tilde_sia_partial_V(phi.ravel(),
+ *                                                                      sigma, num_s, num_p, num_a_max, nums_a))
+ */
+  __pyx_t_25 = __Pyx_PyInt_From_int(__pyx_v_num_s); if (unlikely(!__pyx_t_25)) __PYX_ERR(0, 241, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_25);
-  __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_num_p); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 234, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_num_p); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 241, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_num_a_max); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 234, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_num_a_max); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 241, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_t_4 = NULL;
   __pyx_t_8 = 0;
@@ -5831,7 +5911,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
   #if CYTHON_FAST_PYCALL
   if (PyFunction_Check(__pyx_t_22)) {
     PyObject *__pyx_temp[7] = {__pyx_t_4, ((PyObject *)__pyx_v_u_tilde_ev_ravel), ((PyObject *)__pyx_v_sigma), __pyx_t_25, __pyx_t_2, __pyx_t_1, ((PyObject *)__pyx_v_nums_a)};
-    __pyx_t_5 = __Pyx_PyFunction_FastCall(__pyx_t_22, __pyx_temp+1-__pyx_t_8, 6+__pyx_t_8); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 234, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyFunction_FastCall(__pyx_t_22, __pyx_temp+1-__pyx_t_8, 6+__pyx_t_8); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 240, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_25); __pyx_t_25 = 0;
@@ -5842,7 +5922,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
   #if CYTHON_FAST_PYCCALL
   if (__Pyx_PyFastCFunction_Check(__pyx_t_22)) {
     PyObject *__pyx_temp[7] = {__pyx_t_4, ((PyObject *)__pyx_v_u_tilde_ev_ravel), ((PyObject *)__pyx_v_sigma), __pyx_t_25, __pyx_t_2, __pyx_t_1, ((PyObject *)__pyx_v_nums_a)};
-    __pyx_t_5 = __Pyx_PyCFunction_FastCall(__pyx_t_22, __pyx_temp+1-__pyx_t_8, 6+__pyx_t_8); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 234, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyCFunction_FastCall(__pyx_t_22, __pyx_temp+1-__pyx_t_8, 6+__pyx_t_8); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 240, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_25); __pyx_t_25 = 0;
@@ -5851,7 +5931,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
   } else
   #endif
   {
-    __pyx_t_3 = PyTuple_New(6+__pyx_t_8); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 234, __pyx_L1_error)
+    __pyx_t_3 = PyTuple_New(6+__pyx_t_8); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 240, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     if (__pyx_t_4) {
       __Pyx_GIVEREF(__pyx_t_4); PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_4); __pyx_t_4 = NULL;
@@ -5874,18 +5954,26 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
     __pyx_t_25 = 0;
     __pyx_t_2 = 0;
     __pyx_t_1 = 0;
-    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_22, __pyx_t_3, NULL); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 234, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_22, __pyx_t_3, NULL); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 240, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   }
   __Pyx_DECREF(__pyx_t_22); __pyx_t_22 = 0;
-  if (!(likely(((__pyx_t_5) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_5, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 234, __pyx_L1_error)
+
+  /* "dsgamesolver/qre_ct.pyx":240
+ *         np.ndarray[np.float64_t, ndim=3] u_tilde_sia_ev = u_tilde_sia(u_tilde_ev_ravel, sigma, num_s, num_p,
+ *                                                                       num_a_max, nums_a)
+ *         np.ndarray[np.float64_t, ndim=5] u_tilde_sia_partial_beta_ev = (u_tilde_sia_partial_beta(u_tilde_ev_ravel,             # <<<<<<<<<<<<<<
+ *                                                                         sigma, num_s, num_p, num_a_max, nums_a))
+ *         np.ndarray[np.float64_t, ndim=5] u_tilde_sia_partial_V_ev = (u_tilde_sia_partial_V(phi.ravel(),
+ */
+  if (!(likely(((__pyx_t_5) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_5, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 240, __pyx_L1_error)
   __pyx_t_27 = ((PyArrayObject *)__pyx_t_5);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_u_tilde_sia_partial_beta_ev.rcbuffer->pybuffer, (PyObject*)__pyx_t_27, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES, 5, 0, __pyx_stack) == -1)) {
       __pyx_v_u_tilde_sia_partial_beta_ev = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_u_tilde_sia_partial_beta_ev.rcbuffer->pybuffer.buf = NULL;
-      __PYX_ERR(0, 234, __pyx_L1_error)
+      __PYX_ERR(0, 240, __pyx_L1_error)
     } else {__pyx_pybuffernd_u_tilde_sia_partial_beta_ev.diminfo[0].strides = __pyx_pybuffernd_u_tilde_sia_partial_beta_ev.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_u_tilde_sia_partial_beta_ev.diminfo[0].shape = __pyx_pybuffernd_u_tilde_sia_partial_beta_ev.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_u_tilde_sia_partial_beta_ev.diminfo[1].strides = __pyx_pybuffernd_u_tilde_sia_partial_beta_ev.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_u_tilde_sia_partial_beta_ev.diminfo[1].shape = __pyx_pybuffernd_u_tilde_sia_partial_beta_ev.rcbuffer->pybuffer.shape[1]; __pyx_pybuffernd_u_tilde_sia_partial_beta_ev.diminfo[2].strides = __pyx_pybuffernd_u_tilde_sia_partial_beta_ev.rcbuffer->pybuffer.strides[2]; __pyx_pybuffernd_u_tilde_sia_partial_beta_ev.diminfo[2].shape = __pyx_pybuffernd_u_tilde_sia_partial_beta_ev.rcbuffer->pybuffer.shape[2]; __pyx_pybuffernd_u_tilde_sia_partial_beta_ev.diminfo[3].strides = __pyx_pybuffernd_u_tilde_sia_partial_beta_ev.rcbuffer->pybuffer.strides[3]; __pyx_pybuffernd_u_tilde_sia_partial_beta_ev.diminfo[3].shape = __pyx_pybuffernd_u_tilde_sia_partial_beta_ev.rcbuffer->pybuffer.shape[3]; __pyx_pybuffernd_u_tilde_sia_partial_beta_ev.diminfo[4].strides = __pyx_pybuffernd_u_tilde_sia_partial_beta_ev.rcbuffer->pybuffer.strides[4]; __pyx_pybuffernd_u_tilde_sia_partial_beta_ev.diminfo[4].shape = __pyx_pybuffernd_u_tilde_sia_partial_beta_ev.rcbuffer->pybuffer.shape[4];
     }
   }
@@ -5893,16 +5981,16 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
   __pyx_v_u_tilde_sia_partial_beta_ev = ((PyArrayObject *)__pyx_t_5);
   __pyx_t_5 = 0;
 
-  /* "dsgamesolver/qre_ct.pyx":235
- *         np.ndarray[np.float64_t, ndim=3] u_tilde_sia_ev = u_tilde_sia(u_tilde_ev_ravel, sigma, num_s, num_p, num_a_max, nums_a)
- *         np.ndarray[np.float64_t, ndim=5] u_tilde_sia_partial_beta_ev = u_tilde_sia_partial_beta(u_tilde_ev_ravel, sigma, num_s, num_p, num_a_max, nums_a)
- *         np.ndarray[np.float64_t, ndim=5] u_tilde_sia_partial_V_ev = u_tilde_sia_partial_V(phi.ravel(), sigma, num_s, num_p, num_a_max, nums_a)             # <<<<<<<<<<<<<<
+  /* "dsgamesolver/qre_ct.pyx":242
+ *         np.ndarray[np.float64_t, ndim=5] u_tilde_sia_partial_beta_ev = (u_tilde_sia_partial_beta(u_tilde_ev_ravel,
+ *                                                                         sigma, num_s, num_p, num_a_max, nums_a))
+ *         np.ndarray[np.float64_t, ndim=5] u_tilde_sia_partial_V_ev = (u_tilde_sia_partial_V(phi.ravel(),             # <<<<<<<<<<<<<<
+ *                                                                      sigma, num_s, num_p, num_a_max, nums_a))
  *         int row_state, row_player, row_action
- *         int col_state, col_player, col_action
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_22, __pyx_n_s_u_tilde_sia_partial_V); if (unlikely(!__pyx_t_22)) __PYX_ERR(0, 235, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_22, __pyx_n_s_u_tilde_sia_partial_V); if (unlikely(!__pyx_t_22)) __PYX_ERR(0, 242, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_22);
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_phi, __pyx_n_s_ravel); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 235, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_phi, __pyx_n_s_ravel); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 242, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_t_2 = NULL;
   if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_1))) {
@@ -5916,14 +6004,22 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
   }
   __pyx_t_3 = (__pyx_t_2) ? __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_t_2) : __Pyx_PyObject_CallNoArg(__pyx_t_1);
   __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
-  if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 235, __pyx_L1_error)
+  if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 242, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_num_s); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 235, __pyx_L1_error)
+
+  /* "dsgamesolver/qre_ct.pyx":243
+ *                                                                         sigma, num_s, num_p, num_a_max, nums_a))
+ *         np.ndarray[np.float64_t, ndim=5] u_tilde_sia_partial_V_ev = (u_tilde_sia_partial_V(phi.ravel(),
+ *                                                                      sigma, num_s, num_p, num_a_max, nums_a))             # <<<<<<<<<<<<<<
+ *         int row_state, row_player, row_action
+ *         int col_state, col_player, col_action
+ */
+  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_num_s); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 243, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_num_p); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 235, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_num_p); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 243, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_25 = __Pyx_PyInt_From_int(__pyx_v_num_a_max); if (unlikely(!__pyx_t_25)) __PYX_ERR(0, 235, __pyx_L1_error)
+  __pyx_t_25 = __Pyx_PyInt_From_int(__pyx_v_num_a_max); if (unlikely(!__pyx_t_25)) __PYX_ERR(0, 243, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_25);
   __pyx_t_4 = NULL;
   __pyx_t_8 = 0;
@@ -5940,7 +6036,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
   #if CYTHON_FAST_PYCALL
   if (PyFunction_Check(__pyx_t_22)) {
     PyObject *__pyx_temp[7] = {__pyx_t_4, __pyx_t_3, ((PyObject *)__pyx_v_sigma), __pyx_t_1, __pyx_t_2, __pyx_t_25, ((PyObject *)__pyx_v_nums_a)};
-    __pyx_t_5 = __Pyx_PyFunction_FastCall(__pyx_t_22, __pyx_temp+1-__pyx_t_8, 6+__pyx_t_8); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 235, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyFunction_FastCall(__pyx_t_22, __pyx_temp+1-__pyx_t_8, 6+__pyx_t_8); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 242, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
@@ -5952,7 +6048,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
   #if CYTHON_FAST_PYCCALL
   if (__Pyx_PyFastCFunction_Check(__pyx_t_22)) {
     PyObject *__pyx_temp[7] = {__pyx_t_4, __pyx_t_3, ((PyObject *)__pyx_v_sigma), __pyx_t_1, __pyx_t_2, __pyx_t_25, ((PyObject *)__pyx_v_nums_a)};
-    __pyx_t_5 = __Pyx_PyCFunction_FastCall(__pyx_t_22, __pyx_temp+1-__pyx_t_8, 6+__pyx_t_8); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 235, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyCFunction_FastCall(__pyx_t_22, __pyx_temp+1-__pyx_t_8, 6+__pyx_t_8); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 242, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
@@ -5962,7 +6058,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
   } else
   #endif
   {
-    __pyx_t_28 = PyTuple_New(6+__pyx_t_8); if (unlikely(!__pyx_t_28)) __PYX_ERR(0, 235, __pyx_L1_error)
+    __pyx_t_28 = PyTuple_New(6+__pyx_t_8); if (unlikely(!__pyx_t_28)) __PYX_ERR(0, 242, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_28);
     if (__pyx_t_4) {
       __Pyx_GIVEREF(__pyx_t_4); PyTuple_SET_ITEM(__pyx_t_28, 0, __pyx_t_4); __pyx_t_4 = NULL;
@@ -5985,18 +6081,26 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
     __pyx_t_1 = 0;
     __pyx_t_2 = 0;
     __pyx_t_25 = 0;
-    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_22, __pyx_t_28, NULL); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 235, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_22, __pyx_t_28, NULL); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 242, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_28); __pyx_t_28 = 0;
   }
   __Pyx_DECREF(__pyx_t_22); __pyx_t_22 = 0;
-  if (!(likely(((__pyx_t_5) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_5, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 235, __pyx_L1_error)
+
+  /* "dsgamesolver/qre_ct.pyx":242
+ *         np.ndarray[np.float64_t, ndim=5] u_tilde_sia_partial_beta_ev = (u_tilde_sia_partial_beta(u_tilde_ev_ravel,
+ *                                                                         sigma, num_s, num_p, num_a_max, nums_a))
+ *         np.ndarray[np.float64_t, ndim=5] u_tilde_sia_partial_V_ev = (u_tilde_sia_partial_V(phi.ravel(),             # <<<<<<<<<<<<<<
+ *                                                                      sigma, num_s, num_p, num_a_max, nums_a))
+ *         int row_state, row_player, row_action
+ */
+  if (!(likely(((__pyx_t_5) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_5, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 242, __pyx_L1_error)
   __pyx_t_29 = ((PyArrayObject *)__pyx_t_5);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_u_tilde_sia_partial_V_ev.rcbuffer->pybuffer, (PyObject*)__pyx_t_29, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES, 5, 0, __pyx_stack) == -1)) {
       __pyx_v_u_tilde_sia_partial_V_ev = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_u_tilde_sia_partial_V_ev.rcbuffer->pybuffer.buf = NULL;
-      __PYX_ERR(0, 235, __pyx_L1_error)
+      __PYX_ERR(0, 242, __pyx_L1_error)
     } else {__pyx_pybuffernd_u_tilde_sia_partial_V_ev.diminfo[0].strides = __pyx_pybuffernd_u_tilde_sia_partial_V_ev.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_u_tilde_sia_partial_V_ev.diminfo[0].shape = __pyx_pybuffernd_u_tilde_sia_partial_V_ev.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_u_tilde_sia_partial_V_ev.diminfo[1].strides = __pyx_pybuffernd_u_tilde_sia_partial_V_ev.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_u_tilde_sia_partial_V_ev.diminfo[1].shape = __pyx_pybuffernd_u_tilde_sia_partial_V_ev.rcbuffer->pybuffer.shape[1]; __pyx_pybuffernd_u_tilde_sia_partial_V_ev.diminfo[2].strides = __pyx_pybuffernd_u_tilde_sia_partial_V_ev.rcbuffer->pybuffer.strides[2]; __pyx_pybuffernd_u_tilde_sia_partial_V_ev.diminfo[2].shape = __pyx_pybuffernd_u_tilde_sia_partial_V_ev.rcbuffer->pybuffer.shape[2]; __pyx_pybuffernd_u_tilde_sia_partial_V_ev.diminfo[3].strides = __pyx_pybuffernd_u_tilde_sia_partial_V_ev.rcbuffer->pybuffer.strides[3]; __pyx_pybuffernd_u_tilde_sia_partial_V_ev.diminfo[3].shape = __pyx_pybuffernd_u_tilde_sia_partial_V_ev.rcbuffer->pybuffer.shape[3]; __pyx_pybuffernd_u_tilde_sia_partial_V_ev.diminfo[4].strides = __pyx_pybuffernd_u_tilde_sia_partial_V_ev.rcbuffer->pybuffer.strides[4]; __pyx_pybuffernd_u_tilde_sia_partial_V_ev.diminfo[4].shape = __pyx_pybuffernd_u_tilde_sia_partial_V_ev.rcbuffer->pybuffer.shape[4];
     }
   }
@@ -6004,7 +6108,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
   __pyx_v_u_tilde_sia_partial_V_ev = ((PyArrayObject *)__pyx_t_5);
   __pyx_t_5 = 0;
 
-  /* "dsgamesolver/qre_ct.pyx":241
+  /* "dsgamesolver/qre_ct.pyx":249
  * 
  *     # first block: rows with d_H_strat[s,i,a]
  *     row_index = 0             # <<<<<<<<<<<<<<
@@ -6013,7 +6117,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
  */
   __pyx_v_row_index = 0;
 
-  /* "dsgamesolver/qre_ct.pyx":242
+  /* "dsgamesolver/qre_ct.pyx":250
  *     # first block: rows with d_H_strat[s,i,a]
  *     row_index = 0
  *     col_index_init = 0             # <<<<<<<<<<<<<<
@@ -6022,7 +6126,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
  */
   __pyx_v_col_index_init = 0;
 
-  /* "dsgamesolver/qre_ct.pyx":243
+  /* "dsgamesolver/qre_ct.pyx":251
  *     row_index = 0
  *     col_index_init = 0
  *     for row_state in range(num_s):             # <<<<<<<<<<<<<<
@@ -6034,7 +6138,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
   for (__pyx_t_10 = 0; __pyx_t_10 < __pyx_t_9; __pyx_t_10+=1) {
     __pyx_v_row_state = __pyx_t_10;
 
-    /* "dsgamesolver/qre_ct.pyx":244
+    /* "dsgamesolver/qre_ct.pyx":252
  *     col_index_init = 0
  *     for row_state in range(num_s):
  *         for row_player in range(num_p):             # <<<<<<<<<<<<<<
@@ -6046,7 +6150,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
     for (__pyx_t_13 = 0; __pyx_t_13 < __pyx_t_12; __pyx_t_13+=1) {
       __pyx_v_row_player = __pyx_t_13;
 
-      /* "dsgamesolver/qre_ct.pyx":245
+      /* "dsgamesolver/qre_ct.pyx":253
  *     for row_state in range(num_s):
  *         for row_player in range(num_p):
  *             for row_action in range(nums_a[row_state, row_player]):             # <<<<<<<<<<<<<<
@@ -6060,7 +6164,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
       for (__pyx_t_18 = 0; __pyx_t_18 < __pyx_t_17; __pyx_t_18+=1) {
         __pyx_v_row_action = __pyx_t_18;
 
-        /* "dsgamesolver/qre_ct.pyx":249
+        /* "dsgamesolver/qre_ct.pyx":257
  *                 # derivatives w.r.t. beta[s',i',a']
  *                 # entries with s' != s are 0, thus no looping over s'
  *                 col_index = col_index_init             # <<<<<<<<<<<<<<
@@ -6069,7 +6173,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
  */
         __pyx_v_col_index = __pyx_v_col_index_init;
 
-        /* "dsgamesolver/qre_ct.pyx":250
+        /* "dsgamesolver/qre_ct.pyx":258
  *                 # entries with s' != s are 0, thus no looping over s'
  *                 col_index = col_index_init
  *                 for col_player in range(num_p):             # <<<<<<<<<<<<<<
@@ -6081,12 +6185,12 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
         for (__pyx_t_32 = 0; __pyx_t_32 < __pyx_t_31; __pyx_t_32+=1) {
           __pyx_v_col_player = __pyx_t_32;
 
-          /* "dsgamesolver/qre_ct.pyx":251
+          /* "dsgamesolver/qre_ct.pyx":259
  *                 col_index = col_index_init
  *                 for col_player in range(num_p):
  *                     for col_action in range(nums_a[row_state, col_player]):             # <<<<<<<<<<<<<<
  * 
- *                         # diagonal sub-blocks: derivatives w.r.t. beta[s,i,a'] (own actions in same state)
+ *                         # diagonal sub-blocks: derivatives w.r.t. beta[s,i,a']
  */
           __pyx_t_20 = __pyx_v_row_state;
           __pyx_t_15 = __pyx_v_col_player;
@@ -6095,9 +6199,9 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
           for (__pyx_t_35 = 0; __pyx_t_35 < __pyx_t_34; __pyx_t_35+=1) {
             __pyx_v_col_action = __pyx_t_35;
 
-            /* "dsgamesolver/qre_ct.pyx":254
- * 
- *                         # diagonal sub-blocks: derivatives w.r.t. beta[s,i,a'] (own actions in same state)
+            /* "dsgamesolver/qre_ct.pyx":263
+ *                         # diagonal sub-blocks: derivatives w.r.t. beta[s,i,a']
+ *                         # (own actions in same state)
  *                         if row_player == col_player:             # <<<<<<<<<<<<<<
  *                             if row_action == 0:
  *                                 out_[row_index, col_index] = -sigma[row_state, col_player, col_action]
@@ -6105,8 +6209,8 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
             __pyx_t_36 = ((__pyx_v_row_player == __pyx_v_col_player) != 0);
             if (__pyx_t_36) {
 
-              /* "dsgamesolver/qre_ct.pyx":255
- *                         # diagonal sub-blocks: derivatives w.r.t. beta[s,i,a'] (own actions in same state)
+              /* "dsgamesolver/qre_ct.pyx":264
+ *                         # (own actions in same state)
  *                         if row_player == col_player:
  *                             if row_action == 0:             # <<<<<<<<<<<<<<
  *                                 out_[row_index, col_index] = -sigma[row_state, col_player, col_action]
@@ -6115,7 +6219,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
               __pyx_t_36 = ((__pyx_v_row_action == 0) != 0);
               if (__pyx_t_36) {
 
-                /* "dsgamesolver/qre_ct.pyx":256
+                /* "dsgamesolver/qre_ct.pyx":265
  *                         if row_player == col_player:
  *                             if row_action == 0:
  *                                 out_[row_index, col_index] = -sigma[row_state, col_player, col_action]             # <<<<<<<<<<<<<<
@@ -6129,8 +6233,8 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
                 __pyx_t_37 = __pyx_v_col_index;
                 *__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_out_.rcbuffer->pybuffer.buf, __pyx_t_14, __pyx_pybuffernd_out_.diminfo[0].strides, __pyx_t_37, __pyx_pybuffernd_out_.diminfo[1].strides) = (-(*__Pyx_BufPtrStrided3d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_sigma.rcbuffer->pybuffer.buf, __pyx_t_15, __pyx_pybuffernd_sigma.diminfo[0].strides, __pyx_t_20, __pyx_pybuffernd_sigma.diminfo[1].strides, __pyx_t_19, __pyx_pybuffernd_sigma.diminfo[2].strides)));
 
-                /* "dsgamesolver/qre_ct.pyx":255
- *                         # diagonal sub-blocks: derivatives w.r.t. beta[s,i,a'] (own actions in same state)
+                /* "dsgamesolver/qre_ct.pyx":264
+ *                         # (own actions in same state)
  *                         if row_player == col_player:
  *                             if row_action == 0:             # <<<<<<<<<<<<<<
  *                                 out_[row_index, col_index] = -sigma[row_state, col_player, col_action]
@@ -6139,7 +6243,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
                 goto __pyx_L20;
               }
 
-              /* "dsgamesolver/qre_ct.pyx":258
+              /* "dsgamesolver/qre_ct.pyx":267
  *                                 out_[row_index, col_index] = -sigma[row_state, col_player, col_action]
  *                             else:
  *                                 if col_action == 0:             # <<<<<<<<<<<<<<
@@ -6150,7 +6254,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
                 __pyx_t_36 = ((__pyx_v_col_action == 0) != 0);
                 if (__pyx_t_36) {
 
-                  /* "dsgamesolver/qre_ct.pyx":259
+                  /* "dsgamesolver/qre_ct.pyx":268
  *                             else:
  *                                 if col_action == 0:
  *                                     out_[row_index, col_index] = 1             # <<<<<<<<<<<<<<
@@ -6161,7 +6265,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
                   __pyx_t_20 = __pyx_v_col_index;
                   *__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_out_.rcbuffer->pybuffer.buf, __pyx_t_19, __pyx_pybuffernd_out_.diminfo[0].strides, __pyx_t_20, __pyx_pybuffernd_out_.diminfo[1].strides) = 1.0;
 
-                  /* "dsgamesolver/qre_ct.pyx":258
+                  /* "dsgamesolver/qre_ct.pyx":267
  *                                 out_[row_index, col_index] = -sigma[row_state, col_player, col_action]
  *                             else:
  *                                 if col_action == 0:             # <<<<<<<<<<<<<<
@@ -6171,7 +6275,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
                   goto __pyx_L21;
                 }
 
-                /* "dsgamesolver/qre_ct.pyx":260
+                /* "dsgamesolver/qre_ct.pyx":269
  *                                 if col_action == 0:
  *                                     out_[row_index, col_index] = 1
  *                                 elif row_action == col_action:             # <<<<<<<<<<<<<<
@@ -6181,18 +6285,18 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
                 __pyx_t_36 = ((__pyx_v_row_action == __pyx_v_col_action) != 0);
                 if (__pyx_t_36) {
 
-                  /* "dsgamesolver/qre_ct.pyx":261
+                  /* "dsgamesolver/qre_ct.pyx":270
  *                                     out_[row_index, col_index] = 1
  *                                 elif row_action == col_action:
  *                                     out_[row_index, col_index] = -1             # <<<<<<<<<<<<<<
  * 
- *                         # off-diagonal sub-blocks: derivatives w.r.t. beta[s,i',a'] (other players' actions in same state)
+ *                         # off-diagonal sub-blocks: derivatives w.r.t. beta[s,i',a']
  */
                   __pyx_t_20 = __pyx_v_row_index;
                   __pyx_t_19 = __pyx_v_col_index;
                   *__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_out_.rcbuffer->pybuffer.buf, __pyx_t_20, __pyx_pybuffernd_out_.diminfo[0].strides, __pyx_t_19, __pyx_pybuffernd_out_.diminfo[1].strides) = -1.0;
 
-                  /* "dsgamesolver/qre_ct.pyx":260
+                  /* "dsgamesolver/qre_ct.pyx":269
  *                                 if col_action == 0:
  *                                     out_[row_index, col_index] = 1
  *                                 elif row_action == col_action:             # <<<<<<<<<<<<<<
@@ -6204,9 +6308,9 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
               }
               __pyx_L20:;
 
-              /* "dsgamesolver/qre_ct.pyx":254
- * 
- *                         # diagonal sub-blocks: derivatives w.r.t. beta[s,i,a'] (own actions in same state)
+              /* "dsgamesolver/qre_ct.pyx":263
+ *                         # diagonal sub-blocks: derivatives w.r.t. beta[s,i,a']
+ *                         # (own actions in same state)
  *                         if row_player == col_player:             # <<<<<<<<<<<<<<
  *                             if row_action == 0:
  *                                 out_[row_index, col_index] = -sigma[row_state, col_player, col_action]
@@ -6214,23 +6318,23 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
               goto __pyx_L19;
             }
 
-            /* "dsgamesolver/qre_ct.pyx":266
+            /* "dsgamesolver/qre_ct.pyx":276
  *                         else:
  *                             # row_action == 0 -> entry = 0
  *                             if row_action != 0:             # <<<<<<<<<<<<<<
- *                                 out_[row_index, col_index] = lambda_ * (  u_tilde_sia_partial_beta_ev[row_state, row_player, row_action, col_player, col_action]
- *                                                                         - u_tilde_sia_partial_beta_ev[row_state, row_player,          0, col_player, col_action])
+ *                                 out_[row_index, col_index] = lambda_ * (
+ *                                       u_tilde_sia_partial_beta_ev[row_state, row_player, row_action, col_player, col_action]
  */
             /*else*/ {
               __pyx_t_36 = ((__pyx_v_row_action != 0) != 0);
               if (__pyx_t_36) {
 
-                /* "dsgamesolver/qre_ct.pyx":267
- *                             # row_action == 0 -> entry = 0
+                /* "dsgamesolver/qre_ct.pyx":278
  *                             if row_action != 0:
- *                                 out_[row_index, col_index] = lambda_ * (  u_tilde_sia_partial_beta_ev[row_state, row_player, row_action, col_player, col_action]             # <<<<<<<<<<<<<<
- *                                                                         - u_tilde_sia_partial_beta_ev[row_state, row_player,          0, col_player, col_action])
- * 
+ *                                 out_[row_index, col_index] = lambda_ * (
+ *                                       u_tilde_sia_partial_beta_ev[row_state, row_player, row_action, col_player, col_action]             # <<<<<<<<<<<<<<
+ *                                     - u_tilde_sia_partial_beta_ev[row_state, row_player,          0, col_player, col_action]
+ *                                     )
  */
                 __pyx_t_19 = __pyx_v_row_state;
                 __pyx_t_20 = __pyx_v_row_player;
@@ -6238,12 +6342,12 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
                 __pyx_t_37 = __pyx_v_col_player;
                 __pyx_t_14 = __pyx_v_col_action;
 
-                /* "dsgamesolver/qre_ct.pyx":268
- *                             if row_action != 0:
- *                                 out_[row_index, col_index] = lambda_ * (  u_tilde_sia_partial_beta_ev[row_state, row_player, row_action, col_player, col_action]
- *                                                                         - u_tilde_sia_partial_beta_ev[row_state, row_player,          0, col_player, col_action])             # <<<<<<<<<<<<<<
+                /* "dsgamesolver/qre_ct.pyx":279
+ *                                 out_[row_index, col_index] = lambda_ * (
+ *                                       u_tilde_sia_partial_beta_ev[row_state, row_player, row_action, col_player, col_action]
+ *                                     - u_tilde_sia_partial_beta_ev[row_state, row_player,          0, col_player, col_action]             # <<<<<<<<<<<<<<
+ *                                     )
  * 
- *                         col_index += 1
  */
                 __pyx_t_38 = __pyx_v_row_state;
                 __pyx_t_39 = __pyx_v_row_player;
@@ -6251,30 +6355,30 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
                 __pyx_t_41 = __pyx_v_col_player;
                 __pyx_t_42 = __pyx_v_col_action;
 
-                /* "dsgamesolver/qre_ct.pyx":267
+                /* "dsgamesolver/qre_ct.pyx":277
  *                             # row_action == 0 -> entry = 0
  *                             if row_action != 0:
- *                                 out_[row_index, col_index] = lambda_ * (  u_tilde_sia_partial_beta_ev[row_state, row_player, row_action, col_player, col_action]             # <<<<<<<<<<<<<<
- *                                                                         - u_tilde_sia_partial_beta_ev[row_state, row_player,          0, col_player, col_action])
- * 
+ *                                 out_[row_index, col_index] = lambda_ * (             # <<<<<<<<<<<<<<
+ *                                       u_tilde_sia_partial_beta_ev[row_state, row_player, row_action, col_player, col_action]
+ *                                     - u_tilde_sia_partial_beta_ev[row_state, row_player,          0, col_player, col_action]
  */
                 __pyx_t_43 = __pyx_v_row_index;
                 __pyx_t_44 = __pyx_v_col_index;
                 *__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_out_.rcbuffer->pybuffer.buf, __pyx_t_43, __pyx_pybuffernd_out_.diminfo[0].strides, __pyx_t_44, __pyx_pybuffernd_out_.diminfo[1].strides) = (__pyx_v_lambda_ * ((*__Pyx_BufPtrStrided5d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_u_tilde_sia_partial_beta_ev.rcbuffer->pybuffer.buf, __pyx_t_19, __pyx_pybuffernd_u_tilde_sia_partial_beta_ev.diminfo[0].strides, __pyx_t_20, __pyx_pybuffernd_u_tilde_sia_partial_beta_ev.diminfo[1].strides, __pyx_t_15, __pyx_pybuffernd_u_tilde_sia_partial_beta_ev.diminfo[2].strides, __pyx_t_37, __pyx_pybuffernd_u_tilde_sia_partial_beta_ev.diminfo[3].strides, __pyx_t_14, __pyx_pybuffernd_u_tilde_sia_partial_beta_ev.diminfo[4].strides)) - (*__Pyx_BufPtrStrided5d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_u_tilde_sia_partial_beta_ev.rcbuffer->pybuffer.buf, __pyx_t_38, __pyx_pybuffernd_u_tilde_sia_partial_beta_ev.diminfo[0].strides, __pyx_t_39, __pyx_pybuffernd_u_tilde_sia_partial_beta_ev.diminfo[1].strides, __pyx_t_40, __pyx_pybuffernd_u_tilde_sia_partial_beta_ev.diminfo[2].strides, __pyx_t_41, __pyx_pybuffernd_u_tilde_sia_partial_beta_ev.diminfo[3].strides, __pyx_t_42, __pyx_pybuffernd_u_tilde_sia_partial_beta_ev.diminfo[4].strides))));
 
-                /* "dsgamesolver/qre_ct.pyx":266
+                /* "dsgamesolver/qre_ct.pyx":276
  *                         else:
  *                             # row_action == 0 -> entry = 0
  *                             if row_action != 0:             # <<<<<<<<<<<<<<
- *                                 out_[row_index, col_index] = lambda_ * (  u_tilde_sia_partial_beta_ev[row_state, row_player, row_action, col_player, col_action]
- *                                                                         - u_tilde_sia_partial_beta_ev[row_state, row_player,          0, col_player, col_action])
+ *                                 out_[row_index, col_index] = lambda_ * (
+ *                                       u_tilde_sia_partial_beta_ev[row_state, row_player, row_action, col_player, col_action]
  */
               }
             }
             __pyx_L19:;
 
-            /* "dsgamesolver/qre_ct.pyx":270
- *                                                                         - u_tilde_sia_partial_beta_ev[row_state, row_player,          0, col_player, col_action])
+            /* "dsgamesolver/qre_ct.pyx":282
+ *                                     )
  * 
  *                         col_index += 1             # <<<<<<<<<<<<<<
  * 
@@ -6284,7 +6388,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
           }
         }
 
-        /* "dsgamesolver/qre_ct.pyx":273
+        /* "dsgamesolver/qre_ct.pyx":285
  * 
  *                 # derivatives w.r.t. V[s',i']
  *                 col_index = num_a_tot             # <<<<<<<<<<<<<<
@@ -6293,7 +6397,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
  */
         __pyx_v_col_index = __pyx_v_num_a_tot;
 
-        /* "dsgamesolver/qre_ct.pyx":274
+        /* "dsgamesolver/qre_ct.pyx":286
  *                 # derivatives w.r.t. V[s',i']
  *                 col_index = num_a_tot
  *                 for col_state in range(num_s):             # <<<<<<<<<<<<<<
@@ -6305,34 +6409,34 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
         for (__pyx_t_32 = 0; __pyx_t_32 < __pyx_t_31; __pyx_t_32+=1) {
           __pyx_v_col_state = __pyx_t_32;
 
-          /* "dsgamesolver/qre_ct.pyx":275
+          /* "dsgamesolver/qre_ct.pyx":287
  *                 col_index = num_a_tot
  *                 for col_state in range(num_s):
  *                     for col_player in range(num_p):             # <<<<<<<<<<<<<<
  *                         if row_action != 0:
- *                             out_[row_index, col_index] = lambda_ * (  u_tilde_sia_partial_V_ev[row_state, row_player, row_action, col_state, col_player]
+ *                             out_[row_index, col_index] = lambda_ * (
  */
           __pyx_t_35 = __pyx_v_num_p;
           __pyx_t_45 = __pyx_t_35;
           for (__pyx_t_46 = 0; __pyx_t_46 < __pyx_t_45; __pyx_t_46+=1) {
             __pyx_v_col_player = __pyx_t_46;
 
-            /* "dsgamesolver/qre_ct.pyx":276
+            /* "dsgamesolver/qre_ct.pyx":288
  *                 for col_state in range(num_s):
  *                     for col_player in range(num_p):
  *                         if row_action != 0:             # <<<<<<<<<<<<<<
- *                             out_[row_index, col_index] = lambda_ * (  u_tilde_sia_partial_V_ev[row_state, row_player, row_action, col_state, col_player]
- *                                                                     - u_tilde_sia_partial_V_ev[row_state, row_player,          0, col_state, col_player])
+ *                             out_[row_index, col_index] = lambda_ * (
+ *                                   u_tilde_sia_partial_V_ev[row_state, row_player, row_action, col_state, col_player]
  */
             __pyx_t_36 = ((__pyx_v_row_action != 0) != 0);
             if (__pyx_t_36) {
 
-              /* "dsgamesolver/qre_ct.pyx":277
- *                     for col_player in range(num_p):
+              /* "dsgamesolver/qre_ct.pyx":290
  *                         if row_action != 0:
- *                             out_[row_index, col_index] = lambda_ * (  u_tilde_sia_partial_V_ev[row_state, row_player, row_action, col_state, col_player]             # <<<<<<<<<<<<<<
- *                                                                     - u_tilde_sia_partial_V_ev[row_state, row_player,          0, col_state, col_player])
- *                         col_index += 1
+ *                             out_[row_index, col_index] = lambda_ * (
+ *                                   u_tilde_sia_partial_V_ev[row_state, row_player, row_action, col_state, col_player]             # <<<<<<<<<<<<<<
+ *                                 - u_tilde_sia_partial_V_ev[row_state, row_player,          0, col_state, col_player]
+ *                                 )
  */
               __pyx_t_42 = __pyx_v_row_state;
               __pyx_t_41 = __pyx_v_row_player;
@@ -6340,12 +6444,12 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
               __pyx_t_39 = __pyx_v_col_state;
               __pyx_t_38 = __pyx_v_col_player;
 
-              /* "dsgamesolver/qre_ct.pyx":278
- *                         if row_action != 0:
- *                             out_[row_index, col_index] = lambda_ * (  u_tilde_sia_partial_V_ev[row_state, row_player, row_action, col_state, col_player]
- *                                                                     - u_tilde_sia_partial_V_ev[row_state, row_player,          0, col_state, col_player])             # <<<<<<<<<<<<<<
+              /* "dsgamesolver/qre_ct.pyx":291
+ *                             out_[row_index, col_index] = lambda_ * (
+ *                                   u_tilde_sia_partial_V_ev[row_state, row_player, row_action, col_state, col_player]
+ *                                 - u_tilde_sia_partial_V_ev[row_state, row_player,          0, col_state, col_player]             # <<<<<<<<<<<<<<
+ *                                 )
  *                         col_index += 1
- * 
  */
               __pyx_t_14 = __pyx_v_row_state;
               __pyx_t_37 = __pyx_v_row_player;
@@ -6353,29 +6457,29 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
               __pyx_t_20 = __pyx_v_col_state;
               __pyx_t_19 = __pyx_v_col_player;
 
-              /* "dsgamesolver/qre_ct.pyx":277
+              /* "dsgamesolver/qre_ct.pyx":289
  *                     for col_player in range(num_p):
  *                         if row_action != 0:
- *                             out_[row_index, col_index] = lambda_ * (  u_tilde_sia_partial_V_ev[row_state, row_player, row_action, col_state, col_player]             # <<<<<<<<<<<<<<
- *                                                                     - u_tilde_sia_partial_V_ev[row_state, row_player,          0, col_state, col_player])
- *                         col_index += 1
+ *                             out_[row_index, col_index] = lambda_ * (             # <<<<<<<<<<<<<<
+ *                                   u_tilde_sia_partial_V_ev[row_state, row_player, row_action, col_state, col_player]
+ *                                 - u_tilde_sia_partial_V_ev[row_state, row_player,          0, col_state, col_player]
  */
               __pyx_t_44 = __pyx_v_row_index;
               __pyx_t_43 = __pyx_v_col_index;
               *__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_out_.rcbuffer->pybuffer.buf, __pyx_t_44, __pyx_pybuffernd_out_.diminfo[0].strides, __pyx_t_43, __pyx_pybuffernd_out_.diminfo[1].strides) = (__pyx_v_lambda_ * ((*__Pyx_BufPtrStrided5d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_u_tilde_sia_partial_V_ev.rcbuffer->pybuffer.buf, __pyx_t_42, __pyx_pybuffernd_u_tilde_sia_partial_V_ev.diminfo[0].strides, __pyx_t_41, __pyx_pybuffernd_u_tilde_sia_partial_V_ev.diminfo[1].strides, __pyx_t_40, __pyx_pybuffernd_u_tilde_sia_partial_V_ev.diminfo[2].strides, __pyx_t_39, __pyx_pybuffernd_u_tilde_sia_partial_V_ev.diminfo[3].strides, __pyx_t_38, __pyx_pybuffernd_u_tilde_sia_partial_V_ev.diminfo[4].strides)) - (*__Pyx_BufPtrStrided5d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_u_tilde_sia_partial_V_ev.rcbuffer->pybuffer.buf, __pyx_t_14, __pyx_pybuffernd_u_tilde_sia_partial_V_ev.diminfo[0].strides, __pyx_t_37, __pyx_pybuffernd_u_tilde_sia_partial_V_ev.diminfo[1].strides, __pyx_t_15, __pyx_pybuffernd_u_tilde_sia_partial_V_ev.diminfo[2].strides, __pyx_t_20, __pyx_pybuffernd_u_tilde_sia_partial_V_ev.diminfo[3].strides, __pyx_t_19, __pyx_pybuffernd_u_tilde_sia_partial_V_ev.diminfo[4].strides))));
 
-              /* "dsgamesolver/qre_ct.pyx":276
+              /* "dsgamesolver/qre_ct.pyx":288
  *                 for col_state in range(num_s):
  *                     for col_player in range(num_p):
  *                         if row_action != 0:             # <<<<<<<<<<<<<<
- *                             out_[row_index, col_index] = lambda_ * (  u_tilde_sia_partial_V_ev[row_state, row_player, row_action, col_state, col_player]
- *                                                                     - u_tilde_sia_partial_V_ev[row_state, row_player,          0, col_state, col_player])
+ *                             out_[row_index, col_index] = lambda_ * (
+ *                                   u_tilde_sia_partial_V_ev[row_state, row_player, row_action, col_state, col_player]
  */
             }
 
-            /* "dsgamesolver/qre_ct.pyx":279
- *                             out_[row_index, col_index] = lambda_ * (  u_tilde_sia_partial_V_ev[row_state, row_player, row_action, col_state, col_player]
- *                                                                     - u_tilde_sia_partial_V_ev[row_state, row_player,          0, col_state, col_player])
+            /* "dsgamesolver/qre_ct.pyx":293
+ *                                 - u_tilde_sia_partial_V_ev[row_state, row_player,          0, col_state, col_player]
+ *                                 )
  *                         col_index += 1             # <<<<<<<<<<<<<<
  * 
  *                 # derivative w.r.t. lambda
@@ -6384,44 +6488,60 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
           }
         }
 
-        /* "dsgamesolver/qre_ct.pyx":283
+        /* "dsgamesolver/qre_ct.pyx":297
  *                 # derivative w.r.t. lambda
  *                 # row_action == 0 -> entry = 0
  *                 if row_action != 0:             # <<<<<<<<<<<<<<
- *                     out_[row_index, col_index] = u_tilde_sia_ev[row_state, row_player, row_action] - u_tilde_sia_ev[row_state, row_player, 0]
- * 
+ *                     out_[row_index, col_index] = (u_tilde_sia_ev[row_state, row_player, row_action]
+ *                                                   - u_tilde_sia_ev[row_state, row_player, 0])
  */
         __pyx_t_36 = ((__pyx_v_row_action != 0) != 0);
         if (__pyx_t_36) {
 
-          /* "dsgamesolver/qre_ct.pyx":284
+          /* "dsgamesolver/qre_ct.pyx":298
  *                 # row_action == 0 -> entry = 0
  *                 if row_action != 0:
- *                     out_[row_index, col_index] = u_tilde_sia_ev[row_state, row_player, row_action] - u_tilde_sia_ev[row_state, row_player, 0]             # <<<<<<<<<<<<<<
+ *                     out_[row_index, col_index] = (u_tilde_sia_ev[row_state, row_player, row_action]             # <<<<<<<<<<<<<<
+ *                                                   - u_tilde_sia_ev[row_state, row_player, 0])
  * 
- *                 row_index += 1
  */
           __pyx_t_19 = __pyx_v_row_state;
           __pyx_t_20 = __pyx_v_row_player;
           __pyx_t_15 = __pyx_v_row_action;
+
+          /* "dsgamesolver/qre_ct.pyx":299
+ *                 if row_action != 0:
+ *                     out_[row_index, col_index] = (u_tilde_sia_ev[row_state, row_player, row_action]
+ *                                                   - u_tilde_sia_ev[row_state, row_player, 0])             # <<<<<<<<<<<<<<
+ * 
+ *                 row_index += 1
+ */
           __pyx_t_37 = __pyx_v_row_state;
           __pyx_t_14 = __pyx_v_row_player;
           __pyx_t_38 = 0;
+
+          /* "dsgamesolver/qre_ct.pyx":298
+ *                 # row_action == 0 -> entry = 0
+ *                 if row_action != 0:
+ *                     out_[row_index, col_index] = (u_tilde_sia_ev[row_state, row_player, row_action]             # <<<<<<<<<<<<<<
+ *                                                   - u_tilde_sia_ev[row_state, row_player, 0])
+ * 
+ */
           __pyx_t_39 = __pyx_v_row_index;
           __pyx_t_40 = __pyx_v_col_index;
           *__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_out_.rcbuffer->pybuffer.buf, __pyx_t_39, __pyx_pybuffernd_out_.diminfo[0].strides, __pyx_t_40, __pyx_pybuffernd_out_.diminfo[1].strides) = ((*__Pyx_BufPtrStrided3d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_u_tilde_sia_ev.rcbuffer->pybuffer.buf, __pyx_t_19, __pyx_pybuffernd_u_tilde_sia_ev.diminfo[0].strides, __pyx_t_20, __pyx_pybuffernd_u_tilde_sia_ev.diminfo[1].strides, __pyx_t_15, __pyx_pybuffernd_u_tilde_sia_ev.diminfo[2].strides)) - (*__Pyx_BufPtrStrided3d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_u_tilde_sia_ev.rcbuffer->pybuffer.buf, __pyx_t_37, __pyx_pybuffernd_u_tilde_sia_ev.diminfo[0].strides, __pyx_t_14, __pyx_pybuffernd_u_tilde_sia_ev.diminfo[1].strides, __pyx_t_38, __pyx_pybuffernd_u_tilde_sia_ev.diminfo[2].strides)));
 
-          /* "dsgamesolver/qre_ct.pyx":283
+          /* "dsgamesolver/qre_ct.pyx":297
  *                 # derivative w.r.t. lambda
  *                 # row_action == 0 -> entry = 0
  *                 if row_action != 0:             # <<<<<<<<<<<<<<
- *                     out_[row_index, col_index] = u_tilde_sia_ev[row_state, row_player, row_action] - u_tilde_sia_ev[row_state, row_player, 0]
- * 
+ *                     out_[row_index, col_index] = (u_tilde_sia_ev[row_state, row_player, row_action]
+ *                                                   - u_tilde_sia_ev[row_state, row_player, 0])
  */
         }
 
-        /* "dsgamesolver/qre_ct.pyx":286
- *                     out_[row_index, col_index] = u_tilde_sia_ev[row_state, row_player, row_action] - u_tilde_sia_ev[row_state, row_player, 0]
+        /* "dsgamesolver/qre_ct.pyx":301
+ *                                                   - u_tilde_sia_ev[row_state, row_player, 0])
  * 
  *                 row_index += 1             # <<<<<<<<<<<<<<
  * 
@@ -6431,7 +6551,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
       }
     }
 
-    /* "dsgamesolver/qre_ct.pyx":288
+    /* "dsgamesolver/qre_ct.pyx":303
  *                 row_index += 1
  * 
  *         for row_player in range(num_p):             # <<<<<<<<<<<<<<
@@ -6443,7 +6563,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
     for (__pyx_t_13 = 0; __pyx_t_13 < __pyx_t_12; __pyx_t_13+=1) {
       __pyx_v_row_player = __pyx_t_13;
 
-      /* "dsgamesolver/qre_ct.pyx":289
+      /* "dsgamesolver/qre_ct.pyx":304
  * 
  *         for row_player in range(num_p):
  *             col_index_init += nums_a[row_state,row_player]             # <<<<<<<<<<<<<<
@@ -6456,7 +6576,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
     }
   }
 
-  /* "dsgamesolver/qre_ct.pyx":292
+  /* "dsgamesolver/qre_ct.pyx":307
  * 
  *     # second block: rows with d_H_val[s,i]
  *     row_index = num_a_tot             # <<<<<<<<<<<<<<
@@ -6465,7 +6585,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
  */
   __pyx_v_row_index = __pyx_v_num_a_tot;
 
-  /* "dsgamesolver/qre_ct.pyx":293
+  /* "dsgamesolver/qre_ct.pyx":308
  *     # second block: rows with d_H_val[s,i]
  *     row_index = num_a_tot
  *     col_index_init = 0             # <<<<<<<<<<<<<<
@@ -6474,7 +6594,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
  */
   __pyx_v_col_index_init = 0;
 
-  /* "dsgamesolver/qre_ct.pyx":294
+  /* "dsgamesolver/qre_ct.pyx":309
  *     row_index = num_a_tot
  *     col_index_init = 0
  *     for row_state in range(num_s):             # <<<<<<<<<<<<<<
@@ -6486,7 +6606,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
   for (__pyx_t_10 = 0; __pyx_t_10 < __pyx_t_9; __pyx_t_10+=1) {
     __pyx_v_row_state = __pyx_t_10;
 
-    /* "dsgamesolver/qre_ct.pyx":295
+    /* "dsgamesolver/qre_ct.pyx":310
  *     col_index_init = 0
  *     for row_state in range(num_s):
  *         for row_player in range(num_p):             # <<<<<<<<<<<<<<
@@ -6498,7 +6618,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
     for (__pyx_t_13 = 0; __pyx_t_13 < __pyx_t_12; __pyx_t_13+=1) {
       __pyx_v_row_player = __pyx_t_13;
 
-      /* "dsgamesolver/qre_ct.pyx":299
+      /* "dsgamesolver/qre_ct.pyx":314
  *             # derivatives w.r.t. beta[s',i',a']
  *             # entries with s' != s are 0, thus no looping over s'
  *             col_index = col_index_init             # <<<<<<<<<<<<<<
@@ -6507,7 +6627,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
  */
       __pyx_v_col_index = __pyx_v_col_index_init;
 
-      /* "dsgamesolver/qre_ct.pyx":301
+      /* "dsgamesolver/qre_ct.pyx":316
  *             col_index = col_index_init
  * 
  *             for col_player in range(num_p):             # <<<<<<<<<<<<<<
@@ -6519,7 +6639,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
       for (__pyx_t_31 = 0; __pyx_t_31 < __pyx_t_30; __pyx_t_31+=1) {
         __pyx_v_col_player = __pyx_t_31;
 
-        /* "dsgamesolver/qre_ct.pyx":302
+        /* "dsgamesolver/qre_ct.pyx":317
  * 
  *             for col_player in range(num_p):
  *                 for col_action in range(nums_a[row_state, col_player]):             # <<<<<<<<<<<<<<
@@ -6533,49 +6653,65 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
         for (__pyx_t_32 = 0; __pyx_t_32 < __pyx_t_17; __pyx_t_32+=1) {
           __pyx_v_col_action = __pyx_t_32;
 
-          /* "dsgamesolver/qre_ct.pyx":304
+          /* "dsgamesolver/qre_ct.pyx":319
  *                 for col_action in range(nums_a[row_state, col_player]):
  * 
  *                     if row_player == col_player:             # <<<<<<<<<<<<<<
- *                         out_[row_index, col_index] += sigma[row_state, row_player, col_action] * u_tilde_sia_ev[row_state, row_player, col_action]
- *                     else:
+ *                         out_[row_index, col_index] += (sigma[row_state, row_player, col_action]
+ *                                                        * u_tilde_sia_ev[row_state, row_player, col_action])
  */
           __pyx_t_36 = ((__pyx_v_row_player == __pyx_v_col_player) != 0);
           if (__pyx_t_36) {
 
-            /* "dsgamesolver/qre_ct.pyx":305
+            /* "dsgamesolver/qre_ct.pyx":320
  * 
  *                     if row_player == col_player:
- *                         out_[row_index, col_index] += sigma[row_state, row_player, col_action] * u_tilde_sia_ev[row_state, row_player, col_action]             # <<<<<<<<<<<<<<
+ *                         out_[row_index, col_index] += (sigma[row_state, row_player, col_action]             # <<<<<<<<<<<<<<
+ *                                                        * u_tilde_sia_ev[row_state, row_player, col_action])
  *                     else:
- *                         for row_action in range(nums_a[row_state, row_player]):
  */
             __pyx_t_38 = __pyx_v_row_state;
             __pyx_t_14 = __pyx_v_row_player;
             __pyx_t_37 = __pyx_v_col_action;
+
+            /* "dsgamesolver/qre_ct.pyx":321
+ *                     if row_player == col_player:
+ *                         out_[row_index, col_index] += (sigma[row_state, row_player, col_action]
+ *                                                        * u_tilde_sia_ev[row_state, row_player, col_action])             # <<<<<<<<<<<<<<
+ *                     else:
+ *                         for row_action in range(nums_a[row_state, row_player]):
+ */
             __pyx_t_15 = __pyx_v_row_state;
             __pyx_t_20 = __pyx_v_row_player;
             __pyx_t_19 = __pyx_v_col_action;
+
+            /* "dsgamesolver/qre_ct.pyx":320
+ * 
+ *                     if row_player == col_player:
+ *                         out_[row_index, col_index] += (sigma[row_state, row_player, col_action]             # <<<<<<<<<<<<<<
+ *                                                        * u_tilde_sia_ev[row_state, row_player, col_action])
+ *                     else:
+ */
             __pyx_t_40 = __pyx_v_row_index;
             __pyx_t_39 = __pyx_v_col_index;
             *__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_out_.rcbuffer->pybuffer.buf, __pyx_t_40, __pyx_pybuffernd_out_.diminfo[0].strides, __pyx_t_39, __pyx_pybuffernd_out_.diminfo[1].strides) += ((*__Pyx_BufPtrStrided3d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_sigma.rcbuffer->pybuffer.buf, __pyx_t_38, __pyx_pybuffernd_sigma.diminfo[0].strides, __pyx_t_14, __pyx_pybuffernd_sigma.diminfo[1].strides, __pyx_t_37, __pyx_pybuffernd_sigma.diminfo[2].strides)) * (*__Pyx_BufPtrStrided3d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_u_tilde_sia_ev.rcbuffer->pybuffer.buf, __pyx_t_15, __pyx_pybuffernd_u_tilde_sia_ev.diminfo[0].strides, __pyx_t_20, __pyx_pybuffernd_u_tilde_sia_ev.diminfo[1].strides, __pyx_t_19, __pyx_pybuffernd_u_tilde_sia_ev.diminfo[2].strides)));
 
-            /* "dsgamesolver/qre_ct.pyx":304
+            /* "dsgamesolver/qre_ct.pyx":319
  *                 for col_action in range(nums_a[row_state, col_player]):
  * 
  *                     if row_player == col_player:             # <<<<<<<<<<<<<<
- *                         out_[row_index, col_index] += sigma[row_state, row_player, col_action] * u_tilde_sia_ev[row_state, row_player, col_action]
- *                     else:
+ *                         out_[row_index, col_index] += (sigma[row_state, row_player, col_action]
+ *                                                        * u_tilde_sia_ev[row_state, row_player, col_action])
  */
             goto __pyx_L39;
           }
 
-          /* "dsgamesolver/qre_ct.pyx":307
- *                         out_[row_index, col_index] += sigma[row_state, row_player, col_action] * u_tilde_sia_ev[row_state, row_player, col_action]
+          /* "dsgamesolver/qre_ct.pyx":323
+ *                                                        * u_tilde_sia_ev[row_state, row_player, col_action])
  *                     else:
  *                         for row_action in range(nums_a[row_state, row_player]):             # <<<<<<<<<<<<<<
- *                             out_[row_index, col_index] += sigma[row_state, row_player, row_action] * u_tilde_sia_partial_beta_ev[row_state, row_player, row_action, col_player, col_action]
- * 
+ *                             out_[row_index, col_index] += (sigma[row_state, row_player, row_action]
+ *                                 * u_tilde_sia_partial_beta_ev[row_state, row_player, row_action, col_player, col_action]
  */
           /*else*/ {
             __pyx_t_19 = __pyx_v_row_state;
@@ -6585,21 +6721,37 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
             for (__pyx_t_35 = 0; __pyx_t_35 < __pyx_t_34; __pyx_t_35+=1) {
               __pyx_v_row_action = __pyx_t_35;
 
-              /* "dsgamesolver/qre_ct.pyx":308
+              /* "dsgamesolver/qre_ct.pyx":324
  *                     else:
  *                         for row_action in range(nums_a[row_state, row_player]):
- *                             out_[row_index, col_index] += sigma[row_state, row_player, row_action] * u_tilde_sia_partial_beta_ev[row_state, row_player, row_action, col_player, col_action]             # <<<<<<<<<<<<<<
- * 
- *                     col_index += 1
+ *                             out_[row_index, col_index] += (sigma[row_state, row_player, row_action]             # <<<<<<<<<<<<<<
+ *                                 * u_tilde_sia_partial_beta_ev[row_state, row_player, row_action, col_player, col_action]
+ *                                 )
  */
               __pyx_t_20 = __pyx_v_row_state;
               __pyx_t_19 = __pyx_v_row_player;
               __pyx_t_15 = __pyx_v_row_action;
+
+              /* "dsgamesolver/qre_ct.pyx":325
+ *                         for row_action in range(nums_a[row_state, row_player]):
+ *                             out_[row_index, col_index] += (sigma[row_state, row_player, row_action]
+ *                                 * u_tilde_sia_partial_beta_ev[row_state, row_player, row_action, col_player, col_action]             # <<<<<<<<<<<<<<
+ *                                 )
+ * 
+ */
               __pyx_t_37 = __pyx_v_row_state;
               __pyx_t_14 = __pyx_v_row_player;
               __pyx_t_38 = __pyx_v_row_action;
               __pyx_t_39 = __pyx_v_col_player;
               __pyx_t_40 = __pyx_v_col_action;
+
+              /* "dsgamesolver/qre_ct.pyx":324
+ *                     else:
+ *                         for row_action in range(nums_a[row_state, row_player]):
+ *                             out_[row_index, col_index] += (sigma[row_state, row_player, row_action]             # <<<<<<<<<<<<<<
+ *                                 * u_tilde_sia_partial_beta_ev[row_state, row_player, row_action, col_player, col_action]
+ *                                 )
+ */
               __pyx_t_41 = __pyx_v_row_index;
               __pyx_t_42 = __pyx_v_col_index;
               *__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_out_.rcbuffer->pybuffer.buf, __pyx_t_41, __pyx_pybuffernd_out_.diminfo[0].strides, __pyx_t_42, __pyx_pybuffernd_out_.diminfo[1].strides) += ((*__Pyx_BufPtrStrided3d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_sigma.rcbuffer->pybuffer.buf, __pyx_t_20, __pyx_pybuffernd_sigma.diminfo[0].strides, __pyx_t_19, __pyx_pybuffernd_sigma.diminfo[1].strides, __pyx_t_15, __pyx_pybuffernd_sigma.diminfo[2].strides)) * (*__Pyx_BufPtrStrided5d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_u_tilde_sia_partial_beta_ev.rcbuffer->pybuffer.buf, __pyx_t_37, __pyx_pybuffernd_u_tilde_sia_partial_beta_ev.diminfo[0].strides, __pyx_t_14, __pyx_pybuffernd_u_tilde_sia_partial_beta_ev.diminfo[1].strides, __pyx_t_38, __pyx_pybuffernd_u_tilde_sia_partial_beta_ev.diminfo[2].strides, __pyx_t_39, __pyx_pybuffernd_u_tilde_sia_partial_beta_ev.diminfo[3].strides, __pyx_t_40, __pyx_pybuffernd_u_tilde_sia_partial_beta_ev.diminfo[4].strides)));
@@ -6607,8 +6759,8 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
           }
           __pyx_L39:;
 
-          /* "dsgamesolver/qre_ct.pyx":310
- *                             out_[row_index, col_index] += sigma[row_state, row_player, row_action] * u_tilde_sia_partial_beta_ev[row_state, row_player, row_action, col_player, col_action]
+          /* "dsgamesolver/qre_ct.pyx":328
+ *                                 )
  * 
  *                     col_index += 1             # <<<<<<<<<<<<<<
  * 
@@ -6618,7 +6770,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
         }
       }
 
-      /* "dsgamesolver/qre_ct.pyx":313
+      /* "dsgamesolver/qre_ct.pyx":331
  * 
  *             # derivatives w.r.t. V[s',i']
  *             col_index = num_a_tot             # <<<<<<<<<<<<<<
@@ -6627,7 +6779,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
  */
       __pyx_v_col_index = __pyx_v_num_a_tot;
 
-      /* "dsgamesolver/qre_ct.pyx":314
+      /* "dsgamesolver/qre_ct.pyx":332
  *             # derivatives w.r.t. V[s',i']
  *             col_index = num_a_tot
  *             for col_state in range(num_s):             # <<<<<<<<<<<<<<
@@ -6639,7 +6791,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
       for (__pyx_t_31 = 0; __pyx_t_31 < __pyx_t_30; __pyx_t_31+=1) {
         __pyx_v_col_state = __pyx_t_31;
 
-        /* "dsgamesolver/qre_ct.pyx":315
+        /* "dsgamesolver/qre_ct.pyx":333
  *             col_index = num_a_tot
  *             for col_state in range(num_s):
  *                 for col_player in range(num_p):             # <<<<<<<<<<<<<<
@@ -6651,7 +6803,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
         for (__pyx_t_45 = 0; __pyx_t_45 < __pyx_t_35; __pyx_t_45+=1) {
           __pyx_v_col_player = __pyx_t_45;
 
-          /* "dsgamesolver/qre_ct.pyx":317
+          /* "dsgamesolver/qre_ct.pyx":335
  *                 for col_player in range(num_p):
  * 
  *                     if col_state == row_state and col_player == row_player:             # <<<<<<<<<<<<<<
@@ -6669,18 +6821,18 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
           __pyx_L47_bool_binop_done:;
           if (__pyx_t_36) {
 
-            /* "dsgamesolver/qre_ct.pyx":318
+            /* "dsgamesolver/qre_ct.pyx":336
  * 
  *                     if col_state == row_state and col_player == row_player:
  *                         out_[row_index, col_index] -=1             # <<<<<<<<<<<<<<
  *                     for row_action in range(nums_a[row_state, row_player]):
- *                         out_[row_index, col_index] += sigma[row_state, row_player, row_action] * u_tilde_sia_partial_V_ev[row_state, row_player, row_action, col_state, col_player]
+ *                         out_[row_index, col_index] += (sigma[row_state, row_player, row_action]
  */
             __pyx_t_40 = __pyx_v_row_index;
             __pyx_t_39 = __pyx_v_col_index;
             *__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_out_.rcbuffer->pybuffer.buf, __pyx_t_40, __pyx_pybuffernd_out_.diminfo[0].strides, __pyx_t_39, __pyx_pybuffernd_out_.diminfo[1].strides) -= 1.0;
 
-            /* "dsgamesolver/qre_ct.pyx":317
+            /* "dsgamesolver/qre_ct.pyx":335
  *                 for col_player in range(num_p):
  * 
  *                     if col_state == row_state and col_player == row_player:             # <<<<<<<<<<<<<<
@@ -6689,12 +6841,12 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
  */
           }
 
-          /* "dsgamesolver/qre_ct.pyx":319
+          /* "dsgamesolver/qre_ct.pyx":337
  *                     if col_state == row_state and col_player == row_player:
  *                         out_[row_index, col_index] -=1
  *                     for row_action in range(nums_a[row_state, row_player]):             # <<<<<<<<<<<<<<
- *                         out_[row_index, col_index] += sigma[row_state, row_player, row_action] * u_tilde_sia_partial_V_ev[row_state, row_player, row_action, col_state, col_player]
- * 
+ *                         out_[row_index, col_index] += (sigma[row_state, row_player, row_action]
+ *                             * u_tilde_sia_partial_V_ev[row_state, row_player, row_action, col_state, col_player]
  */
           __pyx_t_39 = __pyx_v_row_state;
           __pyx_t_40 = __pyx_v_row_player;
@@ -6703,28 +6855,44 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
           for (__pyx_t_46 = 0; __pyx_t_46 < __pyx_t_17; __pyx_t_46+=1) {
             __pyx_v_row_action = __pyx_t_46;
 
-            /* "dsgamesolver/qre_ct.pyx":320
+            /* "dsgamesolver/qre_ct.pyx":338
  *                         out_[row_index, col_index] -=1
  *                     for row_action in range(nums_a[row_state, row_player]):
- *                         out_[row_index, col_index] += sigma[row_state, row_player, row_action] * u_tilde_sia_partial_V_ev[row_state, row_player, row_action, col_state, col_player]             # <<<<<<<<<<<<<<
- * 
- *                     col_index += 1
+ *                         out_[row_index, col_index] += (sigma[row_state, row_player, row_action]             # <<<<<<<<<<<<<<
+ *                             * u_tilde_sia_partial_V_ev[row_state, row_player, row_action, col_state, col_player]
+ *                             )
  */
             __pyx_t_40 = __pyx_v_row_state;
             __pyx_t_39 = __pyx_v_row_player;
             __pyx_t_38 = __pyx_v_row_action;
+
+            /* "dsgamesolver/qre_ct.pyx":339
+ *                     for row_action in range(nums_a[row_state, row_player]):
+ *                         out_[row_index, col_index] += (sigma[row_state, row_player, row_action]
+ *                             * u_tilde_sia_partial_V_ev[row_state, row_player, row_action, col_state, col_player]             # <<<<<<<<<<<<<<
+ *                             )
+ * 
+ */
             __pyx_t_14 = __pyx_v_row_state;
             __pyx_t_37 = __pyx_v_row_player;
             __pyx_t_15 = __pyx_v_row_action;
             __pyx_t_19 = __pyx_v_col_state;
             __pyx_t_20 = __pyx_v_col_player;
+
+            /* "dsgamesolver/qre_ct.pyx":338
+ *                         out_[row_index, col_index] -=1
+ *                     for row_action in range(nums_a[row_state, row_player]):
+ *                         out_[row_index, col_index] += (sigma[row_state, row_player, row_action]             # <<<<<<<<<<<<<<
+ *                             * u_tilde_sia_partial_V_ev[row_state, row_player, row_action, col_state, col_player]
+ *                             )
+ */
             __pyx_t_42 = __pyx_v_row_index;
             __pyx_t_41 = __pyx_v_col_index;
             *__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_out_.rcbuffer->pybuffer.buf, __pyx_t_42, __pyx_pybuffernd_out_.diminfo[0].strides, __pyx_t_41, __pyx_pybuffernd_out_.diminfo[1].strides) += ((*__Pyx_BufPtrStrided3d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_sigma.rcbuffer->pybuffer.buf, __pyx_t_40, __pyx_pybuffernd_sigma.diminfo[0].strides, __pyx_t_39, __pyx_pybuffernd_sigma.diminfo[1].strides, __pyx_t_38, __pyx_pybuffernd_sigma.diminfo[2].strides)) * (*__Pyx_BufPtrStrided5d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_u_tilde_sia_partial_V_ev.rcbuffer->pybuffer.buf, __pyx_t_14, __pyx_pybuffernd_u_tilde_sia_partial_V_ev.diminfo[0].strides, __pyx_t_37, __pyx_pybuffernd_u_tilde_sia_partial_V_ev.diminfo[1].strides, __pyx_t_15, __pyx_pybuffernd_u_tilde_sia_partial_V_ev.diminfo[2].strides, __pyx_t_19, __pyx_pybuffernd_u_tilde_sia_partial_V_ev.diminfo[3].strides, __pyx_t_20, __pyx_pybuffernd_u_tilde_sia_partial_V_ev.diminfo[4].strides)));
           }
 
-          /* "dsgamesolver/qre_ct.pyx":322
- *                         out_[row_index, col_index] += sigma[row_state, row_player, row_action] * u_tilde_sia_partial_V_ev[row_state, row_player, row_action, col_state, col_player]
+          /* "dsgamesolver/qre_ct.pyx":342
+ *                             )
  * 
  *                     col_index += 1             # <<<<<<<<<<<<<<
  * 
@@ -6734,7 +6902,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
         }
       }
 
-      /* "dsgamesolver/qre_ct.pyx":326
+      /* "dsgamesolver/qre_ct.pyx":346
  *             # derivative w.r.t. lambda = 0
  * 
  *             row_index += 1             # <<<<<<<<<<<<<<
@@ -6744,7 +6912,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
       __pyx_v_row_index = (__pyx_v_row_index + 1);
     }
 
-    /* "dsgamesolver/qre_ct.pyx":328
+    /* "dsgamesolver/qre_ct.pyx":348
  *             row_index += 1
  * 
  *         for row_player in range(num_p):             # <<<<<<<<<<<<<<
@@ -6756,7 +6924,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
     for (__pyx_t_13 = 0; __pyx_t_13 < __pyx_t_12; __pyx_t_13+=1) {
       __pyx_v_row_player = __pyx_t_13;
 
-      /* "dsgamesolver/qre_ct.pyx":329
+      /* "dsgamesolver/qre_ct.pyx":349
  * 
  *         for row_player in range(num_p):
  *             col_index_init += nums_a[row_state, row_player]             # <<<<<<<<<<<<<<
@@ -6769,7 +6937,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
     }
   }
 
-  /* "dsgamesolver/qre_ct.pyx":331
+  /* "dsgamesolver/qre_ct.pyx":351
  *             col_index_init += nums_a[row_state, row_player]
  * 
  *     return out_             # <<<<<<<<<<<<<<
@@ -6779,7 +6947,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6qre_ct_10J(CYTHON_UNUSED PyObject *__p
   __pyx_r = ((PyObject *)__pyx_v_out_);
   goto __pyx_L0;
 
-  /* "dsgamesolver/qre_ct.pyx":206
+  /* "dsgamesolver/qre_ct.pyx":210
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * def J(np.ndarray[np.float64_t, ndim=1] y, u, phi, int num_s, int num_p,             # <<<<<<<<<<<<<<
@@ -8042,41 +8210,41 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   __Pyx_GIVEREF(__pyx_tuple__7);
   __pyx_codeobj__8 = (PyObject*)__Pyx_PyCode_New(6, 0, 15, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__7, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_dsgamesolver_qre_ct_pyx, __pyx_n_s_u_tilde_sia_partial_beta, 65, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__8)) __PYX_ERR(0, 65, __pyx_L1_error)
 
-  /* "dsgamesolver/qre_ct.pyx":107
+  /* "dsgamesolver/qre_ct.pyx":109
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * def u_tilde_sia_partial_V(np.ndarray[np.float64_t, ndim=1] phi_ravel, np.ndarray[np.float64_t, ndim=3] sigma,             # <<<<<<<<<<<<<<
  *                           int num_s, int num_p, int num_a_max, np.ndarray[np.int32_t, ndim=2] nums_a):
  *     """Derivatives of u_tilde[s,i,a] w.r.t. continuation values V[s',i']."""
  */
-  __pyx_tuple__9 = PyTuple_Pack(15, __pyx_n_s_phi_ravel, __pyx_n_s_sigma, __pyx_n_s_num_s, __pyx_n_s_num_p, __pyx_n_s_num_a_max, __pyx_n_s_nums_a, __pyx_n_s_out, __pyx_n_s_loop_profile, __pyx_n_s_temp_prob, __pyx_n_s_state, __pyx_n_s_player, __pyx_n_s_other, __pyx_n_s_to_state, __pyx_n_s_n, __pyx_n_s_flat_index); if (unlikely(!__pyx_tuple__9)) __PYX_ERR(0, 107, __pyx_L1_error)
+  __pyx_tuple__9 = PyTuple_Pack(15, __pyx_n_s_phi_ravel, __pyx_n_s_sigma, __pyx_n_s_num_s, __pyx_n_s_num_p, __pyx_n_s_num_a_max, __pyx_n_s_nums_a, __pyx_n_s_out, __pyx_n_s_loop_profile, __pyx_n_s_temp_prob, __pyx_n_s_state, __pyx_n_s_player, __pyx_n_s_other, __pyx_n_s_to_state, __pyx_n_s_n, __pyx_n_s_flat_index); if (unlikely(!__pyx_tuple__9)) __PYX_ERR(0, 109, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__9);
   __Pyx_GIVEREF(__pyx_tuple__9);
-  __pyx_codeobj__10 = (PyObject*)__Pyx_PyCode_New(6, 0, 15, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__9, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_dsgamesolver_qre_ct_pyx, __pyx_n_s_u_tilde_sia_partial_V, 107, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__10)) __PYX_ERR(0, 107, __pyx_L1_error)
+  __pyx_codeobj__10 = (PyObject*)__Pyx_PyCode_New(6, 0, 15, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__9, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_dsgamesolver_qre_ct_pyx, __pyx_n_s_u_tilde_sia_partial_V, 109, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__10)) __PYX_ERR(0, 109, __pyx_L1_error)
 
-  /* "dsgamesolver/qre_ct.pyx":148
+  /* "dsgamesolver/qre_ct.pyx":150
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * def H(np.ndarray[np.float64_t, ndim=1] y, u, phi, int num_s, int num_p,             # <<<<<<<<<<<<<<
  *       np.ndarray[np.int32_t, ndim=2] nums_a, int num_a_max, int num_a_tot):
  *     """Homotopy function.
  */
-  __pyx_tuple__11 = PyTuple_Pack(20, __pyx_n_s_y, __pyx_n_s_u, __pyx_n_s_phi, __pyx_n_s_num_s, __pyx_n_s_num_p, __pyx_n_s_nums_a, __pyx_n_s_num_a_max, __pyx_n_s_num_a_tot, __pyx_n_s_out, __pyx_n_s_beta, __pyx_n_s_state, __pyx_n_s_player, __pyx_n_s_action, __pyx_n_s_a, __pyx_n_s_flat_index, __pyx_n_s_sigma, __pyx_n_s_V, __pyx_n_s_lambda, __pyx_n_s_u_tilde_ev_ravel, __pyx_n_s_u_tilde_sia_ev); if (unlikely(!__pyx_tuple__11)) __PYX_ERR(0, 148, __pyx_L1_error)
+  __pyx_tuple__11 = PyTuple_Pack(20, __pyx_n_s_y, __pyx_n_s_u, __pyx_n_s_phi, __pyx_n_s_num_s, __pyx_n_s_num_p, __pyx_n_s_nums_a, __pyx_n_s_num_a_max, __pyx_n_s_num_a_tot, __pyx_n_s_out, __pyx_n_s_beta, __pyx_n_s_state, __pyx_n_s_player, __pyx_n_s_action, __pyx_n_s_a, __pyx_n_s_flat_index, __pyx_n_s_sigma, __pyx_n_s_V, __pyx_n_s_lambda, __pyx_n_s_u_tilde_ev_ravel, __pyx_n_s_u_tilde_sia_ev); if (unlikely(!__pyx_tuple__11)) __PYX_ERR(0, 150, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__11);
   __Pyx_GIVEREF(__pyx_tuple__11);
-  __pyx_codeobj__12 = (PyObject*)__Pyx_PyCode_New(8, 0, 20, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__11, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_dsgamesolver_qre_ct_pyx, __pyx_n_s_H, 148, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__12)) __PYX_ERR(0, 148, __pyx_L1_error)
+  __pyx_codeobj__12 = (PyObject*)__Pyx_PyCode_New(8, 0, 20, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__11, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_dsgamesolver_qre_ct_pyx, __pyx_n_s_H, 150, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__12)) __PYX_ERR(0, 150, __pyx_L1_error)
 
-  /* "dsgamesolver/qre_ct.pyx":206
+  /* "dsgamesolver/qre_ct.pyx":210
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * def J(np.ndarray[np.float64_t, ndim=1] y, u, phi, int num_s, int num_p,             # <<<<<<<<<<<<<<
  *       np.ndarray[np.int32_t, ndim=2] nums_a, int num_a_max, int num_a_tot):
  *     """Jacobian matrix.
  */
-  __pyx_tuple__13 = PyTuple_Pack(30, __pyx_n_s_y, __pyx_n_s_u, __pyx_n_s_phi, __pyx_n_s_num_s, __pyx_n_s_num_p, __pyx_n_s_nums_a, __pyx_n_s_num_a_max, __pyx_n_s_num_a_tot, __pyx_n_s_out, __pyx_n_s_beta, __pyx_n_s_state, __pyx_n_s_player, __pyx_n_s_action, __pyx_n_s_flat_index, __pyx_n_s_sigma, __pyx_n_s_V, __pyx_n_s_lambda, __pyx_n_s_u_tilde_ev_ravel, __pyx_n_s_u_tilde_sia_ev, __pyx_n_s_u_tilde_sia_partial_beta_ev, __pyx_n_s_u_tilde_sia_partial_V_ev, __pyx_n_s_row_state, __pyx_n_s_row_player, __pyx_n_s_row_action, __pyx_n_s_col_state, __pyx_n_s_col_player, __pyx_n_s_col_action, __pyx_n_s_row_index, __pyx_n_s_col_index, __pyx_n_s_col_index_init); if (unlikely(!__pyx_tuple__13)) __PYX_ERR(0, 206, __pyx_L1_error)
+  __pyx_tuple__13 = PyTuple_Pack(30, __pyx_n_s_y, __pyx_n_s_u, __pyx_n_s_phi, __pyx_n_s_num_s, __pyx_n_s_num_p, __pyx_n_s_nums_a, __pyx_n_s_num_a_max, __pyx_n_s_num_a_tot, __pyx_n_s_out, __pyx_n_s_beta, __pyx_n_s_state, __pyx_n_s_player, __pyx_n_s_action, __pyx_n_s_flat_index, __pyx_n_s_sigma, __pyx_n_s_V, __pyx_n_s_lambda, __pyx_n_s_u_tilde_ev_ravel, __pyx_n_s_u_tilde_sia_ev, __pyx_n_s_u_tilde_sia_partial_beta_ev, __pyx_n_s_u_tilde_sia_partial_V_ev, __pyx_n_s_row_state, __pyx_n_s_row_player, __pyx_n_s_row_action, __pyx_n_s_col_state, __pyx_n_s_col_player, __pyx_n_s_col_action, __pyx_n_s_row_index, __pyx_n_s_col_index, __pyx_n_s_col_index_init); if (unlikely(!__pyx_tuple__13)) __PYX_ERR(0, 210, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__13);
   __Pyx_GIVEREF(__pyx_tuple__13);
-  __pyx_codeobj__14 = (PyObject*)__Pyx_PyCode_New(8, 0, 30, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__13, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_dsgamesolver_qre_ct_pyx, __pyx_n_s_J, 206, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__14)) __PYX_ERR(0, 206, __pyx_L1_error)
+  __pyx_codeobj__14 = (PyObject*)__Pyx_PyCode_New(8, 0, 30, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__13, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_dsgamesolver_qre_ct_pyx, __pyx_n_s_J, 210, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__14)) __PYX_ERR(0, 210, __pyx_L1_error)
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;
@@ -8458,40 +8626,40 @@ if (!__Pyx_RefNanny) {
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_u_tilde_sia_partial_beta, __pyx_t_1) < 0) __PYX_ERR(0, 65, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "dsgamesolver/qre_ct.pyx":107
+  /* "dsgamesolver/qre_ct.pyx":109
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * def u_tilde_sia_partial_V(np.ndarray[np.float64_t, ndim=1] phi_ravel, np.ndarray[np.float64_t, ndim=3] sigma,             # <<<<<<<<<<<<<<
  *                           int num_s, int num_p, int num_a_max, np.ndarray[np.int32_t, ndim=2] nums_a):
  *     """Derivatives of u_tilde[s,i,a] w.r.t. continuation values V[s',i']."""
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_12dsgamesolver_6qre_ct_7u_tilde_sia_partial_V, NULL, __pyx_n_s_dsgamesolver_qre_ct); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 107, __pyx_L1_error)
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_12dsgamesolver_6qre_ct_7u_tilde_sia_partial_V, NULL, __pyx_n_s_dsgamesolver_qre_ct); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 109, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_u_tilde_sia_partial_V, __pyx_t_1) < 0) __PYX_ERR(0, 107, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_u_tilde_sia_partial_V, __pyx_t_1) < 0) __PYX_ERR(0, 109, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "dsgamesolver/qre_ct.pyx":148
+  /* "dsgamesolver/qre_ct.pyx":150
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * def H(np.ndarray[np.float64_t, ndim=1] y, u, phi, int num_s, int num_p,             # <<<<<<<<<<<<<<
  *       np.ndarray[np.int32_t, ndim=2] nums_a, int num_a_max, int num_a_tot):
  *     """Homotopy function.
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_12dsgamesolver_6qre_ct_9H, NULL, __pyx_n_s_dsgamesolver_qre_ct); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 148, __pyx_L1_error)
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_12dsgamesolver_6qre_ct_9H, NULL, __pyx_n_s_dsgamesolver_qre_ct); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 150, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_H, __pyx_t_1) < 0) __PYX_ERR(0, 148, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_H, __pyx_t_1) < 0) __PYX_ERR(0, 150, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "dsgamesolver/qre_ct.pyx":206
+  /* "dsgamesolver/qre_ct.pyx":210
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * def J(np.ndarray[np.float64_t, ndim=1] y, u, phi, int num_s, int num_p,             # <<<<<<<<<<<<<<
  *       np.ndarray[np.int32_t, ndim=2] nums_a, int num_a_max, int num_a_tot):
  *     """Jacobian matrix.
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_12dsgamesolver_6qre_ct_11J, NULL, __pyx_n_s_dsgamesolver_qre_ct); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 206, __pyx_L1_error)
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_12dsgamesolver_6qre_ct_11J, NULL, __pyx_n_s_dsgamesolver_qre_ct); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 210, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_J, __pyx_t_1) < 0) __PYX_ERR(0, 206, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_J, __pyx_t_1) < 0) __PYX_ERR(0, 210, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
   /* "dsgamesolver/qre_ct.pyx":1

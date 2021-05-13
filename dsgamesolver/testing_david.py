@@ -41,11 +41,11 @@ qre.initialize()
 """
 import timeit
 
-%timeit.timeit("qre.H(qre.y0, old=True)", number=100000, globals=globals())
-%timeit.timeit("qre.H(qre.y0, old=False)", number=100000, globals=globals())
+%timeit.timeit("qre.H(qre.y0, dev=True)", number=100000, globals=globals())
+%timeit.timeit("qre.H(qre.y0, dev=False)", number=100000, globals=globals())
 
-%timeit qre.H(qre.y0, old=True)
-%timeit qre.H(qre.y0, old=False)
+%timeit qre.H(qre.y0, dev=True)
+%timeit qre.H(qre.y0, dev=False)
 """
 
 qre.solver.verbose = 2
@@ -57,8 +57,8 @@ print(sol)
 # sol2 = qre.solver.solve()
 
 # import timeit
-# %timeit -n 10 -r 10 qre.J(qre.y0, old=True)
-# %timeit -n 10 -r 10 qre.J(qre.y0, old=False)
+# %timeit -n 10 -r 10 qre.J(qre.y0, dev=True)
+# %timeit -n 10 -r 10 qre.J(qre.y0, dev=False)
 
 
 # cython test:

@@ -89,7 +89,9 @@ def u_tilde_sia_partial_beta(np.ndarray[np.float64_t, ndim=1] u_tilde_ravel, np.
                 for player_j in range(num_p):
                     if player_j == player:
                         continue
-                    out_[state, player, loop_profile[player+1], player_j, loop_profile[player_j+1]] += temp_prob * u_tilde_ravel[flat_index]
+                    out_[state, player, loop_profile[player+1], player_j, loop_profile[player_j+1]] += (
+                        temp_prob * u_tilde_ravel[flat_index]
+                        )
                 flat_index += 1 
 
                 loop_profile[num_p] += 1
@@ -172,7 +174,8 @@ def H(np.ndarray[np.float64_t, ndim=1] y, u, phi, int num_s, int num_p,
         np.ndarray[np.float64_t, ndim=2] V = y[num_a_tot : num_a_tot + num_s*num_p].reshape(num_s, num_p)
         double lambda_ = y[num_a_tot + num_s*num_p]
         np.ndarray[np.float64_t, ndim=1] u_tilde_ev_ravel = u_tilde(u, V, phi).ravel()
-        np.ndarray[np.float64_t, ndim=3] u_tilde_sia_ev = u_tilde_sia(u_tilde_ev_ravel, sigma, num_s, num_p, num_a_max, nums_a)
+        np.ndarray[np.float64_t, ndim=3] u_tilde_sia_ev = u_tilde_sia(u_tilde_ev_ravel, sigma, num_s, num_p,
+                                                                      num_a_max, nums_a)
 
     flat_index = 0
     for state in range(num_s):
@@ -184,7 +187,8 @@ def H(np.ndarray[np.float64_t, ndim=1] y, u, phi, int num_s, int num_p,
                     for a in range(nums_a[state, player]):
                         out_[flat_index] -= sigma[state, player, a]
                 else:
-                    out_[flat_index] = beta[state, player, 0] - beta[state, player, action] + lambda_ * (u_tilde_sia_ev[state,player,action] - u_tilde_sia_ev[state,player,0])
+                    out_[flat_index] = (beta[state, player, 0] - beta[state, player, action] + lambda_ *
+                                        (u_tilde_sia_ev[state,player,action] - u_tilde_sia_ev[state,player,0]))
 
                 flat_index += 1
 
@@ -214,7 +218,8 @@ def J(np.ndarray[np.float64_t, ndim=1] y, u, phi, int num_s, int num_p,
     """
 
     cdef:
-        np.ndarray[np.float64_t, ndim=2] out_ = np.zeros((num_a_tot + num_s*num_p, num_a_tot + num_s*num_p + 1), dtype=np.float64)
+        np.ndarray[np.float64_t, ndim=2] out_ = np.zeros((num_a_tot + num_s*num_p, num_a_tot + num_s*num_p + 1),
+                                                         dtype=np.float64)
         np.ndarray[np.float64_t, ndim=3] beta = np.zeros((num_s, num_p, num_a_max), dtype=np.float64)
         int state, player, action
         int flat_index = 0
@@ -230,9 +235,12 @@ def J(np.ndarray[np.float64_t, ndim=1] y, u, phi, int num_s, int num_p,
         np.ndarray[np.float64_t, ndim=2] V = y[num_a_tot : num_a_tot + num_s*num_p].reshape(num_s, num_p)
         double lambda_ = y[num_a_tot + num_s*num_p]
         np.ndarray[np.float64_t, ndim=1] u_tilde_ev_ravel = u_tilde(u, V, phi).ravel()
-        np.ndarray[np.float64_t, ndim=3] u_tilde_sia_ev = u_tilde_sia(u_tilde_ev_ravel, sigma, num_s, num_p, num_a_max, nums_a)
-        np.ndarray[np.float64_t, ndim=5] u_tilde_sia_partial_beta_ev = u_tilde_sia_partial_beta(u_tilde_ev_ravel, sigma, num_s, num_p, num_a_max, nums_a)
-        np.ndarray[np.float64_t, ndim=5] u_tilde_sia_partial_V_ev = u_tilde_sia_partial_V(phi.ravel(), sigma, num_s, num_p, num_a_max, nums_a)
+        np.ndarray[np.float64_t, ndim=3] u_tilde_sia_ev = u_tilde_sia(u_tilde_ev_ravel, sigma, num_s, num_p,
+                                                                      num_a_max, nums_a)
+        np.ndarray[np.float64_t, ndim=5] u_tilde_sia_partial_beta_ev = (u_tilde_sia_partial_beta(u_tilde_ev_ravel,
+                                                                        sigma, num_s, num_p, num_a_max, nums_a))
+        np.ndarray[np.float64_t, ndim=5] u_tilde_sia_partial_V_ev = (u_tilde_sia_partial_V(phi.ravel(),
+                                                                     sigma, num_s, num_p, num_a_max, nums_a))
         int row_state, row_player, row_action
         int col_state, col_player, col_action
         int row_index, col_index, col_index_init
@@ -250,7 +258,8 @@ def J(np.ndarray[np.float64_t, ndim=1] y, u, phi, int num_s, int num_p,
                 for col_player in range(num_p):
                     for col_action in range(nums_a[row_state, col_player]):
 
-                        # diagonal sub-blocks: derivatives w.r.t. beta[s,i,a'] (own actions in same state)
+                        # diagonal sub-blocks: derivatives w.r.t. beta[s,i,a']
+                        # (own actions in same state)
                         if row_player == col_player:
                             if row_action == 0:
                                 out_[row_index, col_index] = -sigma[row_state, col_player, col_action]
@@ -260,12 +269,15 @@ def J(np.ndarray[np.float64_t, ndim=1] y, u, phi, int num_s, int num_p,
                                 elif row_action == col_action:
                                     out_[row_index, col_index] = -1
 
-                        # off-diagonal sub-blocks: derivatives w.r.t. beta[s,i',a'] (other players' actions in same state)
+                        # off-diagonal sub-blocks: derivatives w.r.t. beta[s,i',a']
+                        # (other players' actions in same state)
                         else:
                             # row_action == 0 -> entry = 0
                             if row_action != 0:
-                                out_[row_index, col_index] = lambda_ * (  u_tilde_sia_partial_beta_ev[row_state, row_player, row_action, col_player, col_action]
-                                                                        - u_tilde_sia_partial_beta_ev[row_state, row_player,          0, col_player, col_action])
+                                out_[row_index, col_index] = lambda_ * (
+                                      u_tilde_sia_partial_beta_ev[row_state, row_player, row_action, col_player, col_action]
+                                    - u_tilde_sia_partial_beta_ev[row_state, row_player,          0, col_player, col_action]
+                                    )
             
                         col_index += 1
             
@@ -274,14 +286,17 @@ def J(np.ndarray[np.float64_t, ndim=1] y, u, phi, int num_s, int num_p,
                 for col_state in range(num_s):
                     for col_player in range(num_p):
                         if row_action != 0:
-                            out_[row_index, col_index] = lambda_ * (  u_tilde_sia_partial_V_ev[row_state, row_player, row_action, col_state, col_player]
-                                                                    - u_tilde_sia_partial_V_ev[row_state, row_player,          0, col_state, col_player])
+                            out_[row_index, col_index] = lambda_ * (  
+                                  u_tilde_sia_partial_V_ev[row_state, row_player, row_action, col_state, col_player]
+                                - u_tilde_sia_partial_V_ev[row_state, row_player,          0, col_state, col_player]
+                                )
                         col_index += 1
 
                 # derivative w.r.t. lambda
                 # row_action == 0 -> entry = 0
                 if row_action != 0:
-                    out_[row_index, col_index] = u_tilde_sia_ev[row_state, row_player, row_action] - u_tilde_sia_ev[row_state, row_player, 0]
+                    out_[row_index, col_index] = (u_tilde_sia_ev[row_state, row_player, row_action]
+                                                  - u_tilde_sia_ev[row_state, row_player, 0])
 
                 row_index += 1
 
@@ -302,10 +317,13 @@ def J(np.ndarray[np.float64_t, ndim=1] y, u, phi, int num_s, int num_p,
                 for col_action in range(nums_a[row_state, col_player]):
 
                     if row_player == col_player:
-                        out_[row_index, col_index] += sigma[row_state, row_player, col_action] * u_tilde_sia_ev[row_state, row_player, col_action]
+                        out_[row_index, col_index] += (sigma[row_state, row_player, col_action]
+                                                       * u_tilde_sia_ev[row_state, row_player, col_action])
                     else:
                         for row_action in range(nums_a[row_state, row_player]):
-                            out_[row_index, col_index] += sigma[row_state, row_player, row_action] * u_tilde_sia_partial_beta_ev[row_state, row_player, row_action, col_player, col_action]
+                            out_[row_index, col_index] += (sigma[row_state, row_player, row_action]
+                                * u_tilde_sia_partial_beta_ev[row_state, row_player, row_action, col_player, col_action]
+                                )
 
                     col_index += 1
 
@@ -317,7 +335,9 @@ def J(np.ndarray[np.float64_t, ndim=1] y, u, phi, int num_s, int num_p,
                     if col_state == row_state and col_player == row_player:
                         out_[row_index, col_index] -=1
                     for row_action in range(nums_a[row_state, row_player]):
-                        out_[row_index, col_index] += sigma[row_state, row_player, row_action] * u_tilde_sia_partial_V_ev[row_state, row_player, row_action, col_state, col_player]
+                        out_[row_index, col_index] += (sigma[row_state, row_player, row_action]
+                            * u_tilde_sia_partial_V_ev[row_state, row_player, row_action, col_state, col_player]
+                            )
 
                     col_index += 1
 
