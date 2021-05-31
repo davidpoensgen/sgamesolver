@@ -1,7 +1,7 @@
 # conda create --name dsgamesolver-dev --file .requirements_dev.txt --channel conda-forge -y
 
 # core:
-python=3.8  # version 3.9 not (yet) compatible with all packages
+python=3.9
 numpy
 scipy
 matplotlib
@@ -11,7 +11,7 @@ gxx_linux-64
 
 # dev:
 jupyter
-spyder-kernels=1.9.4
+spyder-kernels=1.10
 pre-commit
 black
 flake8

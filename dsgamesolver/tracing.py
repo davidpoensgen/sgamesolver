@@ -2,10 +2,12 @@
 
 # TODO: check user-provided priors and etas?
 # TODO: maybe write custom optimization for find_y0 to avoid scipy import
+# TODO: starting point seems to be (almost) tangent to t=0, is that correct?
 
 # TODO: play with einsum_path
 # TODO: adjust tracking parameters with "scale" of game
 # TODO: think about Cython import
+
 
 import warnings
 from typing import Union, Optional

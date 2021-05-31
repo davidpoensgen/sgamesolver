@@ -22,7 +22,7 @@ Step 2: create python environment
 ---------------------------------
 
 through conda:
-download requirements_dev.txt
+download .requirements_dev.txt
 conda create --name dsgamesolver-dev --file .requirements_dev.txt --channel conda-forge -y
 
 
@@ -40,5 +40,16 @@ git remote add origin ssh://git@gitlab.eibie.net:6622/steffen/dsgamesolver.git
 git config --local core.sshCommand "ssh -i ~/.ssh/gitlab_eibie_net_ed25519 -F /dev/null"
 
 git pull
+
+
+
+Step 4: set up git hooks
+------------------------
+
+pre-commit install-hooks
+pre-commit install
+
+pre-commit run
+
 
 

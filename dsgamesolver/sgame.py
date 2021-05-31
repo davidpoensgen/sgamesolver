@@ -5,7 +5,8 @@
 # TODO: document ordering of variables in y and equations in H and J
 # TODO: symmetry
 
-from typing import List, Tuple, Union, Optional
+
+from typing import Tuple, Union, Optional
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -19,7 +20,7 @@ ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 class SGame():
     """A stochastic game."""
 
-    def __init__(self, payoff_matrices: List[ArrayLike], transition_matrices: Optional[List[ArrayLike]] = None,
+    def __init__(self, payoff_matrices: list[ArrayLike], transition_matrices: Optional[list[ArrayLike]] = None,
                  discount_factors: Union[ArrayLike, float, int] = 0.0) -> None:
         """Inputs:
 

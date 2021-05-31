@@ -290,8 +290,10 @@ def J(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] rho,
                         # off-diagonal sub-blocks: derivatives w.r.t. beta[s,i',a']
                         # (other players' actions in same state)
                         else:
-                            out_[row_index, col_index] = (t * sigma[row_state, col_player, col_action]
-                                                          * u_tilde_sijab_ev[row_state, row_player, col_player, row_action, col_action])
+                            out_[row_index, col_index] = (
+                                t * sigma[row_state, col_player, col_action]
+                                * u_tilde_sijab_ev[row_state, row_player, col_player, row_action, col_action]
+                                )
 
                         col_index += 1
 

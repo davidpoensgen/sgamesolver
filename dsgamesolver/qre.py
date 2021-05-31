@@ -16,6 +16,7 @@
 
 # TODO: play with numba boost on numpy implementation
 
+
 import numpy as np
 
 from dsgamesolver.sgame import SGame, SGameHomotopy

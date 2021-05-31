@@ -1,5 +1,6 @@
 """Testing stuff for development."""
 
+
 import numpy as np
 
 from dsgamesolver.sgame import SGame
