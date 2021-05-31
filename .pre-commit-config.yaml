@@ -24,7 +24,7 @@ repos:
     hooks:
     -   id: pytest
         name: pytest
-        entry: pytest
+        entry: conda run -n dsgamesolver-dev pytest
         language: system
         pass_filenames: false
         verbose: true
