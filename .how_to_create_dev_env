@@ -10,11 +10,12 @@ Host gitlab
     User git
     Port 6622
     IdentityFile ~/.ssh/gitlab_eibie_net_ed25519
+    AddressFamily inet
 
 set up public ssh key on gitlab
 
 test ssh:
-ssh -o ConnectTimeout=5 -T gitlab 
+ssh -T gitlab
 
 
 
