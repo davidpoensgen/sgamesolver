@@ -4,6 +4,7 @@ import numpy as np
 
 from dsgamesolver.sgame import SGame
 from dsgamesolver.qre import QRE_np, QRE_ct
+from dsgamesolver.tracing import Tracing_ct
 from tests.random_game import create_random_game
 from tests.timings import HomotopyTimer
 
@@ -32,11 +33,17 @@ game = SGame(u, phi, delta)
 
 qre_np = QRE_np(game)
 qre_np.initialize()
-# sol_np = qre_np.solver.solve()
+sol_qre_np = qre_np.solver.solve()
 
 qre_ct = QRE_ct(game)
 qre_ct.initialize()
-# sol_ct = qre_ct.solver.solve()
+sol_qre_ct = qre_ct.solver.solve()
+
+assert np.allclose(sol_qre_np["y"], sol_qre_ct["y"])
+
+tracing_ct = Tracing_ct(game)
+tracing_ct.initialize()
+sol_tracing_ct = tracing_ct.solver.solve()
 
 
 # %% time Jacobian

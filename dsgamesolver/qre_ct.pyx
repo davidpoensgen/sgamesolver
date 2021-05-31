@@ -16,7 +16,7 @@ def u_tilde(u, V, phi):
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def u_tilde_sia(np.ndarray[np.float64_t, ndim=1] u_tilde_ravel, np.ndarray[np.float64_t, ndim=3] sigma,
-                int num_s, int num_p, int num_a_max, np.ndarray[np.int32_t, ndim=2] nums_a):
+                int num_s, int num_p, np.ndarray[np.int32_t, ndim=2] nums_a, int num_a_max):
     """Payoffs (including continuation values) of player i using pure action a in state s,
     given other players play according to mixed strategy profile sigma[s,p,a].
     """
@@ -63,7 +63,7 @@ def u_tilde_sia(np.ndarray[np.float64_t, ndim=1] u_tilde_ravel, np.ndarray[np.fl
 @cython.boundscheck(False)
 @cython.wraparound(False)   
 def u_tilde_sia_partial_beta(np.ndarray[np.float64_t, ndim=1] u_tilde_ravel, np.ndarray[np.float64_t, ndim=3] sigma,
-                             int num_s, int num_p, int num_a_max, np.ndarray[np.int32_t, ndim=2] nums_a):
+                             int num_s, int num_p, np.ndarray[np.int32_t, ndim=2] nums_a, int num_a_max):
     """Derivatives of u_tilde[s,i,a] w.r.t. log strategies beta[i',a'].
     No index s' in beta because the corresponding derivative is zero.
     """
@@ -99,7 +99,7 @@ def u_tilde_sia_partial_beta(np.ndarray[np.float64_t, ndim=1] u_tilde_ravel, np.
                     if loop_profile[num_p-n] == nums_a[state, num_p-n-1]:
                         loop_profile[num_p-n-1] += 1
                         loop_profile[num_p-n] = 0
-                        flat_index += (num_a_max - nums_a[state,num_p-n-1]) * num_a_max**n       
+                        flat_index += (num_a_max - nums_a[state, num_p-n-1]) * num_a_max**n       
 
     return out_
 
@@ -107,7 +107,7 @@ def u_tilde_sia_partial_beta(np.ndarray[np.float64_t, ndim=1] u_tilde_ravel, np.
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def u_tilde_sia_partial_V(np.ndarray[np.float64_t, ndim=1] phi_ravel, np.ndarray[np.float64_t, ndim=3] sigma,
-                          int num_s, int num_p, int num_a_max, np.ndarray[np.int32_t, ndim=2] nums_a):
+                          int num_s, int num_p, np.ndarray[np.int32_t, ndim=2] nums_a, int num_a_max):
     """Derivatives of u_tilde[s,i,a] w.r.t. continuation values V[s',i']."""
 
     cdef:
@@ -158,7 +158,7 @@ def H(np.ndarray[np.float64_t, ndim=1] y, u, phi, int num_s, int num_p,
     """
 
     cdef:
-        np.ndarray[np.float64_t, ndim=1] out_ = np.zeros(num_a_tot+num_s*num_p, dtype=np.float64)
+        np.ndarray[np.float64_t, ndim=1] out_ = np.zeros(num_a_tot + num_s*num_p, dtype=np.float64)
         np.ndarray[np.float64_t, ndim=3] beta = np.zeros((num_s, num_p, num_a_max), dtype=np.float64)
         int state, player, action, a
         int flat_index = 0
@@ -175,7 +175,7 @@ def H(np.ndarray[np.float64_t, ndim=1] y, u, phi, int num_s, int num_p,
         double lambda_ = y[num_a_tot + num_s*num_p]
         np.ndarray[np.float64_t, ndim=1] u_tilde_ev_ravel = u_tilde(u, V, phi).ravel()
         np.ndarray[np.float64_t, ndim=3] u_tilde_sia_ev = u_tilde_sia(u_tilde_ev_ravel, sigma, num_s, num_p,
-                                                                      num_a_max, nums_a)
+                                                                      nums_a, num_a_max)
 
     flat_index = 0
     for state in range(num_s):
@@ -214,7 +214,7 @@ def J(np.ndarray[np.float64_t, ndim=1] y, u, phi, int num_s, int num_p,
     J(y) = [  d_H_strat[s,i,a] / d_beta[s',i',a'],  d_H_strat[s,i,a] / d_V[s',i'],  d_H_strat[s,i,a] / d_lambda  ]
            [  d_H_val[s,i]     / d_beta[s',i',a'],  d_H_val[s,i]     / d_V[s',i'],  d_H_val[s,i]     / d_lambda  ]
     with
-    y = [ beta[s,i,a], V[s,i], lambda ]
+    y = [ beta[s,i,a],  V[s,i],  lambda ]
     """
 
     cdef:
@@ -236,11 +236,11 @@ def J(np.ndarray[np.float64_t, ndim=1] y, u, phi, int num_s, int num_p,
         double lambda_ = y[num_a_tot + num_s*num_p]
         np.ndarray[np.float64_t, ndim=1] u_tilde_ev_ravel = u_tilde(u, V, phi).ravel()
         np.ndarray[np.float64_t, ndim=3] u_tilde_sia_ev = u_tilde_sia(u_tilde_ev_ravel, sigma, num_s, num_p,
-                                                                      num_a_max, nums_a)
+                                                                      nums_a, num_a_max)
         np.ndarray[np.float64_t, ndim=5] u_tilde_sia_partial_beta_ev = (u_tilde_sia_partial_beta(u_tilde_ev_ravel,
-                                                                        sigma, num_s, num_p, num_a_max, nums_a))
+                                                                        sigma, num_s, num_p, nums_a, num_a_max))
         np.ndarray[np.float64_t, ndim=5] u_tilde_sia_partial_V_ev = (u_tilde_sia_partial_V(phi.ravel(),
-                                                                     sigma, num_s, num_p, num_a_max, nums_a))
+                                                                     sigma, num_s, num_p, nums_a, num_a_max))
         int row_state, row_player, row_action
         int col_state, col_player, col_action
         int row_index, col_index, col_index_init
@@ -278,9 +278,9 @@ def J(np.ndarray[np.float64_t, ndim=1] y, u, phi, int num_s, int num_p,
                                       u_tilde_sia_partial_beta_ev[row_state, row_player, row_action, col_player, col_action]
                                     - u_tilde_sia_partial_beta_ev[row_state, row_player,          0, col_player, col_action]
                                     )
-            
+
                         col_index += 1
-            
+
                 # derivatives w.r.t. V[s',i']
                 col_index = num_a_tot
                 for col_state in range(num_s):
