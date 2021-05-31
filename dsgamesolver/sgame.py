@@ -122,8 +122,7 @@ class SGame():
         for s in range(self.num_states):
             for p in range(self.num_players):
                 sigma = np.random.exponential(scale=1, size=self.nums_actions[s, p])
-                sigma = sigma / sigma.sum()
-                strategy_profile[s, p, :self.nums_actions[s, p]] = sigma
+                strategy_profile[s, p, :self.nums_actions[s, p]] = sigma / sigma.sum()
 
         return strategy_profile
 
