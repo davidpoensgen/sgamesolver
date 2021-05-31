@@ -5,7 +5,7 @@ import numpy as np
 
 from dsgamesolver.sgame import SGame
 from dsgamesolver.qre import QRE_np, QRE_ct
-from dsgamesolver.tracing import Tracing_ct
+from dsgamesolver.tracing import Tracing_np, Tracing_ct
 from tests.random_game import create_random_game
 from tests.timings import HomotopyTimer
 
@@ -46,7 +46,7 @@ assert np.allclose(sol_qre_np["y"], sol_qre_ct["y"])
 
 # Tracing:
 
-# tracing_np = Tracing_np(game)
+tracing_np = Tracing_np(game)
 # tracing_np.initialize()
 # sol_tracing_np = tracing_np.solver.solve()
 
