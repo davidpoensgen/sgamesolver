@@ -5,7 +5,7 @@ import numpy as np
 
 from dsgamesolver.sgame import SGame
 from dsgamesolver.qre import QRE_np, QRE_ct
-from dsgamesolver.tracing import Tracing_np, Tracing_ct
+from dsgamesolver.tracing import Tracing_np, Tracing_ct, TracingFixedEta_np, TracingFixedEta_ct
 from tests.random_game import create_random_game
 from tests.timings import HomotopyTimer
 
@@ -55,6 +55,18 @@ tracing_ct.initialize()
 sol_tracing_ct = tracing_ct.solver.solve()
 
 assert np.allclose(sol_tracing_np["y"], sol_tracing_ct["y"])
+
+# Tracing with fixed eta:
+
+tracing_fixed_eta_np = TracingFixedEta_np(game)
+tracing_fixed_eta_np.initialize()
+sol_tracing_fixed_eta_np = tracing_fixed_eta_np.solver.solve()
+
+tracing_fixed_eta_ct = TracingFixedEta_ct(game)
+tracing_fixed_eta_ct.initialize()
+sol_tracing_fixed_eta_ct = tracing_fixed_eta_ct.solver.solve()
+
+assert np.allclose(sol_tracing_fixed_eta_np["y"], sol_tracing_fixed_eta_ct["y"])
 
 
 # %% time Jacobian

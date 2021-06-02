@@ -1,5 +1,6 @@
 """Test implementation of QRE homotopy."""
 
+
 import numpy as np
 
 from dsgamesolver.sgame import SGame
