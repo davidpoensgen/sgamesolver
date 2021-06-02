@@ -126,13 +126,19 @@ class SGame():
 
         return strategy_profile
 
-    def centroid_strategy(self) -> np.ndarray:
-        """Generate the centroid strategy profile."""
+    def centroid_strategy(self, weights: Optional[ArrayLike] = None) -> np.ndarray:
+        """Generate the (weighted) centroid strategy profile."""
+
+        if weights is None:
+            weights = np.ones((self.num_states, self.num_players, self.num_actions_max))
+        else:
+            weights = np.array(weights)
 
         strategy_profile = np.nan * np.empty((self.num_states, self.num_players, self.num_actions_max))
         for s in range(self.num_states):
             for p in range(self.num_players):
-                strategy_profile[s, p, :self.nums_actions[s, p]] = 1 / self.nums_actions[s, p]
+                strategy_profile[s, p, :self.nums_actions[s, p]] = (weights[s, p, :self.nums_actions[s, p]]
+                                                                    / np.sum(weights[s, p, :self.nums_actions[s, p]]))
 
         return strategy_profile
 
@@ -217,7 +223,10 @@ class SGame():
 class SGameHomotopy:
     """General homotopy class for some sGame.
 
-    TODO: document order of (sigma, V, T) in y
+    Tracing is done in log strategies beta = log(sigma).
+
+    TODO: document order of (beta, V, T) in y
+
     TODO: document order of equations in H (and thus J)
     """
 
@@ -258,9 +267,11 @@ class SGameHomotopy:
         Typical use case: Strategies are relevant for convergence, but are transformed during tracing.
         Example: QRE, with uses log strategies beta=log(sigma) during tracing.
 
-        Note: If not needed, can simply pass None to HomCont.
+        Note: If not needed, simply overwrite to None.
         """
-        pass
+        x = y.copy()
+        x[0:self.game.num_actions_total] = np.exp(x[0:self.game.num_actions_total])
+        return x
 
     def H_reduced(self, y: np.ndarray) -> np.ndarray:
         """H evaluated at y, reduced by exploiting symmetries."""
@@ -280,7 +291,9 @@ class SGameHomotopy:
 
     def y_to_sigma_V_t(self, y: np.ndarray, zeros: bool = False) -> Tuple[np.ndarray, np.ndarray, Union[float, int]]:
         """Translate a vector y to arrays representing strategies sigma, values V and homotopy parameter t."""
-        sigma_V_t_flat = self.x_transformer(y)
+        sigma_V_t_flat = y.copy()
+        sigma_V_t_flat[0:self.game.num_actions_total] = np.exp(sigma_V_t_flat[0:self.game.num_actions_total])
+
         sigma = self.game.unflatten_strategies(sigma_V_t_flat[0:self.game.num_actions_total], zeros=zeros)
         V = self.game.unflatten_values(sigma_V_t_flat[self.game.num_actions_total:-1])
         t = sigma_V_t_flat[-1]

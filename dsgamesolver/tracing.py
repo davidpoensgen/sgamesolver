@@ -1,6 +1,6 @@
 """(Logarithmic stochastic) tracing homotopy."""
 
-# TODO: check user-provided priors and etas?
+# TODO: check user-provided priors and weights?
 # TODO: maybe write custom optimization for find_y0 to avoid scipy import
 # TODO: starting point seems to be (almost) tangent to t=0, is that correct?
 
@@ -28,7 +28,8 @@ ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 class Tracing(SGameHomotopy):
     """Tracing homotopy: base class"""
 
-    def __init__(self, game: SGame, priors: Union[str, ArrayLike] = "centroid", weights: Optional[ArrayLike] = None):
+    def __init__(self, game: SGame, priors: Union[str, ArrayLike] = "centroid",
+                 weights: Optional[ArrayLike] = None) -> None:
         super().__init__(game)
 
         # TODO: adjust parameters with scale of payoff matrix:
@@ -165,14 +166,6 @@ class Tracing(SGameHomotopy):
 
         return self.sigma_V_t_to_y(sigma, V, 0.0)
 
-    def x_transformer(self, y: np.ndarray) -> np.ndarray:
-        """Reverts logarithmization of strategies in vector y:
-        Transformed values are needed to check whether sigmas have converged.
-        """
-        x = y.copy()
-        x[0:self.game.num_actions_total] = np.exp(x[0:self.game.num_actions_total])
-        return x
-
 
 # %% Numpy implementation of Tracing
 
@@ -180,13 +173,14 @@ class Tracing(SGameHomotopy):
 class Tracing_np(Tracing):
     """Tracing homotopy: Numpy implementation"""
 
-    def __init__(self, game: SGame) -> None:
+    def __init__(self, game: SGame, priors: Union[str, ArrayLike] = "centroid",
+                 weights: Optional[ArrayLike] = None) -> None:
         """prepares the following:
             - H_mask, J_mask
             - T_H, T_J
             - einsum_eqs
         """
-        super().__init__(game)
+        super().__init__(game, priors, weights)
 
         num_s, num_p, nums_a = self.game.num_states, self.game.num_players, self.game.nums_actions
         num_a_max = self.game.num_actions_max
@@ -395,8 +389,9 @@ class Tracing_np(Tracing):
 class Tracing_ct(Tracing):
     """Tracing homotopy: Cython implementation"""
 
-    def __init__(self, game: SGame) -> None:
-        super().__init__(game)
+    def __init__(self, game: SGame, priors: Union[str, ArrayLike] = "centroid",
+                 weights: Optional[ArrayLike] = None) -> None:
+        super().__init__(game, priors, weights)
 
         # only import Cython module on class instantiation
         try:
@@ -433,6 +428,11 @@ class Tracing_ct(Tracing):
 
 class TracingFixedEta_np(Tracing_np):
     """Tracing homotopy with fixed eta: Numpy implementation"""
+
+    def __init__(self, game: SGame, priors: Union[str, ArrayLike] = "centroid",
+                 weights: Optional[ArrayLike] = None, scale: Union[float, int] = 1.0) -> None:
+        super().__init__(game, priors, weights)
+        self.eta = scale
 
     def H(self, y: np.ndarray) -> np.ndarray:
         """Homotopy function."""
@@ -560,6 +560,11 @@ class TracingFixedEta_np(Tracing_np):
 
 class TracingFixedEta_ct(Tracing_ct):
     """Tracing homotopy with fixed eta: Cython implementation"""
+
+    def __init__(self, game: SGame, priors: Union[str, ArrayLike] = "centroid",
+                 weights: Optional[ArrayLike] = None, scale: Union[float, int] = 1.0) -> None:
+        super().__init__(game, priors, weights)
+        self.eta = scale
 
     def H(self, y: np.ndarray) -> np.ndarray:
         return self.tracing_ct.H_fixed_eta(y, self.game.payoffs, self.game.transitions,

@@ -1,4 +1,4 @@
-"""Test implementation of logarithmic tracing homotopy."""
+"""Test implementation of (logarithmic stochastic) tracing homotopy."""
 
 
 import numpy as np

@@ -22,7 +22,7 @@ def u_tilde_sia(np.ndarray[np.float64_t, ndim=1] u_tilde_ravel, np.ndarray[np.fl
     """
 
     cdef: 
-        np.ndarray[np.float64_t, ndim=3] out_ = np.zeros((num_s, num_p, num_a_max), dtype=np.float64)
+        np.ndarray[np.float64_t, ndim=3] out_ = np.zeros((num_s, num_p, num_a_max))
 
         np.ndarray[np.int32_t, ndim=1] loop_profile = np.zeros(num_p + 1, dtype=np.int32)
         # loop_profile is used to loop over all action profiles.
@@ -69,7 +69,7 @@ def u_tilde_sia_partial_beta(np.ndarray[np.float64_t, ndim=1] u_tilde_ravel, np.
     """
     
     cdef: 
-        np.ndarray[np.float64_t, ndim=5] out_ = np.zeros((num_s, num_p, num_a_max, num_p, num_a_max), dtype=np.float64)
+        np.ndarray[np.float64_t, ndim=5] out_ = np.zeros((num_s, num_p, num_a_max, num_p, num_a_max))
         np.ndarray[np.int32_t, ndim=1] loop_profile = np.zeros(num_p+1, dtype=np.int32)
         double temp_prob
         int state, player, player_j, other, n
@@ -111,7 +111,7 @@ def u_tilde_sia_partial_V(np.ndarray[np.float64_t, ndim=1] phi_ravel, np.ndarray
     """Derivatives of u_tilde[s,i,a] w.r.t. continuation values V[s',i']."""
 
     cdef:
-        np.ndarray[np.float64_t, ndim=5] out_ = np.zeros((num_s, num_p, num_a_max, num_s, num_p), dtype=np.float64)
+        np.ndarray[np.float64_t, ndim=5] out_ = np.zeros((num_s, num_p, num_a_max, num_s, num_p))
         np.ndarray[np.int32_t, ndim=1] loop_profile = np.zeros(num_p+1, dtype=np.int32)
         double temp_prob 
         int state, player, other, to_state, n
@@ -158,8 +158,8 @@ def H(np.ndarray[np.float64_t, ndim=1] y, u, phi, int num_s, int num_p,
     """
 
     cdef:
-        np.ndarray[np.float64_t, ndim=1] out_ = np.zeros(num_a_tot + num_s*num_p, dtype=np.float64)
-        np.ndarray[np.float64_t, ndim=3] beta = np.zeros((num_s, num_p, num_a_max), dtype=np.float64)
+        np.ndarray[np.float64_t, ndim=1] out_ = np.zeros(num_a_tot + num_s*num_p)
+        np.ndarray[np.float64_t, ndim=3] beta = np.zeros((num_s, num_p, num_a_max))
         int state, player, action, a
         int flat_index = 0
 
@@ -218,9 +218,8 @@ def J(np.ndarray[np.float64_t, ndim=1] y, u, phi, int num_s, int num_p,
     """
 
     cdef:
-        np.ndarray[np.float64_t, ndim=2] out_ = np.zeros((num_a_tot + num_s*num_p, num_a_tot + num_s*num_p + 1),
-                                                         dtype=np.float64)
-        np.ndarray[np.float64_t, ndim=3] beta = np.zeros((num_s, num_p, num_a_max), dtype=np.float64)
+        np.ndarray[np.float64_t, ndim=2] out_ = np.zeros((num_a_tot + num_s*num_p, num_a_tot + num_s*num_p + 1))
+        np.ndarray[np.float64_t, ndim=3] beta = np.zeros((num_s, num_p, num_a_max))
         int state, player, action
         int flat_index = 0
 

@@ -77,16 +77,7 @@ class QRE(SGameHomotopy):
     def find_y0(self) -> np.ndarray:
         sigma = self.game.centroid_strategy()
         V = self.game.get_values(sigma)
-        t = 0.0
-        return self.sigma_V_t_to_y(sigma, V, t)
-
-    def x_transformer(self, y: np.ndarray) -> np.ndarray:
-        """Reverts logarithmization of strategies in vector y:
-        Transformed values are needed to check whether sigmas have converged.
-        """
-        x = y.copy()
-        x[0:self.game.num_actions_total] = np.exp(x[0:self.game.num_actions_total])
-        return x
+        return self.sigma_V_t_to_y(sigma, V, 0.0)
 
 
 # %% Numpy implementation of QRE
@@ -346,7 +337,7 @@ class QRE_np(QRE):
 class QRE_ct(QRE):
     """QRE homotopy: Cython implementation"""
 
-    def __init__(self, game: SGame):
+    def __init__(self, game: SGame) -> None:
         super().__init__(game)
 
         # only import Cython module on class instantiation
