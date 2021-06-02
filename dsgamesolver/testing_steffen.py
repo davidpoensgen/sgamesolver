@@ -47,14 +47,14 @@ assert np.allclose(sol_qre_np["y"], sol_qre_ct["y"])
 # Tracing:
 
 tracing_np = Tracing_np(game)
-# tracing_np.initialize()
-# sol_tracing_np = tracing_np.solver.solve()
+tracing_np.initialize()
+sol_tracing_np = tracing_np.solver.solve()
 
 tracing_ct = Tracing_ct(game)
 tracing_ct.initialize()
 sol_tracing_ct = tracing_ct.solver.solve()
 
-# assert np.allclose(sol_tracing_np["y"], sol_tracing_ct["y"])
+assert np.allclose(sol_tracing_np["y"], sol_tracing_ct["y"])
 
 
 # %% time Jacobian

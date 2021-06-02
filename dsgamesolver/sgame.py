@@ -285,3 +285,33 @@ class SGameHomotopy:
         V = self.game.unflatten_values(sigma_V_t_flat[self.game.num_actions_total:-1])
         t = sigma_V_t_flat[-1]
         return sigma, V, t
+
+
+# %% testing
+
+
+if __name__ == '__main__':
+
+    from tests.random_game import create_random_game
+
+    # SGame
+
+    game = SGame(*create_random_game())
+
+    game.detect_symmetries()
+
+    sigma = game.centroid_strategy()
+    V = game.get_values(sigma)
+
+    losses = game.check_equilibrium(sigma)
+
+    sigma_flat = game.flatten_strategies(sigma)
+    V_flat = game.flatten_values(V)
+
+    y = np.concatenate([np.log(sigma_flat), V_flat, [0.0]])
+
+    # SGameHomotopy
+
+    homotopy = SGameHomotopy(game)
+
+    assert np.allclose(y, homotopy.sigma_V_t_to_y(sigma, V, 0.0))

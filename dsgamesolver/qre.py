@@ -119,9 +119,9 @@ class QRE_np(QRE):
             for p in range(num_p):
                 H_mask.append(flat_index)
                 flat_index += 1
-        H_mask = np.array(H_mask, dtype=np.int64)
+        self.H_mask = np.array(H_mask, dtype=np.int64)
 
-        J_mask = tuple(
+        self.J_mask = tuple(
             np.meshgrid(
                 H_mask,
                 np.append(H_mask, [num_s * num_p * num_a_max + num_s * num_p]),
@@ -129,9 +129,6 @@ class QRE_np(QRE):
                 sparse=True,
             )
         )
-
-        self.H_mask = H_mask
-        self.J_mask = J_mask
 
         # tensors to assemble H
         T_H_0 = np.zeros((num_s, num_p, num_a_max))
@@ -196,14 +193,12 @@ class QRE_np(QRE):
                     for p_ in range(num_p):
                         T_J_4[(s, p) + A + (s, p_, A[p_])] = 1
 
-        self.T_J = {
-            0: T_J_0,
-            1: T_J_1,
-            2: T_J_2,
-            3: T_J_3,
-            4: T_J_4,
-            5: T_J_5,
-        }
+        self.T_J = {0: T_J_0,
+                    1: T_J_1,
+                    2: T_J_2,
+                    3: T_J_3,
+                    4: T_J_4,
+                    5: T_J_5}
 
         # equations to be used by einsum
         self.einsum_eqs = {
@@ -241,6 +236,8 @@ class QRE_np(QRE):
         beta = self.game.unflatten_strategies(y[:num_a_tot], zeros=True)
         sigma, V, lambda_ = self.y_to_sigma_V_t(y, zeros=True)
 
+        # building blocks of H
+
         sigma_p_list = [sigma[:, p, :] for p in range(num_p)]
         if dev:
             u_tilde = self.game.payoffs + np.einsum('sp...S,Sp->sp...', self.game.transitions, V,
@@ -263,11 +260,20 @@ class QRE_np(QRE):
 
         Eu_tilde = np.einsum('spa,spa->sp', sigma, Eu_tilde_a)
 
-        H_strat = (self.T_H[0] + np.einsum('spaSPA,SPA->spa', self.T_H[1], sigma)
-                   + np.einsum('spaSPA,SPA->spa', self.T_H[2], beta - lambda_ * Eu_tilde_a))
-        H_val = np.einsum('spSP,SP->sp', self.T_H[3], V - Eu_tilde)
+        # assemble H
 
-        return np.append(H_strat.ravel(), H_val.ravel())[self.H_mask]
+        spa = num_s * num_p * num_a_max
+        sp = num_s * num_p
+        H = np.zeros(spa+sp)
+
+        # H_strat
+        H[0:spa] = (self.T_H[0] + np.einsum('spaSPA,SPA->spa', self.T_H[1], sigma)
+                    + np.einsum('spaSPA,SPA->spa', self.T_H[2], beta - lambda_ * Eu_tilde_a)
+                    ).reshape(spa)
+        # H_val
+        H[spa : spa+sp] = np.einsum('spSP,SP->sp', self.T_H[3], V - Eu_tilde).reshape(sp)
+
+        return H[self.H_mask]
 
     def J(self, y: np.ndarray, dev: bool = False) -> np.ndarray:
         """Jacobian matrix of homotopy function."""
@@ -294,14 +300,14 @@ class QRE_np(QRE):
             dEu_tilde_a_dV = np.empty((num_s, num_p, num_a_max, num_s, num_p))
             for p in range(num_p):
                 Eu_tilde_a[:, p] = np.einsum(self.einsum_eqs['Eu_tilde_a_J'][p], u_tilde[:, p], sigma_prod_with_p[:, p])
-                dEu_tilde_a_dV[:, p] = np.einsum(self.einsum_eqs['dEu_tilde_a_dV'][p],
-                                                 self.T_J[3][:, p], sigma_prod_with_p[:, p])
+                dEu_tilde_a_dV[:, p] = np.einsum(self.einsum_eqs['dEu_tilde_a_dV'][p], self.T_J[3][:, p],
+                                                 sigma_prod_with_p[:, p])
                 T_temp = np.einsum('s...,s...->s...', u_tilde[:, p], sigma_prod_with_p[:, p])
                 dEu_tilde_a_dbeta[:, p] = np.einsum(self.einsum_eqs['dEu_tilde_a_dbeta'][p], T_temp, self.T_J[2][:, p])
 
         else:
             Eu_tilde_a = u_tilde
-            dEu_tilde_a_dbeta = np.zeros(shape=(num_s, num_p, num_a_max, num_s, num_p, num_a_max))
+            dEu_tilde_a_dbeta = np.zeros((num_s, num_p, num_a_max, num_s, num_p, num_a_max))
             dEu_tilde_a_dV = self.T_J[3]
 
         T_temp = np.einsum("sp...,s...->sp...", u_tilde, sigma_prod)
@@ -317,17 +323,18 @@ class QRE_np(QRE):
 
         # dH_strat_dbeta
         J[0:spa, 0:spa] = (self.T_J[0] + np.einsum('spaSPA,SPA->spaSPA', self.T_J[1], sigma) + lambda_ *
-                           np.einsum('spatqb,tqbSPA->spaSPA', -self.T_H[2], dEu_tilde_a_dbeta)).reshape((spa, spa))
+                           np.einsum('spatqb,tqbSPA->spaSPA', -self.T_H[2], dEu_tilde_a_dbeta)
+                           ).reshape((spa, spa))
         # dH_strat_dV
-        J[0:spa, spa : spa+sp] = lambda_ * np.einsum('spatqb,tqbSP->spaSP', -self.T_H[2],
-                                                     dEu_tilde_a_dV).reshape((spa, sp))
+        J[0:spa, spa : spa+sp] = (lambda_ * np.einsum('spatqb,tqbSP->spaSP', -self.T_H[2], dEu_tilde_a_dV)
+                                  ).reshape((spa, sp))
         # dH_strat_dlambda
-        J[0:spa, spa+sp] = np.einsum('spatqb,tqb->spa', -self.T_H[2], Eu_tilde_a).reshape((spa))
+        J[0:spa, spa+sp] = np.einsum('spatqb,tqb->spa', -self.T_H[2], Eu_tilde_a).reshape(spa)
         # dH_val_dbeta
         J[spa : spa+sp, 0:spa] = np.einsum('sptq,tqSPA->spSPA', -self.T_H[3], dEu_tilde_dbeta).reshape((sp, spa))
         # dH_val_dV
-        J[spa : spa+sp, spa : spa+sp] = (self.T_J[5] + np.einsum('sptq,tqSP->spSP', -self.T_H[3],
-                                                                 dEu_tilde_dV)).reshape((sp, sp))
+        J[spa : spa+sp, spa : spa+sp] = (self.T_J[5] + np.einsum('sptq,tqSP->spSP', -self.T_H[3], dEu_tilde_dV)
+                                         ).reshape((sp, sp))
         # dH_val_dlambda = 0
 
         return J[self.J_mask]
@@ -400,6 +407,9 @@ if __name__ == '__main__':
 
     # numpy
     qre_np = QRE_np(game)
+    qre_np.initialize()
+    qre_np.solver.solve()
+
     y0 = qre_np.find_y0()
     """
     %timeit qre_np.H(y0)
@@ -408,7 +418,9 @@ if __name__ == '__main__':
 
     # cython
     qre_ct = QRE_ct(game)
-    print(qre_ct.H(qre_ct.find_y0()))
+    qre_ct.initialize()
+    qre_ct.solver.solve()
+
     """
     %timeit qre_ct.H(y0)
     %timeit qre_ct.J(y0)
@@ -416,7 +428,8 @@ if __name__ == '__main__':
 
     # numba
     # qre_nb = QRE_nb(game)
-    # print(qre_nb.H(qre_nb.find_y0()))
+    # qre_nb.initialize()
+    # qre_nb.solver.solve()
     # """
     # %timeit qre_nb.H(y0)
     # %timeit qre_nb.J(y0)

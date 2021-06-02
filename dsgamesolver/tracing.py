@@ -83,29 +83,30 @@ class Tracing(SGameHomotopy):
 
         # nu
         if weights is None:
-            self.weights = np.ones((self.game.num_states, self.game.num_players, self.game.num_actions_max))
+            self.nu = np.ones((self.game.num_states, self.game.num_players, self.game.num_actions_max))
         else:
             # TODO: document how weights should be specified / should they be checked?
-            self.weights = weights
+            self.nu = weights
 
-        # eta_0
-        self.scale = 1.0
+        # eta_0 := 1
+        self.eta_0 = 1.0
 
         # prepare payoffs and transition given other players follow prior
         num_s, num_p, num_a_max = self.game.num_states, self.game.num_players, self.game.num_actions_max
         rho_p_list = [self.priors[:, p, :] for p in range(num_p)]
-        einsum_eqs_u_rho = ['s' + ABC[0:num_p] + ',s' + ',s'.join(ABC[p_] for p_ in range(num_p) if p_ != p)
-                            + '->s' + ABC[p] for p in range(num_p)]
-        einsum_eqs_phi_rho = ['s' + ABC[0:num_p] + 't,s' + ',s'.join(ABC[p_] for p_ in range(num_p) if p_ != p)
-                              + '->s' + ABC[p] + 't' for p in range(num_p)]
-
+        self.einsum_eqs = {
+            'u_a': ['s' + ABC[0:num_p] + ',s' + ',s'.join(ABC[p_] for p_ in range(num_p) if p_ != p)
+                    + '->s' + ABC[p] for p in range(num_p)],
+            'phi_a': ['s' + ABC[0:num_p] + 't,s' + ',s'.join(ABC[p_] for p_ in range(num_p) if p_ != p)
+                      + '->s' + ABC[p] + 't' for p in range(num_p)],
+        }
         if num_p > 1:
             self.u_rho = np.empty((num_s, num_p, num_a_max))
             self.phi_rho = np.empty((num_s, num_p, num_a_max, num_s))
             for p in range(num_p):
-                self.u_rho[:, p] = np.einsum(einsum_eqs_u_rho[p],
+                self.u_rho[:, p] = np.einsum(self.einsum_eqs['u_a'][p],
                                              self.game.payoffs[:, p], *(rho_p_list[:p]+rho_p_list[(p+1):]))
-                self.phi_rho[:, p] = np.einsum(einsum_eqs_phi_rho[p],
+                self.phi_rho[:, p] = np.einsum(self.einsum_eqs['phi_a'][p],
                                                self.game.transitions[:, p], *(rho_p_list[:p]+rho_p_list[(p+1):]))
         else:
             self.u_rho = self.game.payoffs
@@ -140,18 +141,18 @@ class Tracing(SGameHomotopy):
                     c_max_idx = np.argmax(c[s, p, 0:nums_a[s, p]])
 
                     def f(sigma1):
-                        return - 1 + ((self.weights[s, p, 0:nums_a[s, p]] / self.weights[s, p, c_max_idx])
+                        return - 1 + ((self.nu[s, p, 0:nums_a[s, p]] / self.nu[s, p, c_max_idx])
                                       / ((c[s, p, c_max_idx] - c[s, p, 0:nums_a[s, p]])
-                                         / (self.scale * self.weights[s, p, c_max_idx]) + 1/sigma1)).sum()
+                                         / (self.eta_0 * self.nu[s, p, c_max_idx]) + 1/sigma1)).sum()
 
                     sigma1 = brentq(f, 1e-24, 1)
 
-                    sigma[s, p, 0:nums_a[s, p]] = ((self.weights[s, p, 0:nums_a[s, p]] / self.weights[s, p, c_max_idx])
+                    sigma[s, p, 0:nums_a[s, p]] = ((self.nu[s, p, 0:nums_a[s, p]] / self.nu[s, p, c_max_idx])
                                                    / ((c[s, p, c_max_idx] - c[s, p, 0:nums_a[s, p]])
-                                                      / (self.scale * self.weights[s, p, c_max_idx]) + 1/sigma1))
-                    V[s, p] = (c[s, p, c_max_idx] + ((self.scale * self.weights[s, p, c_max_idx]) / sigma1)
-                               + self.scale * ((self.weights[s, p, 0:nums_a[s, p]]
-                                                * (np.log(sigma[s, p, 0:nums_a[s, p]]) - 1)).sum()))
+                                                      / (self.eta_0 * self.nu[s, p, c_max_idx]) + 1/sigma1))
+                    V[s, p] = (c[s, p, c_max_idx] + ((self.eta_0 * self.nu[s, p, c_max_idx]) / sigma1)
+                               + self.eta_0 * ((self.nu[s, p, 0:nums_a[s, p]]
+                                               * (np.log(sigma[s, p, 0:nums_a[s, p]]) - 1)).sum()))
 
             if np.max(np.abs(V - V_old)) < tol and np.allclose(sigma, sigma_old, rtol=0, atol=tol, equal_nan=True):
                 break
@@ -187,13 +188,205 @@ class Tracing_np(Tracing):
         """
         super().__init__(game)
 
-    def H(self, y: np.ndarray) -> np.ndarray:
+        num_s, num_p, nums_a = self.game.num_states, self.game.num_players, self.game.nums_actions
+        num_a_max = self.game.num_actions_max
+
+        # indices to mask H and J according to nums_a
+        H_mask = []
+        flat_index = 0
+        for s in range(num_s):
+            for p in range(num_p):
+                for _ in range(nums_a[s, p]):
+                    H_mask.append(flat_index)
+                    flat_index += 1
+                flat_index += num_a_max - nums_a[s, p]
+        for s in range(num_s):
+            for p in range(num_p):
+                H_mask.append(flat_index)
+                flat_index += 1
+        self.H_mask = np.array(H_mask, dtype=np.int64)
+
+        self.J_mask = tuple(
+            np.meshgrid(
+                H_mask,
+                np.append(H_mask, [num_s * num_p * num_a_max + num_s * num_p]),
+                indexing="ij",
+                sparse=True,
+            )
+        )
+
+        # tensors to assemble J
+        T_J_0 = np.zeros((num_s, num_p, num_a_max, num_s, num_p, num_a_max))
+        for s in range(num_s):
+            for p in range(num_p):
+                for a in range(nums_a[s, p]):
+                    T_J_0[s, p, a, s, p, a] = 1
+
+        T_J_1 = np.zeros((num_s, num_p, num_a_max, num_s, num_p, num_a_max))
+        for s in range(num_s):
+            for p in range(num_p):
+                for a in range(nums_a[s, p]):
+                    for b in range(nums_a[s, p]):
+                        if b != a:
+                            T_J_1[s, p, a, s, p, b] = 1
+
+        T_J_2 = np.zeros((num_s, num_p, num_a_max, num_s, num_p, num_a_max))
+        for s in range(num_s):
+            for p in range(num_p):
+                for q in range(num_p):
+                    if q != p:
+                        T_J_2[s, p, :, s, q, :] = 1
+
+        T_J_3 = np.zeros((num_s, num_p, num_a_max, num_s, num_p))
+        for p in range(num_p):
+            T_J_3[:, p, :, :, p] = 1
+
+        T_J_4 = np.zeros((num_s, num_p, num_a_max, num_s, num_p))
+        for s in range(num_s):
+            for p in range(num_p):
+                T_J_4[s, p, :, s, p] = 1
+
+        T_J_5 = np.zeros((num_s, num_p, num_s, num_p, num_a_max))
+        for s in range(num_s):
+            for p in range(num_p):
+                T_J_5[s, p, s, p, :] = 1
+
+        self.T_J = {0: T_J_0,
+                    1: T_J_1,
+                    2: T_J_2,
+                    3: T_J_3,
+                    4: T_J_4,
+                    5: T_J_5}
+
+        # equations to be used by einsum
+        self.einsum_eqs['u_ab'] = [
+            ['s' + ABC[0:num_p] + ',s'.join(['']+[ABC[p_] for p_ in range(num_p) if p_ not in [p, q]])
+             + '->s' + ABC[p] + (ABC[q] if q != p else '') for q in range(num_p)] for p in range(num_p)
+        ]
+
+        # optimal paths to be used by einsum
         # TODO
-        return super().H(y)
+        self.einsum_paths = {}
+
+    def H(self, y: np.ndarray) -> np.ndarray:
+        """Homotopy function."""
+
+        num_s, num_p = self.game.num_states, self.game.num_players
+        num_a_max, num_a_tot = self.game.num_actions_max, self.game.num_actions_total
+
+        sigma, V, t = self.y_to_sigma_V_t(y, zeros=True)
+
+        # building blocks of H
+
+        beta_with_nan = self.game.unflatten_strategies(y[:num_a_tot])
+        sigma_inv = np.nan_to_num(np.exp(-beta_with_nan))
+        beta = np.nan_to_num(beta_with_nan, nan=1.0)
+
+        sigma_p_list = [sigma[:, p, :] for p in range(num_p)]
+
+        # TODO: sigma_prod_with_p ?
+
+        if num_p > 1:
+            u_sigma = np.empty((num_s, num_p, num_a_max))
+            phi_sigma = np.empty((num_s, num_p, num_a_max, num_s))
+            for p in range(num_p):
+                u_sigma[:, p] = np.einsum(self.einsum_eqs['u_a'][p], self.game.payoffs[:, p],
+                                          *(sigma_p_list[:p] + sigma_p_list[(p + 1):]))
+                phi_sigma[:, p] = np.einsum(self.einsum_eqs['phi_a'][p], self.game.transitions[:, p],
+                                            *(sigma_p_list[:p] + sigma_p_list[(p + 1):]))
+        else:
+            u_sigma = self.game.payoffs
+            phi_sigma = self.game.transitions
+
+        u_bar = t*u_sigma + (1-t)*self.u_rho
+        phi_bar = t*phi_sigma + (1-t)*self.phi_rho
+
+        Eu_tilde_a = u_bar + np.einsum('spat,tp->spa', phi_bar, V)
+
+        # assemble H
+
+        spa = num_s * num_p * num_a_max
+        sp = num_s * num_p
+        H = np.zeros(spa+sp)
+
+        # H_val
+        H[0:spa] = (Eu_tilde_a - np.repeat(V[:, :, np.newaxis], num_a_max, axis=2) + (1-t)**2 * self.eta_0
+                    * (self.nu * sigma_inv
+                       + np.repeat((self.nu*(beta-1)).sum(axis=2)[:, :, np.newaxis], num_a_max, axis=2))
+                    ).reshape(spa)
+        # H_strat
+        H[spa : spa+sp] = (np.sum(sigma, axis=2) - np.ones((num_s, num_p))).reshape(sp)
+
+        return H[self.H_mask]
 
     def J(self, y: np.ndarray) -> np.ndarray:
-        # TODO
-        return super().J(y)
+        """Jacobian matrix of homotopy function."""
+
+        num_s, num_p = self.game.num_states, self.game.num_players
+        num_a_max, num_a_tot = self.game.num_actions_max, self.game.num_actions_total
+
+        sigma, V, t = self.y_to_sigma_V_t(y, zeros=True)
+
+        # building blocks of J
+
+        beta_with_nan = self.game.unflatten_strategies(y[:num_a_tot])
+        sigma_inv = np.nan_to_num(np.exp(-beta_with_nan))
+        beta = np.nan_to_num(beta_with_nan, nan=1.0)
+
+        sigma_p_list = [sigma[:, p, :] for p in range(num_p)]
+
+        u_tilde = self.game.payoffs + np.einsum('sp...S,Sp->sp...', self.game.transitions, V)
+
+        if num_p > 1:
+            u_sigma = np.empty((num_s, num_p, num_a_max))
+            phi_sigma = np.empty((num_s, num_p, num_a_max, num_s))
+            Eu_tilde_ab = np.empty((num_s, num_p, num_p, num_a_max, num_a_max))
+            for p in range(num_p):
+                u_sigma[:, p] = np.einsum(self.einsum_eqs['u_a'][p], self.game.payoffs[:, p],
+                                          *(sigma_p_list[:p] + sigma_p_list[(p + 1):]))
+                phi_sigma[:, p] = np.einsum(self.einsum_eqs['phi_a'][p], self.game.transitions[:, p],
+                                            *(sigma_p_list[:p] + sigma_p_list[(p + 1):]))
+                for q in range(num_p):
+                    # TODO: can loop be made more efficient?
+                    Eu_tilde_pq = np.einsum(self.einsum_eqs['u_ab'][p][q], u_tilde[:, p],
+                                            *[sigma_p_list[p_] for p_ in range(num_p) if p_ not in [p, q]])
+                    if q == p:
+                        Eu_tilde_pq = np.repeat(np.expand_dims(Eu_tilde_pq, axis=-1), num_a_max, axis=-1)
+                    Eu_tilde_ab[:, p, q] = Eu_tilde_pq
+        else:
+            u_sigma = self.game.payoffs
+            phi_sigma = self.game.transitions
+            Eu_tilde_ab = np.repeat(u_tilde[:, :, np.newaxis, :, np.newaxis], num_a_max, axis=4)
+
+        u_hat = u_sigma - self.u_rho
+        phi_hat = phi_sigma - self.phi_rho
+
+        phi_bar = t*phi_sigma + (1-t)*self.phi_rho
+
+        # assemble J
+
+        spa = num_s * num_p * num_a_max
+        sp = num_s * num_p
+        J = np.zeros((spa+sp, spa+sp+1))
+
+        # dH_val_dbeta
+        J[0:spa, 0:spa] = ((1-t)**2 * self.eta_0 * np.einsum('spaSPA,SPA->spaSPA', self.T_J[0], self.nu*(1-sigma_inv))
+                           + (1-t)**2 * self.eta_0 * np.einsum('spaSPA,spA->spaSPA', self.T_J[1], self.nu)
+                           + t * np.einsum('spaSPA,sPA,spPaA->spaSPA', self.T_J[2], sigma, Eu_tilde_ab)
+                           ).reshape((spa, spa))
+        # dH_val_dV
+        J[0:spa, spa : spa+sp] = (np.einsum('spaSP,spaS->spaSP', self.T_J[3], phi_bar) - self.T_J[4]).reshape((spa, sp))
+        # dH_val_dt
+        J[0:spa, spa+sp] = (u_hat + np.einsum('spaS,Sp->spa', phi_hat, V) - 2*(1-t) * self.eta_0
+                            * (self.nu*sigma_inv + np.repeat((self.nu*(beta-1)).sum(axis=2)[:, :, np.newaxis],
+                                                             num_a_max, axis=2))
+                            ).reshape(spa)
+        # dH_strat_dbeta
+        J[spa : spa+sp, 0:spa] = np.einsum('spSPA,SPA->spSPA', self.T_J[5], sigma).reshape((sp, spa))
+        # dH_strat_dV = 0
+        # dH_strat_dt = 0
+
+        return J[self.J_mask]
 
 
 # %% Cython implementation of Tracing
@@ -224,13 +417,13 @@ class Tracing_ct(Tracing):
 
     def H(self, y: np.ndarray) -> np.ndarray:
         return self.tracing_ct.H(y, self.game.payoffs, self.game.transitions,
-                                 self.priors, self.weights, self.scale, self.u_rho, self.phi_rho,
+                                 self.priors, self.nu, self.eta_0, self.u_rho, self.phi_rho,
                                  self.game.num_states, self.game.num_players, self.game.nums_actions,
                                  self.game.num_actions_max, self.game.num_actions_total)
 
     def J(self, y: np.ndarray) -> np.ndarray:
         return self.tracing_ct.J(y, self.game.payoffs, self.game.transitions,
-                                 self.priors, self.weights, self.scale, self.u_rho, self.phi_rho,
+                                 self.priors, self.nu, self.eta_0, self.u_rho, self.phi_rho,
                                  self.game.num_states, self.game.num_players, self.game.nums_actions,
                                  self.game.num_actions_max, self.game.num_actions_total)
 
@@ -245,6 +438,9 @@ if __name__ == '__main__':
 
     # numpy
     tracing_np = Tracing_np(game)
+    tracing_np.initialize()
+    tracing_np.solver.solve()
+
     y0 = tracing_np.find_y0()
     """
     %timeit tracing_np.H(y0)
@@ -253,7 +449,8 @@ if __name__ == '__main__':
 
     # cython
     tracing_ct = Tracing_ct(game)
-    print(tracing_ct.H(tracing_ct.find_y0()))
+    tracing_ct.initialize()
+    tracing_ct.solver.solve()
     """
     %timeit tracing_ct.H(y0)
     %timeit tracing_ct.J(y0)
