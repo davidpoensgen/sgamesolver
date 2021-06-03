@@ -7,6 +7,7 @@ from dsgamesolver.sgame import SGame
 from dsgamesolver.qre import QRE_np, QRE_ct
 from dsgamesolver.tracing import Tracing_np, Tracing_ct, TracingFixedEta_np, TracingFixedEta_ct
 from dsgamesolver.loggame import LogGame_np, LogGame_ct
+from dsgamesolver.ipm import IPM_ct
 from tests.random_game import create_random_game
 from tests.timings import HomotopyTimer
 
@@ -81,13 +82,16 @@ sol_log_game_ct = log_game_ct.solver.solve()
 
 assert np.allclose(sol_log_game_np["y"], sol_log_game_ct["y"])
 
+# IPM:
+ipm_ct = IPM_ct(game)
+ipm_ct.initialize()
+sol_ipm_ct = ipm_ct.solver.solve()
+
 
 # %% time Jacobian
 
 
 """
-import timeit
-
 %timeit -n 1000 -r 10 qre_np.H(qre_np.y0)
 %timeit -n 1000 -r 10 qre_np.H(qre_np.y0, dev=True)
 

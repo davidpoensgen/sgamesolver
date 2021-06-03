@@ -599,7 +599,7 @@ class HomCont:
         t_axis = np.zeros(len(self.tangent))
         t_axis[-1] = 1
         tangent_angle = angle(self.tangent, t_axis)
-        if abs(90 - tangent_angle) < 2.5:
+        if abs(tangent_angle) < 2.5:
             print(f'Warning: Tangent has angle {tangent_angle:.1f}° '
                   'relative to t-axis. Starting point may violate transversality.')
 

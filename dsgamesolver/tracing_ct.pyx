@@ -1,4 +1,4 @@
-"""Cython implementation of QRE homotopy."""
+"""Cython implementation of Tracing homotopy."""
 
 import cython
 import numpy as np

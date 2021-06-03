@@ -66,35 +66,32 @@ class Tracing(SGameHomotopy):
             'bifurc_angle_min': 175,
         }
 
-        # rho
         if priors == "centroid":
-            self.priors = np.zeros((self.game.num_states, self.game.num_players, self.game.num_actions_max))
+            self.rho = np.zeros((self.game.num_states, self.game.num_players, self.game.num_actions_max))
             for s in range(self.game.num_states):
                 for p in range(self.game.num_players):
-                    self.priors[s, p, 0:self.game.nums_actions[s, p]] = 1 / self.game.nums_actions[s, p]
+                    self.rho[s, p, 0:self.game.nums_actions[s, p]] = 1 / self.game.nums_actions[s, p]
         elif priors == "random":
-            self.priors = np.zeros((self.game.num_states, self.game.num_players, self.game.num_actions_max))
+            self.rho = np.zeros((self.game.num_states, self.game.num_players, self.game.num_actions_max))
             for s in range(self.game.num_states):
                 for p in range(self.game.num_players):
                     sigma = np.random.exponential(scale=1, size=self.game.nums_actions[s, p])
-                    self.priors[s, p, 0:self.game.nums_actions[s, p]] = sigma / sigma.sum()
+                    self.rho[s, p, 0:self.game.nums_actions[s, p]] = sigma / sigma.sum()
         else:
             # TODO: document how priors should be specified / should they be checked?
-            self.priors = np.array(priors)
+            self.rho = np.array(priors)
 
-        # nu
         if weights is None:
             self.nu = np.ones((self.game.num_states, self.game.num_players, self.game.num_actions_max))
         else:
             # TODO: document how weights should be specified / should they be checked?
             self.nu = weights
 
-        # eta := 1
         self.eta = 1.0
 
         # prepare payoffs and transition given other players follow prior
         num_s, num_p, num_a_max = self.game.num_states, self.game.num_players, self.game.num_actions_max
-        rho_p_list = [self.priors[:, p, :] for p in range(num_p)]
+        rho_p_list = [self.rho[:, p, :] for p in range(num_p)]
         self.einsum_eqs = {
             'u_a': ['s' + ABC[0:num_p] + ',s' + ',s'.join(ABC[p_] for p_ in range(num_p) if p_ != p)
                     + '->s' + ABC[p] for p in range(num_p)],
@@ -115,6 +112,7 @@ class Tracing(SGameHomotopy):
 
     def initialize(self) -> None:
         self.y0 = self.find_y0()
+        # TODO: silence warning of transversality at starting point?
         self.solver = HomCont(self.H, self.y0, self.J, t_target=1.0,
                               parameters=self.tracking_parameters['normal'],
                               x_transformer=self.x_transformer, store_path=True)
@@ -278,8 +276,6 @@ class Tracing_np(Tracing):
 
         sigma_p_list = [sigma[:, p, :] for p in range(num_p)]
 
-        # TODO: sigma_prod_with_p ?
-
         if num_p > 1:
             u_sigma = np.empty((num_s, num_p, num_a_max))
             phi_sigma = np.empty((num_s, num_p, num_a_max, num_s))
@@ -341,7 +337,6 @@ class Tracing_np(Tracing):
                 phi_sigma[:, p] = np.einsum(self.einsum_eqs['phi_a'][p], self.game.transitions[:, p],
                                             *(sigma_p_list[:p] + sigma_p_list[(p + 1):]))
                 for q in range(num_p):
-                    # TODO: can loop be made more efficient?
                     Eu_tilde_pq = np.einsum(self.einsum_eqs['u_ab'][p][q], u_tilde[:, p],
                                             *[sigma_p_list[p_] for p_ in range(num_p) if p_ not in [p, q]])
                     if q == p:
@@ -412,13 +407,13 @@ class Tracing_ct(Tracing):
 
     def H(self, y: np.ndarray) -> np.ndarray:
         return self.tracing_ct.H(y, self.game.payoffs, self.game.transitions,
-                                 self.priors, self.nu, self.eta, self.u_rho, self.phi_rho,
+                                 self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
                                  self.game.num_states, self.game.num_players, self.game.nums_actions,
                                  self.game.num_actions_max, self.game.num_actions_total)
 
     def J(self, y: np.ndarray) -> np.ndarray:
         return self.tracing_ct.J(y, self.game.payoffs, self.game.transitions,
-                                 self.priors, self.nu, self.eta, self.u_rho, self.phi_rho,
+                                 self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
                                  self.game.num_states, self.game.num_players, self.game.nums_actions,
                                  self.game.num_actions_max, self.game.num_actions_total)
 
@@ -449,8 +444,6 @@ class TracingFixedEta_np(Tracing_np):
         beta = np.nan_to_num(beta_with_nan, nan=1.0)
 
         sigma_p_list = [sigma[:, p, :] for p in range(num_p)]
-
-        # TODO: sigma_prod_with_p ?
 
         if num_p > 1:
             u_sigma = np.empty((num_s, num_p, num_a_max))
@@ -513,7 +506,6 @@ class TracingFixedEta_np(Tracing_np):
                 phi_sigma[:, p] = np.einsum(self.einsum_eqs['phi_a'][p], self.game.transitions[:, p],
                                             *(sigma_p_list[:p] + sigma_p_list[(p + 1):]))
                 for q in range(num_p):
-                    # TODO: can loop be made more efficient?
                     Eu_tilde_pq = np.einsum(self.einsum_eqs['u_ab'][p][q], u_tilde[:, p],
                                             *[sigma_p_list[p_] for p_ in range(num_p) if p_ not in [p, q]])
                     if q == p:
@@ -568,13 +560,13 @@ class TracingFixedEta_ct(Tracing_ct):
 
     def H(self, y: np.ndarray) -> np.ndarray:
         return self.tracing_ct.H_fixed_eta(y, self.game.payoffs, self.game.transitions,
-                                           self.priors, self.nu, self.eta, self.u_rho, self.phi_rho,
+                                           self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
                                            self.game.num_states, self.game.num_players, self.game.nums_actions,
                                            self.game.num_actions_max, self.game.num_actions_total)
 
     def J(self, y: np.ndarray) -> np.ndarray:
         return self.tracing_ct.J_fixed_eta(y, self.game.payoffs, self.game.transitions,
-                                           self.priors, self.nu, self.eta, self.u_rho, self.phi_rho,
+                                           self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
                                            self.game.num_states, self.game.num_players, self.game.nums_actions,
                                            self.game.num_actions_max, self.game.num_actions_total)
 

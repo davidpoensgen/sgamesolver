@@ -45,7 +45,8 @@
     \newcommand{\bone}{\bm{1}}
     \newcommand{\ba}{\bm{a}}
     \newcommand{\tu}{\tilde{u}}
-     \newcommand{\by}{\bm{y}}
+    \newcommand{\by}{\bm{y}}
+    \newcommand{\bz}{\bm{z}}
 \usepackage{amsthm}
     \newtheorem{definition}{Definition}
     \newtheorem{lemma}{Lemma}
@@ -1154,24 +1155,24 @@ Note: $t$ goes from $1$ to $0$.
 \subsection*{Homotopy Function}
 
 \begin{align*}
-	H(\by,\bV,t) \;=\;
+	H(\bz,\bV,t) \;=\;
 	\begin{pmatrix} 
-		H^{V}(\by,\bV,t) \\ 
-		H^{\sigma}(\by,\bV,t) 
+		H^{V}(\bz,\bV,t) \\ 
+		H^{\sigma}(\bz,\bV,t) 
 	\end{pmatrix}
 \end{align*}
 with
 \begin{align*}
 	& \begin{aligned}
-		H^V_{sia}(\by,\bV,t) & \;=\; (1-t) \Biggl( u_{si}\bigl(a,\bsigma_{s,\minusi}(y_{s,\minusi},t)\bigr) + \delta_i \sum\limits_{\mathclap{s'\in S}} \phiss\bigl(a,\bsigma_{s,\minusi}(y_{s,\minusi},t)\bigr) \; V_{s'i} \Biggr) \\
-		& \qquad \;+\; \lambda_{sia}(y_{sia}, t) - V_{si} + t(1-t) \nu_{sia}
+		H^V_{sia}(\bz,\bV,t) & \;=\; (1-t) \Biggl( u_{si}\bigl(a,\bsigma_{s,\minusi}(z_{s,\minusi},t)\bigr) + \delta_i \sum\limits_{\mathclap{s'\in S}} \phiss\bigl(a,\bsigma_{s,\minusi}(z_{s,\minusi},t)\bigr) \; V_{s'i} \Biggr) \\
+		& \qquad \;+\; \lambda_{sia}(z_{sia}, t) - V_{si} + t(1-t) \nu_{sia}
 	\end{aligned} && s\in S, i\in I, a\in A_{si} \\
-	& H^\sigma_{si}(\by,\bV,t) \;\; \;=\; \sum\limits_{\mathclap{a\in A_{si}}} \sigma(y_{sia},t) \:-\: 1 && s\in S, i\in I
+	& H^\sigma_{si}(\bz,\bV,t) \;\; \;=\; \sum\limits_{\mathclap{a\in A_{si}}} \sigma(z_{sia},t) \:-\: 1 && s\in S, i\in I
 \end{align*}
 where
 \begin{align*}
-	\sigma_{sia}(y_{sia}, t) & \;=\; \left( \frac{\sqrt{y_{sia}^2+4t\sqrt{\sigma^0_{sia}}} + y_{sia}}{2} \right)^2 \\
-	\lambda_{sia}(y_{sia}, t) & \;=\; \left( \frac{\sqrt{y_{sia}^2+4t\sqrt{\sigma^0_{sia}}} - y_{sia}}{2} \right)^2
+	\sigma_{sia}(z_{sia}, t) & \;=\; \frac{1}{4} \Biggl( z_{sia} + \sqrt{z_{sia}^2+4t\sqrt{\sigma^0_{sia}}} \Biggr)^2 \\
+	\lambda_{sia}(z_{sia}, t) & \;=\; \frac{1}{4} \Biggl( - z_{sia} + \sqrt{z_{sia}^2+4t\sqrt{\sigma^0_{sia}}} \Biggr)^2
 \end{align*}
 and $\bsigma^0$ denotes the initial strategy profile and $\bnu$ denotes a perturbation term.
 
@@ -1180,28 +1181,28 @@ and $\bsigma^0$ denotes the initial strategy profile and $\bnu$ denotes a pertur
 
 $J: \R^{n+1} \rightarrow \R^n \times \R^{n+1}$:
 \begin{align*}
-	J(\by,\bV,t) \;=\; 
+	J(\bz,\bV,t) \;=\; 
 	\begin{pmatrix}
-		\frac{ \partial H^V_{sia}(\by,\bV,t) }{ \partial y_{s'i'a'} } 
-		& \frac{ \partial H^V_{sia}(\by,\bV,t) }{ \partial V_{s'i'} } 
-		& \frac{ \partial H^V_{sia}(\by,\bV,t) }{ \partial t } \\[1em] 
-		\frac{ \partial H^\sigma_{si}(\by,\bV,t) }{ \partial y_{s'i'a'} } 
-		& \frac{ \partial H^\sigma_{si}(\by,\bV,t) }{ \partial V_{s'i'} } 
-		& \frac{ \partial H^\sigma_{si}(\by,\bV,t) }{ \partial t }
+		\frac{ \partial H^V_{sia}(\bz,\bV,t) }{ \partial z_{s'i'a'} } 
+		& \frac{ \partial H^V_{sia}(\bz,\bV,t) }{ \partial V_{s'i'} } 
+		& \frac{ \partial H^V_{sia}(\bz,\bV,t) }{ \partial t } \\[1em] 
+		\frac{ \partial H^\sigma_{si}(\bz,\bV,t) }{ \partial z_{s'i'a'} } 
+		& \frac{ \partial H^\sigma_{si}(\bz,\bV,t) }{ \partial V_{s'i'} } 
+		& \frac{ \partial H^\sigma_{si}(\bz,\bV,t) }{ \partial t }
 	\end{pmatrix} 
 \end{align*}
 with
 \begin{align*}
-	\frac{ \partial H^V_{sia}(\by,\bV,t) }{ \partial y_{s'i'a'} } \;=\; 
+	\frac{ \partial H^V_{sia}(\bz,\bV,t) }{ \partial z_{s'i'a'} } \;=\; 
 	\begin{cases}
 		\begin{aligned}
-			& \frac{\partial \lambda_{sia}}{\partial y_{s'i'a'}}
+			& \frac{\partial \lambda_{sia}}{\partial z_{sia}}
 		\end{aligned} & 
 		\begin{aligned}
 			& \text{if } s'=s, i'=i \\ &\text{and } a'=a
 		\end{aligned} \\[1em]
 		\begin{aligned}
-			& (1-t) \frac{\partial \sigma_{sia}}{\partial y_{s'i'a'}} \biggl( u_{si}\bigl(a_{si},a_{si'}',\bsigma_{s,\shortminus\{i,i'\}}\bigr) \\
+			& (1-t) \frac{\partial \sigma_{si'a'}}{\partial z_{si'a'}} \biggl( u_{si}\bigl(a_{si},a_{si'}',\bsigma_{s,\shortminus\{i,i'\}}\bigr) \\
 			& \qquad + \delta_i \sum\limits_{\mathclap{s''\in S}} \phi_{s\shortrightarrow s''}\bigl(a_{si},a_{si'}',\bsigma_{s,\shortminus\{i,i'\}}\bigr) \; V_{s''i} \biggr)
 		\end{aligned} & 
 		\begin{aligned}
@@ -1211,7 +1212,7 @@ with
 	\end{cases}
 \end{align*}
 \begin{align*}
-	\frac{ \partial H^V_{sia}(\by,\bV,t) }{ \partial V_{s'i'} } \;=\;
+	\frac{ \partial H^V_{sia}(\bz,\bV,t) }{ \partial V_{s'i'} } \;=\;
 	\begin{cases}
 		(1-t) \delta_i \phiss(a,\bsigma_{s,\minusi}) - 1 &\text{if } i'=i \text{ and } s'=s \\
 		(1-t) \delta_i \phiss(a,\bsigma_{s,\minusi}) &\text{if } i'=i \text{ and } s'\neq s \\
@@ -1219,141 +1220,40 @@ with
 	\end{cases}
 \end{align*}
 \begin{align*}
-	\frac{\partial H^V_{sia}(\by,\bV,t) }{ \partial t } & \;=\; 
+	\frac{\partial H^V_{sia}(\bz,\bV,t) }{ \partial t } & \;=\; 
 	\sum\limits_{\substack{i'\in I \\ i'\neq i}} \sum\limits_{a_{si'}'\in A_{si'}} (1-t) \frac{\partial\sigma_{si'a'}}{\partial t} \Biggl( u_{si}\bigl(a_{si},a_{si'}',\bsigma_{s,\shortminus\{i,i'\}}\bigr) + \delta_i \sum\limits_{\mathclap{s''\in S}} \phi_{s\shortrightarrow s''}\bigl(a_{si},a_{si'}',\bsigma_{s,\shortminus\{i,i'\}}\bigr) \; V_{s''i} \Biggr) \\
 	& \qquad \;+\; \frac{\partial\lambda_{sia}}{\partial t} \;+\; (1-2t) \nu_{sia} \\
 	& 
 \end{align*}
 
 \begin{align*}
-	\frac{ \partial H^\sigma_{si}(\by,\bV,t) }{ \partial y_{s'i'a'}} \;=\; 
+	\frac{ \partial H^\sigma_{si}(\bz,\bV,t) }{ \partial z_{s'i'a'}} \;=\; 
 	\begin{cases}
-		\frac{\partial\sigma_{sia}}{\partial y_{s'i'a'} } \qquad&\text{if } s'=s \text{ and } i'=i \\
+		\frac{\partial\sigma_{sia}}{\partial z_{s'i'a'} } \qquad&\text{if } s'=s \text{ and } i'=i \\
 		0 \qquad&\text{else}  
 	\end{cases}
 \end{align*}
 \begin{align*}
-	\frac{ \partial H^\sigma_{si}(\by,\bV,t) }{ \partial V_{s'i'} } \quad=\quad 0
+	\frac{ \partial H^\sigma_{si}(\bz,\bV,t) }{ \partial V_{s'i'} } \quad=\quad 0
 \end{align*}
 \begin{align*}
-	\frac{ \partial H^\sigma_{si}(\by,\bV,t) }{ \partial t } \quad=\quad \sum\limits_{a\in A_{si}} \frac{\partial\sigma_{sia}}{\partial t}
+	\frac{ \partial H^\sigma_{si}(\bz,\bV,t) }{ \partial t } \quad=\quad \sum\limits_{a\in A_{si}} \frac{\partial\sigma_{sia}}{\partial t}
 \end{align*}
 
 where
 \begin{align*}
-	\frac{\partial\sigma_{sia}}{\partial y_{sia}} \quad=\quad \frac{3}{2} y \;+\; \frac{1}{2} \sqrt{y_{sia}^2+4t\sqrt{\sigma^0_{sia}}} \;+\; \frac{y^2}{\sqrt{y_{sia}^2+4t\sqrt{\sigma^0_{sia}}}}
+	\frac{\partial\sigma_{sia}}{\partial z_{sia}} \quad=\quad \frac{3}{2} z_{sia} \;+\; \frac{1}{2} \sqrt{z_{sia}^2+4t\sqrt{\sigma^0_{sia}}} \;+\; \frac{z_{sia}^2}{\sqrt{z_{sia}^2+4t\sqrt{\sigma^0_{sia}}}}
 \end{align*}
 \begin{align*}
-	\frac{\partial\sigma_{sia}}{\partial t} \quad=\quad 2\sqrt{\sigma^0_{sia}} \;+\; \frac{2y\sqrt{\sigma^0_{sia}}}{\sqrt{y_{sia}^2+4t\sqrt{\sigma^0_{sia}}}}
+	\frac{\partial\sigma_{sia}}{\partial t} \quad=\quad 2\sqrt{\sigma^0_{sia}} \;+\; \frac{2z_{sia}\sqrt{\sigma^0_{sia}}}{\sqrt{z_{sia}^2+4t\sqrt{\sigma^0_{sia}}}}
 \end{align*}
 
 and
 \begin{align*}
-	\frac{\partial\lambda_{sia}}{\partial y_{sia}} \quad=\quad \frac{3}{2} y \;-\; \frac{1}{2} \sqrt{y_{sia}^2+4t\sqrt{\sigma^0_{sia}}} \;-\; \frac{y^2}{\sqrt{y_{sia}^2+4t\sqrt{\sigma^0_{sia}}}}
+	\frac{\partial\lambda_{sia}}{\partial z_{sia}} \quad=\quad \frac{3}{2} z_{sia} \;-\; \frac{1}{2} \sqrt{z_{sia}^2+4t\sqrt{\sigma^0_{sia}}} \;-\; \frac{z_{sia}^2}{\sqrt{z_{sia}^2+4t\sqrt{\sigma^0_{sia}}}}
 \end{align*}
 \begin{align*}
-	\frac{\partial\lambda_{sia}}{\partial t} \quad=\quad 2\sqrt{\sigma^0_{sia}} \;-\; \frac{2y\sqrt{\sigma^0_{sia}}}{\sqrt{y_{sia}^2+4t\sqrt{\sigma^0_{sia}}}}
-\end{align*}
-
-
-
-
-\subsection*{Tensor Notation}
-
-%TODO: continue here
-
-TBD
-
-
-\subsubsection*{Primitives}
-
-\begin{align*}
-	\biggl( \bbeta \biggr)_{sia} & \;:=\; \biggl( \beta_{sia} \biggr)_{s\in S, i\in I,a \in A_{si}} \\
-	\biggl( \bsigma \biggr)_{sia} & \;:=\; \biggl( \exp(\beta_{sia}) \biggr)_{s\in S, i\in I,a \in A_{si}} \\
-	\biggl( \bsigma^{-1} \biggr)_{sia} & \;:=\; \biggl( \exp(-\beta_{sia}) \biggr)_{s\in S, i\in I,a \in A_{si}} \\
-	\biggl( \brho \biggr)_{sia} & \;:=\; \biggl( \rho_{sia} \biggr)_{s\in S, i\in I, a\in A_{s,i}} \\
-	\biggl( \bnu \biggr)_{sia} & \;:=\; \biggl( \nu_{sia} \biggr)_{s\in S, i\in I, a\in A_{si}} \\
-	\biggl( \bnu\bigl[\bbeta-\bone\bigr] \biggr)_{sia} & \;:=\; \biggl( \nu_{sia}\bigl[\beta_{sia}-1\bigr] \biggr)_{s\in S, i\in I, a\in A_{si}} \\
-	\biggl( \bm{u} \biggr)_{si\ba} & \;:=\; \biggl( u_{si}(\ba) \biggr)_{s\in S, i\in I, \ba\in A} \\
-	\biggl( \bV \biggr)_{si} & \;:=\; \biggl( V_{si} \biggr)_{s\in S, i\in I}
-\end{align*}
-Transition probabilities including individual discount factors:
-\begin{align*}
-	\biggl( \bm{\phi} \biggr)_{si\ba s'} & \;:=\; \biggl( \delta_i \; \phiss(\ba) \biggr)_{s\in S, i\in I, \ba\in A}
-\end{align*}
-Transition probabilities in auxiliary game:
-\begin{align*}
-	\biggl( \bm{\phi^{\sigma}} \biggr)_{sias'} & \;:=\; \left[ \quad \biggl( \bm{\phi} \biggr)_{si\ba s'} \; \prod\limits_{i'\neq i} \biggl( \bsigma \biggr)_{si'a_{i'}} \quad \right]_{sias'} \\
-	\biggl( \bm{\phi^{\rho}} \biggr)_{sias'} & \;:=\; \left[ \quad \biggl( \bm{\phi} \biggr)_{si\ba s'} \; \prod\limits_{i'\neq i} \biggl( \brho \biggr)_{si'a_{i'}} \quad \right]_{sias'} \\
-	\biggl( \bm{{\bar{\phi}^t}} \biggr)_{sias'} & \;:=\; t \; \biggl( \bm{\phi^{\sigma}} \biggr)_{sias'} \;+\; (1-t) \; \biggl( \bm{\phi^{\rho}} \biggr)_{sias'}
-\end{align*}
-Discounted payoffs in auxiliary game:
-\begin{align*}
-	\biggl( \bm{u^{\sigma}} \biggr)_{sia} & \;:=\; \left[ \quad \biggl( \bm{u} \biggr)_{si\ba} \cdot \prod\limits_{i'\neq i} \biggl( \bsigma \biggr)_{si'a_{i'}} \quad \right]_{sia} \\
-	\biggl( \bm{u^{\rho}} \biggr)_{sia} & \;:=\; \left[ \quad \biggl( \bm{u} \biggr)_{si\ba} \; \prod\limits_{i'\neq i} \biggl( \brho \biggr)_{si'a_{i'}} \quad \right]_{sia} \\
-	\biggl( \bm{{\bar{u}^t}} \biggr)_{sia} & \;:=\; t \; \biggl( \bm{u^{\sigma}} \biggr)_{sia} \;+\; (1-t) \; \biggl( \bm{u^{\rho}} \biggr)_{sia}
-\end{align*}
-Expected discounted payoffs in auxiliary game for player $i$ in state $s$ playing action $a$ while all other players $i'\neq i$ play according to $\bsigma$:
-\begin{align*}
-	\biggl( \bm{{E\tu^{a}}} \biggr)_{sia} & \;:=\; \biggl( \bm{{\bar{u}^t}} \biggr)_{sia} \;+\; \left[ \quad \biggl( \bm{{\bar{\phi}^t}} \biggr)_{sias'} \; \biggl( \bV \biggr)_{s'i} \quad \right]_{sia}
-\end{align*}
-Expected discounted payoffs for player $i$ in state $s$ when player $i$ plays action $a$ and player $i'$ plays action $a'$ and all other players $i'' \neq i, i'$ play according to $\bsigma$. \\
-Note 1: Here, expectation taken w.r.t.\ actual strategies; no beliefs involved. \\
-Note 2: The case $i'=i$ is explicitly included to allow for decision problems with $|I|=1$.
-\begin{align*}
-	\biggl( \bm{{\tu}} \biggr)_{si\ba} & \;:=\; \biggl( \bm{u} \biggr)_{si\ba} \;+\; \left[ \quad \biggl( \bm{\phi} \biggr)_{si\ba s'} \; \biggl( \bV \biggr)_{s'i} \quad \right]_{si\ba} \\
-	\biggl( \bm{{E\tu^{a,a'}}} \biggr)_{sii'aa'} & \;:=\; \left[ \quad \biggl( \bm{{\tu}} \biggr)_{si\ba} \; \prod\limits_{i''\neq i,i'} \biggl( \bsigma \biggr)_{si''a_{i''}} \quad \right]_{sii'aa'}
-\end{align*} 
-
-
-\subsubsection*{Homotopy Function}
-
-\begin{align*}
-	\biggl( \bm{H^{V}} \biggr)_{sia} & \;=\; 
-	\biggl( \bm{{E\tu^{a}}} \biggr)_{sia} \;-\; \Biggl[ \biggl( \bone \biggr)_{sia} \; \biggl( \bV \biggr)_{si} \Biggr]_{sia} \\
-	& \qquad \;+\; (1-t)^2 \: \eta_0 \; \left( \Biggl[ \biggl( \bnu \biggr)_{sia} \biggl( \bsigma^{-1} \biggr) \Biggr]_{sia} + \Biggl[ \biggl( \bone \biggr)_{sia} \Biggl[ \biggl( \bnu\bigl[\bbeta-\bone\bigr] \biggr)_{sia} \Biggr]_{si} \Biggr]_{sia} \right)
-\end{align*}
-\begin{align*}
-	\biggl( \bm{H^{\sigma}} \biggr)_{si} & \;=\; 
-	\Biggl[ \biggl( \bsigma \biggr)_{sia} \Biggr]_{si} \;-\; \biggl( \bone \biggr)_{si} 
-\end{align*}
-
-
-\subsubsection*{Jacobian Matrix} 
-
-\begin{align*}
-	\frac{ \partial \biggl( \bm{H^{V}} \biggr)_{sia} }{ \partial \biggl( \bbeta \biggr)_{s'i'a'} } & \;=\; 
-	(1-t)^2 \: \eta_0 \; \left[ \biggl( \bm{T_0^J} \biggr)_{sias'i'a'} \; \Biggl[ \biggl( \bnu \biggr)_{s'i'a'} \Biggl( \biggl( \bone \biggr)_{s'i'a'} - \biggl( \bsigma^{-1} \biggr)_{s'i'a'} \Biggr) \Biggr]_{s'i'a'} \right]_{sias'i'a'} \\
-	& \qquad \;+\;  (1-t)^2 \: \eta_0 \; \Biggl[ \biggl( \bm{T_1^J} \biggr)_{sias'i'a'} \biggl( \bnu \biggr)_{sia'} \Biggr]_{sias'i'a'} \\
-	& \qquad \;+\; t \; \Biggl[ \biggl( \bm{T_2^J} \biggr)_{sias'i'a'} \biggl( \bsigma \biggr)_{si'a'} \biggl( \bm{{E\tu^{a,a'}}} \biggr)_{sii'aa'} \Biggr]_{sias'i'a'}
-\end{align*}
-\begin{align*}
-	\frac{ \partial \biggl( \bm{H^{V}} \biggr)_{sia} }{ \partial \biggl( \bV \biggr)_{s'i'} } & \;=\; 
-	\Biggl[ \biggl( \bm{T_3^J} \biggr)_{sias'i'} \biggl( \bm{{\bar{\phi}^t}} \biggr)_{sias'} \Biggr]_{sias'i'} - \biggl( \bm{T_4^J} \biggr)_{sias'i'}
-\end{align*}
-\begin{align*}
-	\frac{ \partial \biggl( \bm{H^{V}} \biggr)_{sia} }{ \partial t } & \;=\; 
-	\biggl( \bm{u^{\sigma}} - \bm{u^{\rho}} \biggr)_{sia} + \Biggl[ \biggl( \bm{\phi^{\sigma}} - \bm{\phi^{\rho}} \biggr)_{sias'} \biggl( \bV \biggr)_{s'i} \Biggr]_{sia} \\
-	& \qquad \;-\; 2(1-t) \: \eta_0 \; \left( \Biggl[ \biggl( \bnu \biggr)_{sia} \biggl( \bsigma^{-1} \biggr)_{sia} \Biggr]_{sia} + \Biggl[ \biggl( \bone \biggr)_{sia} \Biggl[ \biggl( \bnu\bigl[\bbeta-\bone\bigr] \biggr)_{sia} \Biggr]_{si} \Biggr]_{sia} \right)
-\end{align*}
-\begin{align*}
-	\frac{ \partial \biggl( \bm{H^{\sigma}} \biggr)_{si} }{ \partial \biggl( \bbeta \biggr)_{s'i'a'} } \;=\; 
-	\Biggl[ \biggl( \bm{T_5^J} \biggr)_{sis'i'a'} \biggl( \bsigma \biggr)_{s'i'a'} \Biggr]_{sis'i'a'}
-\end{align*}
-\begin{align*}
-	\frac{ \partial \biggl( \bm{H^{\sigma}} \biggr)_{si} }{ \partial \biggl( \bV \biggr)_{s'i'} } \;=\; \biggl( \bzero \biggr)_{sis'i'}
-\end{align*}
-\begin{align*}
-	\frac{ \partial \biggl( \bm{H^{\sigma}} \biggr)_{si} }{ \partial t } \;=\; \biggl( \bzero \biggr)_{si}
-\end{align*}
-with
-\begin{align*}
-	& \biggl( \bm{T_0^J} \biggr)_{sias'i'a'} = \biggl( \id_{\{s'=s,i'=i,a'=a\}} \biggr)_{sias'i'a'} \\
-	& \biggl( \bm{T_1^J} \biggr)_{sias'i'a'} = \biggl( \id_{\{s'=s,i'=i,a'\neq a\}} \biggr)_{sias'i'a'} \\
-	& \biggl( \bm{T_2^J} \biggr)_{sias'i'a'} = \biggl( \id_{\{s'=s,i'\neq i\}} \biggr)_{sias'i'a'} \\
-	& \biggl( \bm{T_3^J} \biggr)_{sias'i'} = \biggl( \id_{\{i'=i\}} \biggr)_{sias'i'} \\
-	& \biggl( \bm{T_4^J} \biggr)_{sias'i'} = \biggl( \id_{\{s'=s,i'=i\}} \biggr)_{sias'i'} \\
-	& \biggl( \bm{T_5^J} \biggr)_{sis'i'a'} = \biggl( \id_{\{s'=s,i'=i\}} \biggr)_{sis'i'a'}
+	\frac{\partial\lambda_{sia}}{\partial t} \quad=\quad 2\sqrt{\sigma^0_{sia}} \;-\; \frac{2z_{sia}\sqrt{\sigma^0_{sia}}}{\sqrt{z_{sia}^2+4t\sqrt{\sigma^0_{sia}}}}
 \end{align*}
 
 

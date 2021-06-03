@@ -1798,7 +1798,7 @@ static const char __pyx_k_cline_in_traceback[] = "cline_in_traceback";
 static const char __pyx_k_dsgamesolver_tracing_ct[] = "dsgamesolver.tracing_ct";
 static const char __pyx_k_dsgamesolver_tracing_ct_pyx[] = "dsgamesolver/tracing_ct.pyx";
 static const char __pyx_k_numpy_core_multiarray_failed_to[] = "numpy.core.multiarray failed to import";
-static const char __pyx_k_Cython_implementation_of_QRE_hom[] = "Cython implementation of QRE homotopy.";
+static const char __pyx_k_Cython_implementation_of_Tracing[] = "Cython implementation of Tracing homotopy.";
 static const char __pyx_k_numpy_core_umath_failed_to_impor[] = "numpy.core.umath failed to import";
 static PyObject *__pyx_n_s_H;
 static PyObject *__pyx_n_s_H_fixed_eta;
@@ -12272,7 +12272,7 @@ static PyModuleDef_Slot __pyx_moduledef_slots[] = {
 static struct PyModuleDef __pyx_moduledef = {
     PyModuleDef_HEAD_INIT,
     "tracing_ct",
-    __pyx_k_Cython_implementation_of_QRE_hom, /* m_doc */
+    __pyx_k_Cython_implementation_of_Tracing, /* m_doc */
   #if CYTHON_PEP489_MULTI_PHASE_INIT
     0, /* m_size */
   #else
@@ -12801,7 +12801,7 @@ if (!__Pyx_RefNanny) {
   Py_INCREF(__pyx_m);
   #else
   #if PY_MAJOR_VERSION < 3
-  __pyx_m = Py_InitModule4("tracing_ct", __pyx_methods, __pyx_k_Cython_implementation_of_QRE_hom, 0, PYTHON_API_VERSION); Py_XINCREF(__pyx_m);
+  __pyx_m = Py_InitModule4("tracing_ct", __pyx_methods, __pyx_k_Cython_implementation_of_Tracing, 0, PYTHON_API_VERSION); Py_XINCREF(__pyx_m);
   #else
   __pyx_m = PyModule_Create(&__pyx_moduledef);
   #endif
@@ -12956,7 +12956,7 @@ if (!__Pyx_RefNanny) {
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
   /* "dsgamesolver/tracing_ct.pyx":1
- * """Cython implementation of QRE homotopy."""             # <<<<<<<<<<<<<<
+ * """Cython implementation of Tracing homotopy."""             # <<<<<<<<<<<<<<
  * 
  * import cython
  */

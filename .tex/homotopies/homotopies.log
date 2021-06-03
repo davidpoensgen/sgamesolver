@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.21 (TeX Live 2020/Arch Linux) (preloaded format=pdflatex 2021.5.19)  2 JUN 2021 14:21
+This is pdfTeX, Version 3.14159265-2.6-1.40.21 (TeX Live 2020/Arch Linux) (preloaded format=pdflatex 2021.5.19)  3 JUN 2021 02:04
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -725,7 +725,7 @@ File: pgfmodulematrix.code.tex 2020/12/01 v3.1.7a (3.1.7a)
 topaths.code.tex
 File: tikzlibrarytopaths.code.tex 2020/12/01 v3.1.7a (3.1.7a)
 )))
-LaTeX Font Info:    Trying to load font information for T1+lmr on input line 84
+LaTeX Font Info:    Trying to load font information for T1+lmr on input line 85
 .
  (/usr/share/texmf-dist/tex/latex/lm/t1lmr.fd
 File: t1lmr.fd 2009/10/30 v1.6 Font defs for Latin Modern
@@ -736,22 +736,22 @@ File: l3backend-pdftex.def 2020-09-24 L3 backend support: PDF output (pdfTeX)
 \l__pdf_internal_box=\box61
 )
 (./homotopies.aux)
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 84.
-LaTeX Font Info:    ... okay on input line 84.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 84.
-LaTeX Font Info:    ... okay on input line 84.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 84.
-LaTeX Font Info:    ... okay on input line 84.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 84.
-LaTeX Font Info:    ... okay on input line 84.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 84.
-LaTeX Font Info:    ... okay on input line 84.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 84.
-LaTeX Font Info:    ... okay on input line 84.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 84.
-LaTeX Font Info:    ... okay on input line 84.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 84.
-LaTeX Font Info:    ... okay on input line 84.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 85.
+LaTeX Font Info:    ... okay on input line 85.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 85.
+LaTeX Font Info:    ... okay on input line 85.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 85.
+LaTeX Font Info:    ... okay on input line 85.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 85.
+LaTeX Font Info:    ... okay on input line 85.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 85.
+LaTeX Font Info:    ... okay on input line 85.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 85.
+LaTeX Font Info:    ... okay on input line 85.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 85.
+LaTeX Font Info:    ... okay on input line 85.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 85.
+LaTeX Font Info:    ... okay on input line 85.
 
 *geometry* driver: auto-detecting
 *geometry* detected driver: pdftex
@@ -809,7 +809,7 @@ Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
 File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
 e
 ))
-Package hyperref Info: Link coloring ON on input line 84.
+Package hyperref Info: Link coloring ON on input line 85.
 
 (/usr/share/texmf-dist/tex/latex/hyperref/nameref.sty
 Package: nameref 2019/09/16 v2.46 Cross-referencing by name of section
@@ -822,66 +822,66 @@ Package: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)
 )
 \c@section@level=\count324
 )
-LaTeX Info: Redefining \ref on input line 84.
-LaTeX Info: Redefining \pageref on input line 84.
-LaTeX Info: Redefining \nameref on input line 84.
+LaTeX Info: Redefining \ref on input line 85.
+LaTeX Info: Redefining \pageref on input line 85.
+LaTeX Info: Redefining \nameref on input line 85.
 
 (./homotopies.out) (./homotopies.out)
 \@outlinefile=\write4
 LaTeX Font Info:    Trying to load font information for OT1+lmr on input line 9
-7.
+8.
 
 (/usr/share/texmf-dist/tex/latex/lm/ot1lmr.fd
 File: ot1lmr.fd 2009/10/30 v1.6 Font defs for Latin Modern
 )
 LaTeX Font Info:    Trying to load font information for OML+lmm on input line 9
-7.
+8.
 
 (/usr/share/texmf-dist/tex/latex/lm/omllmm.fd
 File: omllmm.fd 2009/10/30 v1.6 Font defs for Latin Modern
 )
 LaTeX Font Info:    Trying to load font information for OMS+lmsy on input line 
-97.
+98.
 
 (/usr/share/texmf-dist/tex/latex/lm/omslmsy.fd
 File: omslmsy.fd 2009/10/30 v1.6 Font defs for Latin Modern
 )
 LaTeX Font Info:    Trying to load font information for OMX+lmex on input line 
-97.
+98.
 
 (/usr/share/texmf-dist/tex/latex/lm/omxlmex.fd
 File: omxlmex.fd 2009/10/30 v1.6 Font defs for Latin Modern
 )
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <12> on input line 97.
+(Font)              <12> on input line 98.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <8> on input line 97.
+(Font)              <8> on input line 98.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <6> on input line 97.
-LaTeX Font Info:    Trying to load font information for U+msa on input line 97.
+(Font)              <6> on input line 98.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 98.
 
 
 (/usr/share/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 97.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 98.
 
 
 (/usr/share/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
 LaTeX Font Info:    Trying to load font information for TS1+lmr on input line 9
-7.
+8.
 
 (/usr/share/texmf-dist/tex/latex/lm/ts1lmr.fd
 File: ts1lmr.fd 2009/10/30 v1.6 Font defs for Latin Modern
 )
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <9> on input line 97.
+(Font)              <9> on input line 98.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <5> on input line 97.
+(Font)              <5> on input line 98.
 LaTeX Font Info:    Trying to load font information for T1+lmtt on input line 9
-7.
+8.
 
 (/usr/share/texmf-dist/tex/latex/lm/t1lmtt.fd
 File: t1lmtt.fd 2009/10/30 v1.6 Font defs for Latin Modern
@@ -893,108 +893,108 @@ LaTeX Font Info:    External font `lmex10' loaded for size
  [1
 
 {/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}] [2]
-Overfull \hbox (1.64444pt too wide) detected at line 162
+Overfull \hbox (1.64444pt too wide) detected at line 163
 []
  []
 
 [3] [4] [5]
 LaTeX Font Info:    Trying to load font information for U+dsrom on input line 3
-18.
+19.
  (/usr/share/texmf-dist/tex/latex/doublestroke/Udsrom.fd
 File: Udsrom.fd 1995/08/01 v0.1 Double stroke roman font definitions
 ) [6]
 [7] [8]
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 380.
+(hyperref)                removing `math shift' on input line 381.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\eta' on input line 380.
+(hyperref)                removing `\eta' on input line 381.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\eta' on input line 380.
+(hyperref)                removing `\eta' on input line 381.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `subscript' on input line 380.
+(hyperref)                removing `subscript' on input line 381.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 380.
+(hyperref)                removing `math shift' on input line 381.
 
 [9] [10] [11] [12]
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 575.
+(hyperref)                removing `math shift' on input line 576.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\eta' on input line 575.
+(hyperref)                removing `\eta' on input line 576.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 575.
+(hyperref)                removing `math shift' on input line 576.
 
 [13] [14]
-Overfull \hbox (4.82118pt too wide) detected at line 669
+Overfull \hbox (4.82118pt too wide) detected at line 670
 []
  []
 
 [15]
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 694.
+(hyperref)                removing `math shift' on input line 695.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\eta' on input line 694.
+(hyperref)                removing `\eta' on input line 695.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\eta' on input line 694.
+(hyperref)                removing `\eta' on input line 695.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `subscript' on input line 694.
+(hyperref)                removing `subscript' on input line 695.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 694.
+(hyperref)                removing `math shift' on input line 695.
 
 [16] [17] [18]
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 842.
+(hyperref)                removing `math shift' on input line 843.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\eta' on input line 842.
+(hyperref)                removing `\eta' on input line 843.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 842.
+(hyperref)                removing `math shift' on input line 843.
 
 [19] [20] [21] [22] [23] [24] [25] [26]
-Overfull \hbox (32.26517pt too wide) detected at line 1170
+Overfull \hbox (31.38306pt too wide) detected at line 1171
 []
  []
 
 [27]
-Overfull \hbox (46.77065pt too wide) detected at line 1226
+Overfull \hbox (46.44112pt too wide) detected at line 1227
 []
  []
 
-[28] [29] [30] [31] [32] (./homotopies.bbl) [33] (./homotopies.aux)
+[28] [29] (./homotopies.bbl) [30] (./homotopies.aux)
 Package rerunfilecheck Info: File `homotopies.out' has not changed.
 (rerunfilecheck)             Checksum: 47CE31937C6B1161C3CAF53A397D6432;681.
  ) 
 Here is how much of TeX's memory you used:
- 19652 strings out of 479383
- 356050 string characters out of 5875830
- 685180 words of memory out of 5000000
- 36199 multiletter control sequences out of 15000+600000
+ 19646 strings out of 479383
+ 355987 string characters out of 5875830
+ 685185 words of memory out of 5000000
+ 36200 multiletter control sequences out of 15000+600000
  493212 words of font info for 99 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  80i,28n,85p,562b,853s stack positions out of 5000i,500n,10000p,200000b,80000s
@@ -1021,10 +1021,10 @@ fb></usr/share/texmf-dist/fonts/type1/public/lm/lmsy10.pfb></usr/share/texmf-di
 st/fonts/type1/public/lm/lmsy6.pfb></usr/share/texmf-dist/fonts/type1/public/lm
 /lmsy8.pfb></usr/share/texmf-dist/fonts/type1/public/lm/lmtt9.pfb></usr/share/t
 exmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on homotopies.pdf (33 pages, 444983 bytes).
+Output written on homotopies.pdf (30 pages, 439323 bytes).
 PDF statistics:
- 402 PDF objects out of 1000 (max. 8388607)
- 337 compressed objects within 4 object streams
- 92 named destinations out of 1000 (max. 500000)
+ 384 PDF objects out of 1000 (max. 8388607)
+ 322 compressed objects within 4 object streams
+ 85 named destinations out of 1000 (max. 500000)
  85 words of extra memory for PDF output out of 10000 (max. 10000000)
 

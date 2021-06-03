@@ -6,7 +6,7 @@
 # TODO: symmetry
 
 
-from typing import Tuple, Union, Optional
+from typing import Union, Optional
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -267,7 +267,8 @@ class SGameHomotopy:
         Typical use case: Strategies are relevant for convergence, but are transformed during tracing.
         Example: QRE, with uses log strategies beta=log(sigma) during tracing.
 
-        Note: If not needed, simply overwrite to None.
+        Note: If not using log strategies beta = log(sigma), simply overwrite.
+              If not needed, simply overwrite to None.
         """
         x = y.copy()
         x[0:self.game.num_actions_total] = np.exp(x[0:self.game.num_actions_total])
@@ -284,13 +285,19 @@ class SGameHomotopy:
         pass
 
     def sigma_V_t_to_y(self, sigma: np.ndarray, V: np.ndarray, t: Union[float, int]) -> np.ndarray:
-        """Translate arrays representing strategies sigma, values V and homotopy parameter t to a vector y."""
+        """Translate arrays representing strategies sigma, values V and homotopy parameter t to a vector y.
+
+        Note: If not using log strategies beta = log(sigma), simply overwrite this function.
+        """
         beta_flat = np.log(self.game.flatten_strategies(sigma))
         V_flat = self.game.flatten_values(V)
         return np.concatenate([beta_flat, V_flat, [t]])
 
-    def y_to_sigma_V_t(self, y: np.ndarray, zeros: bool = False) -> Tuple[np.ndarray, np.ndarray, Union[float, int]]:
-        """Translate a vector y to arrays representing strategies sigma, values V and homotopy parameter t."""
+    def y_to_sigma_V_t(self, y: np.ndarray, zeros: bool = False) -> tuple[np.ndarray, np.ndarray, Union[float, int]]:
+        """Translate a vector y to arrays representing strategies sigma, values V and homotopy parameter t.
+
+        Note: If not using log strategies beta = log(sigma), simply overwrite this function.
+        """
         sigma_V_t_flat = y.copy()
         sigma_V_t_flat[0:self.game.num_actions_total] = np.exp(sigma_V_t_flat[0:self.game.num_actions_total])
 

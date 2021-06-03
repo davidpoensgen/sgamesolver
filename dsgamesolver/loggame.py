@@ -24,7 +24,7 @@ ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 class LogGame(SGameHomotopy):
     """Logarithmic game homotopy: base class"""
 
-    def __init__(self, game: SGame, weights: Optional[ArrayLike] = None):
+    def __init__(self, game: SGame, weights: Optional[ArrayLike] = None) -> None:
         super().__init__(game)
 
         # TODO: adjust parameters with scale of payoff matrix:
@@ -93,13 +93,13 @@ class LogGame(SGameHomotopy):
 class LogGame_np(LogGame):
     """Logarithmic game homotopy: Numpy implementation"""
 
-    def __init__(self, game: SGame) -> None:
+    def __init__(self, game: SGame, weights: Optional[ArrayLike] = None) -> None:
         """prepares the following:
             - H_mask, J_mask
             - T_H, T_J
             - einsum_eqs
         """
-        super().__init__(game)
+        super().__init__(game, weights)
 
         num_s, num_p, nums_a = self.game.num_states, self.game.num_players, self.game.nums_actions
         num_a_max = self.game.num_actions_max
@@ -301,8 +301,8 @@ class LogGame_np(LogGame):
 class LogGame_ct(LogGame):
     """Logarithmic game homotopy: Cython implementation"""
 
-    def __init__(self, game: SGame) -> None:
-        super().__init__(game)
+    def __init__(self, game: SGame, weights: Optional[ArrayLike] = None) -> None:
+        super().__init__(game, weights)
 
         # only import Cython module on class instantiation
         try:
