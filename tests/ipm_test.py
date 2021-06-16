@@ -4,7 +4,7 @@
 import numpy as np
 
 from dsgamesolver.sgame import SGame
-from dsgamesolver.ipm import IPM_ct
+from dsgamesolver.ipm import IPM_ct, IPM_sp
 from tests.random_game import create_random_game
 
 
@@ -17,6 +17,15 @@ class TestIPM:
     y_rand = np.random.random(game.num_actions_total + game.num_states * game.num_players + 1)
     hom_ct = IPM_ct(game)
     hom_ct.initialize()
+    hom_sp = IPM_sp(game)
+
+    # def test_H_ct_equal_sp(cls):
+    #     assert np.allclose(cls.hom_ct.H(cls.y_rand), cls.hom_sp.H(cls.y_rand))
+
+    # def test_J_ct_equal_sp(cls):
+    #     assert np.allclose(cls.hom_ct.J(cls.y_rand), cls.hom_sp.J(cls.y_rand))
+
+    # for all tests below: ct implementation only
 
     def test_H_zero_at_starting_point(cls):
         H_y0 = cls.hom_ct.H(cls.hom_ct.y0)

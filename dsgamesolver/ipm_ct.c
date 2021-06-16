@@ -6247,7 +6247,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6ipm_ct_20H(CYTHON_UNUSED PyObject *__p
  *         for player in range(num_p):
  *             for action in range(nums_a[state, player]):             # <<<<<<<<<<<<<<
  *                 out_[flat_index] = ((1-t) * u_tilde_sia_ev[state, player, action] + lambda_ev[state, player, action]
- *                                     - V[state, player] + t*(1-t) * nu[state, player, action])
+ *                                     - V[state, player] - t*(1-t) * nu[state, player, action])
  */
       __pyx_t_16 = __pyx_v_state;
       __pyx_t_21 = __pyx_v_player;
@@ -6260,7 +6260,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6ipm_ct_20H(CYTHON_UNUSED PyObject *__p
  *         for player in range(num_p):
  *             for action in range(nums_a[state, player]):
  *                 out_[flat_index] = ((1-t) * u_tilde_sia_ev[state, player, action] + lambda_ev[state, player, action]             # <<<<<<<<<<<<<<
- *                                     - V[state, player] + t*(1-t) * nu[state, player, action])
+ *                                     - V[state, player] - t*(1-t) * nu[state, player, action])
  *                 flat_index += 1
  */
         __pyx_t_21 = __pyx_v_state;
@@ -6273,7 +6273,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6ipm_ct_20H(CYTHON_UNUSED PyObject *__p
         /* "dsgamesolver/ipm_ct.pyx":236
  *             for action in range(nums_a[state, player]):
  *                 out_[flat_index] = ((1-t) * u_tilde_sia_ev[state, player, action] + lambda_ev[state, player, action]
- *                                     - V[state, player] + t*(1-t) * nu[state, player, action])             # <<<<<<<<<<<<<<
+ *                                     - V[state, player] - t*(1-t) * nu[state, player, action])             # <<<<<<<<<<<<<<
  *                 flat_index += 1
  * 
  */
@@ -6287,15 +6287,15 @@ static PyObject *__pyx_pf_12dsgamesolver_6ipm_ct_20H(CYTHON_UNUSED PyObject *__p
  *         for player in range(num_p):
  *             for action in range(nums_a[state, player]):
  *                 out_[flat_index] = ((1-t) * u_tilde_sia_ev[state, player, action] + lambda_ev[state, player, action]             # <<<<<<<<<<<<<<
- *                                     - V[state, player] + t*(1-t) * nu[state, player, action])
+ *                                     - V[state, player] - t*(1-t) * nu[state, player, action])
  *                 flat_index += 1
  */
         __pyx_t_35 = __pyx_v_flat_index;
-        *__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_out_.rcbuffer->pybuffer.buf, __pyx_t_35, __pyx_pybuffernd_out_.diminfo[0].strides) = (((((1.0 - __pyx_v_t) * (*__Pyx_BufPtrStrided3d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_u_tilde_sia_ev.rcbuffer->pybuffer.buf, __pyx_t_21, __pyx_pybuffernd_u_tilde_sia_ev.diminfo[0].strides, __pyx_t_16, __pyx_pybuffernd_u_tilde_sia_ev.diminfo[1].strides, __pyx_t_20, __pyx_pybuffernd_u_tilde_sia_ev.diminfo[2].strides))) + (*__Pyx_BufPtrStrided3d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_lambda_ev.rcbuffer->pybuffer.buf, __pyx_t_15, __pyx_pybuffernd_lambda_ev.diminfo[0].strides, __pyx_t_28, __pyx_pybuffernd_lambda_ev.diminfo[1].strides, __pyx_t_29, __pyx_pybuffernd_lambda_ev.diminfo[2].strides))) - (*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_V.rcbuffer->pybuffer.buf, __pyx_t_30, __pyx_pybuffernd_V.diminfo[0].strides, __pyx_t_31, __pyx_pybuffernd_V.diminfo[1].strides))) + ((__pyx_v_t * (1.0 - __pyx_v_t)) * (*__Pyx_BufPtrStrided3d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_nu.rcbuffer->pybuffer.buf, __pyx_t_32, __pyx_pybuffernd_nu.diminfo[0].strides, __pyx_t_33, __pyx_pybuffernd_nu.diminfo[1].strides, __pyx_t_34, __pyx_pybuffernd_nu.diminfo[2].strides))));
+        *__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_out_.rcbuffer->pybuffer.buf, __pyx_t_35, __pyx_pybuffernd_out_.diminfo[0].strides) = (((((1.0 - __pyx_v_t) * (*__Pyx_BufPtrStrided3d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_u_tilde_sia_ev.rcbuffer->pybuffer.buf, __pyx_t_21, __pyx_pybuffernd_u_tilde_sia_ev.diminfo[0].strides, __pyx_t_16, __pyx_pybuffernd_u_tilde_sia_ev.diminfo[1].strides, __pyx_t_20, __pyx_pybuffernd_u_tilde_sia_ev.diminfo[2].strides))) + (*__Pyx_BufPtrStrided3d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_lambda_ev.rcbuffer->pybuffer.buf, __pyx_t_15, __pyx_pybuffernd_lambda_ev.diminfo[0].strides, __pyx_t_28, __pyx_pybuffernd_lambda_ev.diminfo[1].strides, __pyx_t_29, __pyx_pybuffernd_lambda_ev.diminfo[2].strides))) - (*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_V.rcbuffer->pybuffer.buf, __pyx_t_30, __pyx_pybuffernd_V.diminfo[0].strides, __pyx_t_31, __pyx_pybuffernd_V.diminfo[1].strides))) - ((__pyx_v_t * (1.0 - __pyx_v_t)) * (*__Pyx_BufPtrStrided3d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_nu.rcbuffer->pybuffer.buf, __pyx_t_32, __pyx_pybuffernd_nu.diminfo[0].strides, __pyx_t_33, __pyx_pybuffernd_nu.diminfo[1].strides, __pyx_t_34, __pyx_pybuffernd_nu.diminfo[2].strides))));
 
         /* "dsgamesolver/ipm_ct.pyx":237
  *                 out_[flat_index] = ((1-t) * u_tilde_sia_ev[state, player, action] + lambda_ev[state, player, action]
- *                                     - V[state, player] + t*(1-t) * nu[state, player, action])
+ *                                     - V[state, player] - t*(1-t) * nu[state, player, action])
  *                 flat_index += 1             # <<<<<<<<<<<<<<
  * 
  *     for state in range(num_s):
@@ -8392,7 +8392,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6ipm_ct_22J(CYTHON_UNUSED PyObject *__p
  *                         big_sum += (dsigma_dt_ev[row_state, col_player, col_action]
  *                                     * u_tilde_sijab_ev[row_state, row_player, col_player, row_action, col_action])             # <<<<<<<<<<<<<<
  *                 out_[row_index, col_index] = ((1-t) * big_sum + dlambda_dt_ev[row_state, row_player, row_action]
- *                                               + (1-2*t)*nu[row_state, row_player, row_action])
+ *                                               - (1-2*t)*nu[row_state, row_player, row_action])
  */
             __pyx_t_15 = __pyx_v_row_state;
             __pyx_t_42 = __pyx_v_row_player;
@@ -8416,7 +8416,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6ipm_ct_22J(CYTHON_UNUSED PyObject *__p
  *                         big_sum += (dsigma_dt_ev[row_state, col_player, col_action]
  *                                     * u_tilde_sijab_ev[row_state, row_player, col_player, row_action, col_action])
  *                 out_[row_index, col_index] = ((1-t) * big_sum + dlambda_dt_ev[row_state, row_player, row_action]             # <<<<<<<<<<<<<<
- *                                               + (1-2*t)*nu[row_state, row_player, row_action])
+ *                                               - (1-2*t)*nu[row_state, row_player, row_action])
  * 
  */
         __pyx_t_20 = __pyx_v_row_state;
@@ -8426,7 +8426,7 @@ static PyObject *__pyx_pf_12dsgamesolver_6ipm_ct_22J(CYTHON_UNUSED PyObject *__p
         /* "dsgamesolver/ipm_ct.pyx":347
  *                                     * u_tilde_sijab_ev[row_state, row_player, col_player, row_action, col_action])
  *                 out_[row_index, col_index] = ((1-t) * big_sum + dlambda_dt_ev[row_state, row_player, row_action]
- *                                               + (1-2*t)*nu[row_state, row_player, row_action])             # <<<<<<<<<<<<<<
+ *                                               - (1-2*t)*nu[row_state, row_player, row_action])             # <<<<<<<<<<<<<<
  * 
  *                 row_index += 1
  */
@@ -8438,15 +8438,15 @@ static PyObject *__pyx_pf_12dsgamesolver_6ipm_ct_22J(CYTHON_UNUSED PyObject *__p
  *                         big_sum += (dsigma_dt_ev[row_state, col_player, col_action]
  *                                     * u_tilde_sijab_ev[row_state, row_player, col_player, row_action, col_action])
  *                 out_[row_index, col_index] = ((1-t) * big_sum + dlambda_dt_ev[row_state, row_player, row_action]             # <<<<<<<<<<<<<<
- *                                               + (1-2*t)*nu[row_state, row_player, row_action])
+ *                                               - (1-2*t)*nu[row_state, row_player, row_action])
  * 
  */
         __pyx_t_45 = __pyx_v_row_index;
         __pyx_t_44 = __pyx_v_col_index;
-        *__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_out_.rcbuffer->pybuffer.buf, __pyx_t_45, __pyx_pybuffernd_out_.diminfo[0].strides, __pyx_t_44, __pyx_pybuffernd_out_.diminfo[1].strides) = ((((1.0 - __pyx_v_t) * __pyx_v_big_sum) + (*__Pyx_BufPtrStrided3d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_dlambda_dt_ev.rcbuffer->pybuffer.buf, __pyx_t_20, __pyx_pybuffernd_dlambda_dt_ev.diminfo[0].strides, __pyx_t_21, __pyx_pybuffernd_dlambda_dt_ev.diminfo[1].strides, __pyx_t_16, __pyx_pybuffernd_dlambda_dt_ev.diminfo[2].strides))) + ((1.0 - (2.0 * __pyx_v_t)) * (*__Pyx_BufPtrStrided3d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_nu.rcbuffer->pybuffer.buf, __pyx_t_42, __pyx_pybuffernd_nu.diminfo[0].strides, __pyx_t_15, __pyx_pybuffernd_nu.diminfo[1].strides, __pyx_t_43, __pyx_pybuffernd_nu.diminfo[2].strides))));
+        *__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_out_.rcbuffer->pybuffer.buf, __pyx_t_45, __pyx_pybuffernd_out_.diminfo[0].strides, __pyx_t_44, __pyx_pybuffernd_out_.diminfo[1].strides) = ((((1.0 - __pyx_v_t) * __pyx_v_big_sum) + (*__Pyx_BufPtrStrided3d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_dlambda_dt_ev.rcbuffer->pybuffer.buf, __pyx_t_20, __pyx_pybuffernd_dlambda_dt_ev.diminfo[0].strides, __pyx_t_21, __pyx_pybuffernd_dlambda_dt_ev.diminfo[1].strides, __pyx_t_16, __pyx_pybuffernd_dlambda_dt_ev.diminfo[2].strides))) - ((1.0 - (2.0 * __pyx_v_t)) * (*__Pyx_BufPtrStrided3d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_nu.rcbuffer->pybuffer.buf, __pyx_t_42, __pyx_pybuffernd_nu.diminfo[0].strides, __pyx_t_15, __pyx_pybuffernd_nu.diminfo[1].strides, __pyx_t_43, __pyx_pybuffernd_nu.diminfo[2].strides))));
 
         /* "dsgamesolver/ipm_ct.pyx":349
- *                                               + (1-2*t)*nu[row_state, row_player, row_action])
+ *                                               - (1-2*t)*nu[row_state, row_player, row_action])
  * 
  *                 row_index += 1             # <<<<<<<<<<<<<<
  * 

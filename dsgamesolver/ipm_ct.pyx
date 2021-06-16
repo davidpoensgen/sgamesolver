@@ -233,7 +233,7 @@ def H(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] sigma
         for player in range(num_p):
             for action in range(nums_a[state, player]):
                 out_[flat_index] = ((1-t) * u_tilde_sia_ev[state, player, action] + lambda_ev[state, player, action]
-                                    - V[state, player] + t*(1-t) * nu[state, player, action])
+                                    - V[state, player] - t*(1-t) * nu[state, player, action])
                 flat_index += 1
 
     for state in range(num_s):
@@ -344,7 +344,7 @@ def J(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] sigma
                         big_sum += (dsigma_dt_ev[row_state, col_player, col_action] 
                                     * u_tilde_sijab_ev[row_state, row_player, col_player, row_action, col_action])
                 out_[row_index, col_index] = ((1-t) * big_sum + dlambda_dt_ev[row_state, row_player, row_action]
-                                              + (1-2*t)*nu[row_state, row_player, row_action])
+                                              - (1-2*t)*nu[row_state, row_player, row_action])
 
                 row_index += 1
 

@@ -7,7 +7,7 @@ from dsgamesolver.sgame import SGame
 from dsgamesolver.qre import QRE_np, QRE_ct
 from dsgamesolver.tracing import Tracing_np, Tracing_ct, TracingFixedEta_np, TracingFixedEta_ct
 from dsgamesolver.loggame import LogGame_np, LogGame_ct
-from dsgamesolver.ipm import IPM_ct
+from dsgamesolver.ipm import IPM_ct, IPM_sp
 from tests.random_game import create_random_game
 from tests.timings import HomotopyTimer
 
@@ -33,6 +33,8 @@ u, phi, delta = create_random_game(num_s, num_p, num_a_min, num_a_max, delta_min
 u = [a + b*u_s for u_s in u]
 
 game = SGame(u, phi, delta)
+
+y_rand = np.random.random(game.num_actions_total + game.num_states*game.num_players + 1)
 
 # QRE:
 
@@ -83,9 +85,18 @@ sol_log_game_ct = log_game_ct.solver.solve()
 assert np.allclose(sol_log_game_np["y"], sol_log_game_ct["y"])
 
 # IPM:
+
 ipm_ct = IPM_ct(game)
 ipm_ct.initialize()
 sol_ipm_ct = ipm_ct.solver.solve()
+
+ipm_sp = IPM_sp(game)
+ipm_sp.initialize()
+# sol_ipm_sp = ipm_sp.solver.solve()
+
+# assert np.allclose(sol_ipm_ct["y"], sol_ipm_sp["y"])
+assert np.allclose(ipm_ct.H(ipm_ct.y0), ipm_sp.H(ipm_ct.y0))
+assert np.allclose(ipm_ct.H(y_rand), ipm_sp.H(y_rand))
 
 
 # %% time Jacobian

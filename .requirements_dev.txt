@@ -8,6 +8,7 @@ matplotlib
 numdifftools
 cython
 gxx_linux-64
+sympy
 
 # dev:
 jupyter
