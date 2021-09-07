@@ -8,15 +8,15 @@ import numpy as np
 
 from dsgamesolver.sgame import SGame
 from dsgamesolver.qre import QRE_np, QRE_ct
-# from dsgamesolver.tracing import Tracing_np, Tracing_ct
+from dsgamesolver.tracing import Tracing_np, Tracing_ct
 from tests.random_game import create_random_game
 
 
 HOMOTOPIES = {
     'QRE_np': QRE_np,
     'QRE_ct': QRE_ct,
-    # 'Tracing_np': Tracing_np,
-    # 'Tracing_ct': Tracing_cp,
+    'Tracing_np': Tracing_np,
+    'Tracing_ct': Tracing_ct,
 }
 
 
@@ -233,22 +233,24 @@ if __name__ == '__main__':
 
     # timings for default specification
 
-    timer = HomotopyTimer()
-    timer.timing()
+    # timer = HomotopyTimer()
+    # timer.timing()
 
     # check unsolved games
 
-    game = timer.game_memory.current_game
+    # game = timer.game_memory.current_game
     # game = homotopy_timer.game_memory.unsolved_games[0]
 
-    hom = timer.Homotopy(game)
-    hom.initialize()
-    hom.solver.solve()
+    # hom = timer.Homotopy(game)
+    # hom.initialize()
+    # hom.solver.solve()
 
     # batch timings
 
     np.random.seed(42)
-    timer = HomotopyTimer('QRE_np')
+    timer = HomotopyTimer('Tracing_ct')
+    timer.batch_timings(nums_s=[20], nums_p=[5], nums_a=[5], reps=1)
+    # timer.batch_timings(nums_s=[2, 5, 10, 20], nums_p=[2, 3, 4, 5], nums_a=[2, 5, 10, 20], reps=10)
 
     # takes some time...
     # timer.batch_timings()

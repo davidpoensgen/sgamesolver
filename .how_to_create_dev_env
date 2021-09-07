@@ -34,8 +34,8 @@ Step 3: set up git project
 cd existing_folder
 git init
 
-git config --local user.name "USERNAME"
-git config --local user.email "EMAILADDRESS"
+git config --local user.name "{USERNAME}"
+git config --local user.email "{EMAILADDRESS}"
 
 git remote add origin ssh://git@gitlab.eibie.net:6622/steffen/dsgamesolver.git
 git config --local core.sshCommand "ssh -o AddressFamily=inet -i ~/.ssh/gitlab_eibie_net_ed25519 -F /dev/null"
