@@ -312,7 +312,7 @@ class HomCont:
                 if self.verbose >= 2:
                     sys.stdout.write(f'\rStep {self.step:5d}: t = {self.t:#.4g},  '
                                      f's = {self.s:#.4g},  ds = {self.ds:#.4g},  '
-                                     f'cond(J) = {self.cond:#.4g}')
+                                     f'cond(J) = {self.cond:#.4g}      ')
                     sys.stdout.flush()
 
             if self.converged:
@@ -436,11 +436,16 @@ class HomCont:
         # This is an indicator of potential segment jumping.
         # If change is too large, discard new point.
         # Reduce stepsize and repeat predictor step.
+        # Use log determinant to deal with large matrices.
         self.J_corr = self.J_func(self.y_corr)
-        det_ratio = np.abs(np.linalg.det(np.vstack([self.J_corr, self.tangent])) /
-                           np.linalg.det(np.vstack([self.J, self.tangent])))
-        if det_ratio < self.detJ_change_max or det_ratio > 1/self.detJ_change_max:
-            if self.verbose >= 2:
+        old_log_det = np.linalg.slogdet(np.vstack([self.J, self.tangent]))[1]
+        new_log_det = np.linalg.slogdet(np.vstack([self.J_corr, self.tangent]))[1]
+        det_ratio = np.exp(new_log_det - old_log_det)
+        # TODO: remove old version
+        # det_ratio = np.abs(np.linalg.det(np.vstack([self.J_corr, self.tangent])) /
+        #                    np.linalg.det(np.vstack([self.J, self.tangent])))
+        if det_ratio > self.detJ_change_max or det_ratio < 1/self.detJ_change_max:
+            if self.verbose >= 3:
                 sys.stdout.write(f'\nStep {self.step:5d}: Possible segment jump, discarding step. '
                                  f'Ratio of augmented determinants: det(J_new)/det(J_old) = {det_ratio:0.2f}\n')
                 sys.stdout.flush()
@@ -810,7 +815,7 @@ class HomPath:
 
         cutoff = len(self.s[::freq])
         for variable in [self.y, self.s, self.cond, self.sign, self.step, self.ds]:
-            variable[:cutoff] = self.y[::freq]
+            variable[:cutoff] = variable[::freq]
             variable[cutoff:] = np.NaN
         self.index = cutoff
 

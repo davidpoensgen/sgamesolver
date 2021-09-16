@@ -8,7 +8,7 @@ import numpy as np
 
 from dsgamesolver.sgame import SGame
 from dsgamesolver.qre import QRE_np, QRE_ct
-from dsgamesolver.tracing import Tracing_np, Tracing_ct
+from dsgamesolver.tracing import Tracing_np, Tracing_ct, TracingFixedEta_np, TracingFixedEta_ct
 from tests.random_game import create_random_game
 
 
@@ -17,6 +17,8 @@ HOMOTOPIES = {
     'QRE_ct': QRE_ct,
     'Tracing_np': Tracing_np,
     'Tracing_ct': Tracing_ct,
+    'TracingFixedEta_np': TracingFixedEta_np,
+    'TracingFixedEta_ct': TracingFixedEta_ct,
 }
 
 
@@ -45,7 +47,7 @@ class HomotopyTimer:
             timings[(num_s, num_p, num_a)] = self.timing(num_s, num_p, num_a, delta, reps, verbose, False, False)
 
             if verbose:
-                print(f"Time elapsed = {datetime.datetime.now() - tic}")
+                print(f"Time elapsed = {str(datetime.datetime.now()-tic).split('.')[0]}")
 
         if verbose:
             success_rate = np.mean([timing['success'] for spec, timing in timings.items()])
@@ -97,11 +99,10 @@ class HomotopyTimer:
 
         self.game_memory.replace_current_game(game)
 
-        hom = self.Homotopy(game)
+        hom = self.Homotopy(game, store_path=False)
         hom.initialize()
         hom.solver.max_steps = self.max_steps
         hom.solver.verbose = 0
-        hom.solver.store_path = False
         hom.solver.set_parameters(hom.tracking_parameters[self.tracking])
 
         sol = hom.solver.solve()
@@ -249,8 +250,8 @@ if __name__ == '__main__':
 
     np.random.seed(42)
     timer = HomotopyTimer('Tracing_ct')
-    timer.batch_timings(nums_s=[20], nums_p=[5], nums_a=[5], reps=1)
-    # timer.batch_timings(nums_s=[2, 5, 10, 20], nums_p=[2, 3, 4, 5], nums_a=[2, 5, 10, 20], reps=10)
+    timer.batch_timings(nums_s=[10], nums_p=[5], nums_a=[10], reps=1)
+    # timer.batch_timings(nums_s=[2, 5, 10, 20], nums_p=[2, 3, 4, 5], nums_a=[2, 5, 10], reps=10)
 
     # takes some time...
     # timer.batch_timings()

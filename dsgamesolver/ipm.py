@@ -42,7 +42,7 @@ class IPM(SGameHomotopy):
             'corr_steps_max': 20,
             'corr_dist_max': 0.5,
             'corr_ratio_max': 0.9,
-            'detJ_change_max': 0.6,
+            'detJ_change_max': 1.5,
             'bifurc_angle_min': 175,
         }
 
@@ -58,7 +58,7 @@ class IPM(SGameHomotopy):
             'corr_steps_max': 30,
             'corr_dist_max': 0.3,
             'corr_ratio_max': 0.7,
-            'detJ_change_max': 0.7,
+            'detJ_change_max': 1.3,
             'bifurc_angle_min': 175,
         }
 

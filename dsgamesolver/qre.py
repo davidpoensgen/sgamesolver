@@ -48,7 +48,7 @@ class QRE(SGameHomotopy):
             'corr_steps_max': 20,
             'corr_dist_max': 0.3,
             'corr_ratio_max': 0.3,
-            'detJ_change_max': 0.7,  # TODO: change format. was: 1.3
+            'detJ_change_max': 1.3,
             'bifurc_angle_min': 175,
         }
 
@@ -64,7 +64,7 @@ class QRE(SGameHomotopy):
             'corr_steps_max': 30,
             'corr_dist_max': 0.1,
             'corr_ratio_max': 0.1,
-            'detJ_change_max': 0.7,  # TODO: change format. was: 1.1
+            'detJ_change_max': 1.1,
             'bifurc_angle_min': 175,
         }
 

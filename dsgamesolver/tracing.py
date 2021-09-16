@@ -41,11 +41,11 @@ class Tracing(SGameHomotopy):
             'ds_infl': 1.2,
             'ds_defl': 0.5,
             'ds_min': 1e-9,
-            'ds_max': 10,
+            'ds_max': 100,  # 10
             'corr_steps_max': 20,
             'corr_dist_max': 0.5,
             'corr_ratio_max': 0.5,
-            'detJ_change_max': 0.6,  # TODO: change format. was: 1.5
+            'detJ_change_max': np.inf,  # 1.5
             'bifurc_angle_min': 175,
         }
 
@@ -61,7 +61,7 @@ class Tracing(SGameHomotopy):
             'corr_steps_max': 30,
             'corr_dist_max': 0.3,
             'corr_ratio_max': 0.3,
-            'detJ_change_max': 0.7,  # TODO: change format. was: 1.3
+            'detJ_change_max': 1.3,
             'bifurc_angle_min': 175,
         }
 

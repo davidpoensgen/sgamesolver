@@ -12,15 +12,18 @@ from tests.random_game import create_random_game
 from tests.timings import HomotopyTimer
 
 
+np.random.seed(42)
+
+
 # %% random game
 
 
-num_s = 3           # number of states
-num_p = 3           # number of players
-num_a_max = 4       # maximum number of actions
-num_a_min = 2       # minimum number of actions
+num_s = 10          # number of states
+num_p = 4           # number of players
+num_a_max = 10      # maximum number of actions
+num_a_min = 10      # minimum number of actions
 delta_max = 0.95    # maximum discount factor
-delta_min = 0.90    # minimum discount factor
+delta_min = 0.95    # minimum discount factor
 
 a = 0               # payoffs in [a, a+b]
 b = 1               # payoffs in [a, a+b]
@@ -44,6 +47,7 @@ sol_qre_np = qre_np.solver.solve()
 
 qre_ct = QRE_ct(game)
 qre_ct.initialize()
+qre_ct.solver.verbose = 2
 sol_qre_ct = qre_ct.solver.solve()
 
 assert np.allclose(sol_qre_np["y"], sol_qre_ct["y"])
@@ -56,6 +60,7 @@ sol_tracing_np = tracing_np.solver.solve()
 
 tracing_ct = Tracing_ct(game)
 tracing_ct.initialize()
+tracing_ct.solver.verbose = 2
 sol_tracing_ct = tracing_ct.solver.solve()
 
 assert np.allclose(sol_tracing_np["y"], sol_tracing_ct["y"])
@@ -68,9 +73,10 @@ sol_tracing_fixed_eta_np = tracing_fixed_eta_np.solver.solve()
 
 tracing_fixed_eta_ct = TracingFixedEta_ct(game)
 tracing_fixed_eta_ct.initialize()
+tracing_fixed_eta_ct.solver.verbose = 2
 sol_tracing_fixed_eta_ct = tracing_fixed_eta_ct.solver.solve()
 
-assert np.allclose(sol_tracing_fixed_eta_np["y"], sol_tracing_fixed_eta_ct["y"])
+# assert np.allclose(sol_tracing_fixed_eta_np["y"], sol_tracing_fixed_eta_ct["y"])
 
 # LogGame:
 
