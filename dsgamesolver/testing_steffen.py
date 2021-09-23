@@ -39,6 +39,16 @@ game = SGame(u, phi, delta)
 
 y_rand = np.random.random(game.num_actions_total + game.num_states*game.num_players + 1)
 
+
+tracing_ct = Tracing_ct(game)
+tracing_ct.initialize()
+tracing_ct.solver.verbose = 2
+tracing_ct.solver.max_steps = 9000
+sol_tracing_ct = tracing_ct.solver.solve()
+
+
+# %% run all
+
 # QRE:
 
 qre_np = QRE_np(game)

@@ -20,12 +20,12 @@ repos:
         language_version: python3.9
         always_run: true
 
--   repo: local
-    hooks:
-    -   id: pytest
-        name: pytest
-        entry: conda run -n dsgamesolver-dev pytest
-        language: system
-        pass_filenames: false
-        verbose: true
-        always_run: true
+#-   repo: local
+#    hooks:
+#    -   id: pytest
+#        name: pytest
+#        entry: conda run -n dsgamesolver-dev pytest
+#        language: system
+#        pass_filenames: false
+#        verbose: true
+#        always_run: true
