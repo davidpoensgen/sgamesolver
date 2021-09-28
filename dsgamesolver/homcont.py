@@ -284,7 +284,7 @@ class HomCont:
     def x(self):
         return self._y[:-1]
 
-    def solve(self):
+    def solve(self):  # sourcery no-metrics
         """Main loop of predictor-corrector steps,
         with step size adaptation between iterations.
         """
@@ -384,7 +384,7 @@ class HomCont:
             else:
                 self.failed = 'predictor'
 
-    def correct(self):
+    def correct(self):  # sourcery no-metrics
         """Perform corrector iteration.
 
         Method is quasi-Newton: Jacobian pseudo-inverse is computed once at
@@ -558,14 +558,14 @@ class HomCont:
 
     def set_parameters(self, params: dict = {}, **kwargs):
         """Set multiple parameters at once, given as dictionary and/or as kwargs."""
-        for key in params:
+        for key, value in params.items():
             if not hasattr(self, key):
                 print(f'Warning: "{key}" is not a valid parameter.')
-            setattr(self, key, params[key])
-        for key in kwargs:
+            setattr(self, key, value)
+        for key, value in kwargs.items():
             if not hasattr(self, key):
                 print(f'Warning: "{key}" is not a valid parameter.')
-            setattr(self, key, kwargs[key])
+            setattr(self, key, value)
         if 'ds0' in params or 'ds0' in kwargs:
             self.ds = self.ds0
 

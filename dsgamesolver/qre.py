@@ -86,7 +86,7 @@ class QRE(SGameHomotopy):
 class QRE_np(QRE):
     """QRE homotopy: Numpy implementation"""
 
-    def __init__(self, game: SGame) -> None:
+    def __init__(self, game: SGame) -> None:  # sourcery no-metrics
         """Prepares the following:
             - H_mask, J_mask
             - T_H, T_J
