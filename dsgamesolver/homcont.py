@@ -136,6 +136,9 @@ class HomCont:
         self.x_transformer = x_transformer
         self.verbose = verbose
 
+        # TODO: keep?
+        self.normalize_J = False
+
         # set default parameters
         self.x_tol = 1e-7
         self.t_tol = 1e-7
@@ -225,6 +228,8 @@ class HomCont:
         """Jacobian, evaluated at y."""
         if self._J_needs_update:
             self._J = self.J_func(self.y)
+            if self.normalize_J:
+                self._J /= np.abs(self._J).max(axis=1, keepdims=True)
             self._J_needs_update = False
         return self._J
 
@@ -240,7 +245,7 @@ class HomCont:
         """
         if self._tangent_needs_update:
             Q, R = np.linalg.qr(self.J.transpose(), mode='complete')
-            self._tangent = Q[:, -1] * np.sign(R.diagonal().prod())
+            self._tangent = Q[:, -1] * np.sign(R.diagonal()).prod()
             self._tangent_needs_update = False
         return self._tangent
 
@@ -257,6 +262,8 @@ class HomCont:
         """Jacobian, evaluated at y_pred."""
         if self._J_pred_needs_update:
             self._J_pred = self.J_func(self.y_pred)
+            if self.normalize_J:
+                self._J_pred /= np.abs(self._J_pred).max(axis=1, keepdims=True)
             self._J_pred_needs_update = False
         return self._J_pred
 
@@ -438,16 +445,25 @@ class HomCont:
         # Reduce stepsize and repeat predictor step.
         # Use log determinant to deal with large matrices.
         self.J_corr = self.J_func(self.y_corr)
+
+        if self.normalize_J:
+            self.J_corr /= np.abs(self.J_corr).max(axis=1, keepdims=True)
+
         old_log_det = np.linalg.slogdet(np.vstack([self.J, self.tangent]))[1]
         new_log_det = np.linalg.slogdet(np.vstack([self.J_corr, self.tangent]))[1]
-        det_ratio = np.exp(new_log_det - old_log_det)
+        log_det_diff = new_log_det - old_log_det
+        # det_ratio = np.exp(new_log_det - old_log_det)
+
         # TODO: remove old version
         # det_ratio = np.abs(np.linalg.det(np.vstack([self.J_corr, self.tangent])) /
         #                    np.linalg.det(np.vstack([self.J, self.tangent])))
-        if det_ratio > self.detJ_change_max or det_ratio < 1/self.detJ_change_max:
+        # if det_ratio > self.detJ_change_max or det_ratio < 1/self.detJ_change_max:
+
+        if log_det_diff > np.log(self.detJ_change_max) or log_det_diff < np.log(1/self.detJ_change_max):
             if self.verbose >= 3:
                 sys.stdout.write(f'\nStep {self.step:5d}: Possible segment jump, discarding step. '
-                                 f'Ratio of augmented determinants: det(J_new)/det(J_old) = {det_ratio:0.2f}\n')
+                                 # f'Ratio of augmented determinants: det(J_new)/det(J_old) = {det_ratio:0.2f}\n')
+                                 f'Augmented determinants: logdet(J_new) - logdet(J_old) = {log_det_diff:0.2f}\n')
                 sys.stdout.flush()
             return
 

@@ -41,7 +41,7 @@ class Tracing(SGameHomotopy):
             'ds_infl': 1.2,
             'ds_defl': 0.5,
             'ds_min': 1e-9,
-            'ds_max': 10,
+            'ds_max': 100,
             'corr_steps_max': 20,
             'corr_dist_max': 0.5,
             'corr_ratio_max': 0.5,

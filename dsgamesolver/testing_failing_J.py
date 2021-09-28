@@ -4,8 +4,7 @@
 import numpy as np
 
 from dsgamesolver.sgame import SGame
-from dsgamesolver.qre import QRE_ct
-from dsgamesolver.tracing import Tracing_ct  # , TracingFixedEta_ct
+from dsgamesolver.tracing import Tracing_ct
 from tests.random_game import create_random_game
 
 
@@ -31,24 +30,13 @@ u = [a + b*u_s for u_s in u]
 game = SGame(u, phi, delta)
 
 
-# %% QRE
-
-
-qre = QRE_ct(game)
-qre.initialize()
-qre.solver.verbose = 2
-sol_qre = qre.solver.solve()
-
-
-# %% tracing save
+# %% recover tracing
 
 
 tracing = Tracing_ct(game)
 tracing.initialize()
+
+tracing.solver.load_file('tracing_failing_Jacobian.json')
 tracing.solver.verbose = 2
 tracing.solver.max_steps = 9000
-sol_tracing = tracing.solver.solve()
-
-tracing.solver.return_to_step(7680)
-tracing.solver.max_steps = 7688
-tracing.solver.save_file('tracing_failing_Jacobian.json')
+tracing.solver.solve()
