@@ -739,12 +739,12 @@ class HomPath:
         self.x_transformer = x_transformer
         self.dim = dim
 
-        self.y = np.nan * np.empty(shape=(max_steps, dim), dtype=np.float64)
-        self.s = np.nan * np.empty(shape=max_steps, dtype=np.float64)
-        self.cond = np.nan * np.empty(shape=max_steps, dtype=np.float64)
-        self.sign = np.nan * np.empty(shape=max_steps, dtype=np.float64)
-        self.step = np.nan * np.empty(shape=max_steps, dtype=np.float64)
-        self.ds = np.nan * np.empty(shape=max_steps, dtype=np.float64)
+        self.y = np.nan * np.ones(shape=(max_steps, dim), dtype=np.float64)
+        self.s = np.nan * np.ones(shape=max_steps, dtype=np.float64)
+        self.cond = np.nan * np.ones(shape=max_steps, dtype=np.float64)
+        self.sign = np.nan * np.ones(shape=max_steps, dtype=np.float64)
+        self.step = np.nan * np.ones(shape=max_steps, dtype=np.float64)
+        self.ds = np.nan * np.ones(shape=max_steps, dtype=np.float64)
 
         self.index = 0
 
