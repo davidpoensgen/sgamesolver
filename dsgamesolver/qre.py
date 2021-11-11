@@ -272,8 +272,7 @@ class QRE_np(QRE):
 
         sigma_prod_with_p = np.empty((num_s, num_p, *[num_a_max] * num_p))
         for p in range(num_p):
-            sigma_p_list_with_p = sigma_p_list[:p] + [np.ones_like(sigma[:, p, :])] \
-                                  + sigma_p_list[(p + 1):]
+            sigma_p_list_with_p = sigma_p_list[:p] + [np.ones_like(sigma[:, p, :])] + sigma_p_list[(p + 1):]
             sigma_prod_with_p[:, p] = np.einsum(self.einsum_eqs['sigma_prod_with_p'][p], *sigma_p_list_with_p)
 
         if num_p > 1:
@@ -291,7 +290,7 @@ class QRE_np(QRE):
 
         else:
             Eu_tilde_a = u_tilde
-            dEu_tilde_a_dbeta = np.zeros(shape=(num_s, num_p, num_a_max, num_s, num_p, num_a_max))
+            dEu_tilde_a_dbeta = np.zeros((num_s, num_p, num_a_max, num_s, num_p, num_a_max))
             dEu_tilde_a_dV = self.T_J[3]
 
         T_temp = np.einsum("sp...,s...->sp...", u_tilde, sigma_prod)
@@ -326,7 +325,7 @@ class QRE_np(QRE):
                 ], axis=1)
             ], axis=0)[self.J_mask]
 
-        if not old:
+        else:
             # assemble J
             spa = num_s * num_p * num_a_max
             sp = num_s * num_p
@@ -339,7 +338,7 @@ class QRE_np(QRE):
             J[0:spa, spa:spa + sp] = gamma * np.einsum('spatqb,tqbSP->spaSP',
                                                        -self.T_H[2], dEu_tilde_a_dV).reshape((spa, sp))
             # dH_strat_dlambda
-            J[0:spa, spa + sp] = np.einsum('spatqb,tqb->spa', -self.T_H[2], Eu_tilde_a).reshape((spa))
+            J[0:spa, spa + sp] = np.einsum('spatqb,tqb->spa', -self.T_H[2], Eu_tilde_a).reshape(spa)
             # dH_val_dbeta
             J[spa:spa + sp, 0:spa] = np.einsum('sptq,tqSPA->spSPA', -self.T_H[3], dEu_tilde_dbeta).reshape((sp, spa))
             # dH_val_dV
@@ -348,7 +347,7 @@ class QRE_np(QRE):
             # dH_val_dlambda
             J[spa:spa + sp, spa + sp] = 0
 
-        return J[self.J_mask]
+            return J[self.J_mask]
 
 
 # %% Cython implementation of QRE

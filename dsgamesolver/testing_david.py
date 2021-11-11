@@ -42,9 +42,9 @@ import timeit
 
 # timeit.timeit("qre.H(qre.y0, old=True)", number=100000, globals=globals())
 # timeit.timeit("qre.H(qre.y0, old=False)", number=100000, globals=globals())
-
-%timeit qre.H(qre.y0, old=True)
-%timeit qre.H(qre.y0, old=False)
+#
+# %timeit qre.H(qre.y0, old=True)
+# %timeit qre.H(qre.y0, old=False)
 
 qre.solver.verbose = 2
 # qre.solver.max_steps = 50

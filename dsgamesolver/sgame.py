@@ -214,7 +214,7 @@ class SGame():
 
 
 class SGameHomotopy:
-    """General homotopy class for some sGame.
+    """General homotopy class for some SGame.
 
     TODO: document order of (sigma, V, T) in y
     TODO: document order of equations in H (and thus J)
@@ -277,7 +277,7 @@ class SGameHomotopy:
         V_flat = self.game.flatten_values(V)
         return np.concatenate([beta_flat, V_flat, [t]])
 
-    def y_to_sigma_V_t(self, y: np.ndarray, zeros: bool = False) -> Tuple[np.ndarray, np.ndarray, Union[float, int]]:
+    def y_to_sigma_V_t(self, y: np.ndarray, zeros: bool = False) -> Tuple[np.ndarray, np.ndarray, float]:
         """Translate a vector y to arrays representing strategies sigma, values V and homotopy parameter t."""
         sigma_V_t_flat = self.x_transformer(y)
         sigma = self.game.unflatten_strategies(sigma_V_t_flat[0:self.game.num_actions_total], zeros=zeros)
