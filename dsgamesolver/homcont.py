@@ -136,6 +136,9 @@ class HomCont:
         self.x_transformer = x_transformer
         self.verbose = verbose
 
+        # TODO: keep?
+        self.normalize_J = False
+
         # set default parameters
         self.x_tol = 1e-7
         self.t_tol = 1e-7
@@ -225,6 +228,8 @@ class HomCont:
         """Jacobian, evaluated at y."""
         if self._J_needs_update:
             self._J = self.J_func(self.y)
+            if self.normalize_J:
+                self._J /= np.abs(self._J).max(axis=1, keepdims=True)
             self._J_needs_update = False
         return self._J
 
@@ -240,7 +245,7 @@ class HomCont:
         """
         if self._tangent_needs_update:
             Q, R = np.linalg.qr(self.J.transpose(), mode='complete')
-            self._tangent = Q[:, -1] * np.sign(R.diagonal().prod())
+            self._tangent = Q[:, -1] * np.sign(R.diagonal()).prod()
             self._tangent_needs_update = False
         return self._tangent
 
@@ -257,6 +262,8 @@ class HomCont:
         """Jacobian, evaluated at y_pred."""
         if self._J_pred_needs_update:
             self._J_pred = self.J_func(self.y_pred)
+            if self.normalize_J:
+                self._J_pred /= np.abs(self._J_pred).max(axis=1, keepdims=True)
             self._J_pred_needs_update = False
         return self._J_pred
 
@@ -277,7 +284,7 @@ class HomCont:
     def x(self):
         return self._y[:-1]
 
-    def solve(self):
+    def solve(self):  # sourcery no-metrics
         """Main loop of predictor-corrector steps,
         with step size adaptation between iterations.
         """
@@ -312,7 +319,7 @@ class HomCont:
                 if self.verbose >= 2:
                     sys.stdout.write(f'\rStep {self.step:5d}: t = {self.t:#.4g},  '
                                      f's = {self.s:#.4g},  ds = {self.ds:#.4g},  '
-                                     f'cond(J) = {self.cond:#.4g}')
+                                     f'cond(J) = {self.cond:#.4g}      ')
                     sys.stdout.flush()
 
             if self.converged:
@@ -377,7 +384,7 @@ class HomCont:
             else:
                 self.failed = 'predictor'
 
-    def correct(self):
+    def correct(self):  # sourcery no-metrics
         """Perform corrector iteration.
 
         Method is quasi-Newton: Jacobian pseudo-inverse is computed once at
@@ -436,13 +443,27 @@ class HomCont:
         # This is an indicator of potential segment jumping.
         # If change is too large, discard new point.
         # Reduce stepsize and repeat predictor step.
+        # Use log determinant to deal with large matrices.
         self.J_corr = self.J_func(self.y_corr)
-        det_ratio = np.abs(np.linalg.det(np.vstack([self.J_corr, self.tangent])) /
-                           np.linalg.det(np.vstack([self.J, self.tangent])))
-        if det_ratio < self.detJ_change_max or det_ratio > 1/self.detJ_change_max:
-            if self.verbose >= 2:
+
+        if self.normalize_J:
+            self.J_corr /= np.abs(self.J_corr).max(axis=1, keepdims=True)
+
+        old_log_det = np.linalg.slogdet(np.vstack([self.J, self.tangent]))[1]
+        new_log_det = np.linalg.slogdet(np.vstack([self.J_corr, self.tangent]))[1]
+        log_det_diff = new_log_det - old_log_det
+        # det_ratio = np.exp(new_log_det - old_log_det)
+
+        # TODO: remove old version
+        # det_ratio = np.abs(np.linalg.det(np.vstack([self.J_corr, self.tangent])) /
+        #                    np.linalg.det(np.vstack([self.J, self.tangent])))
+        # if det_ratio > self.detJ_change_max or det_ratio < 1/self.detJ_change_max:
+
+        if log_det_diff > np.log(self.detJ_change_max) or log_det_diff < np.log(1/self.detJ_change_max):
+            if self.verbose >= 3:
                 sys.stdout.write(f'\nStep {self.step:5d}: Possible segment jump, discarding step. '
-                                 f'Ratio of augmented determinants: det(J_new)/det(J_old) = {det_ratio:0.2f}\n')
+                                 # f'Ratio of augmented determinants: det(J_new)/det(J_old) = {det_ratio:0.2f}\n')
+                                 f'Augmented determinants: logdet(J_new) - logdet(J_old) = {log_det_diff:0.2f}\n')
                 sys.stdout.flush()
             return
 
@@ -537,14 +558,14 @@ class HomCont:
 
     def set_parameters(self, params: dict = {}, **kwargs):
         """Set multiple parameters at once, given as dictionary and/or as kwargs."""
-        for key in params:
+        for key, value in params.items():
             if not hasattr(self, key):
                 print(f'Warning: "{key}" is not a valid parameter.')
-            setattr(self, key, params[key])
-        for key in kwargs:
+            setattr(self, key, value)
+        for key, value in kwargs.items():
             if not hasattr(self, key):
                 print(f'Warning: "{key}" is not a valid parameter.')
-            setattr(self, key, kwargs[key])
+            setattr(self, key, value)
         if 'ds0' in params or 'ds0' in kwargs:
             self.ds = self.ds0
 
@@ -599,7 +620,7 @@ class HomCont:
         t_axis = np.zeros(len(self.tangent))
         t_axis[-1] = 1
         tangent_angle = angle(self.tangent, t_axis)
-        if abs(90 - tangent_angle) < 2.5:
+        if abs(tangent_angle) < 2.5:
             print(f'Warning: Tangent has angle {tangent_angle:.1f}° '
                   'relative to t-axis. Starting point may violate transversality.')
 
@@ -718,12 +739,12 @@ class HomPath:
         self.x_transformer = x_transformer
         self.dim = dim
 
-        self.y = np.nan * np.empty(shape=(max_steps, dim), dtype=np.float64)
-        self.s = np.nan * np.empty(shape=max_steps, dtype=np.float64)
-        self.cond = np.nan * np.empty(shape=max_steps, dtype=np.float64)
-        self.sign = np.nan * np.empty(shape=max_steps, dtype=np.float64)
-        self.step = np.nan * np.empty(shape=max_steps, dtype=np.float64)
-        self.ds = np.nan * np.empty(shape=max_steps, dtype=np.float64)
+        self.y = np.nan * np.ones(shape=(max_steps, dim), dtype=np.float64)
+        self.s = np.nan * np.ones(shape=max_steps, dtype=np.float64)
+        self.cond = np.nan * np.ones(shape=max_steps, dtype=np.float64)
+        self.sign = np.nan * np.ones(shape=max_steps, dtype=np.float64)
+        self.step = np.nan * np.ones(shape=max_steps, dtype=np.float64)
+        self.ds = np.nan * np.ones(shape=max_steps, dtype=np.float64)
 
         self.index = 0
 
@@ -810,7 +831,7 @@ class HomPath:
 
         cutoff = len(self.s[::freq])
         for variable in [self.y, self.s, self.cond, self.sign, self.step, self.ds]:
-            variable[:cutoff] = self.y[::freq]
+            variable[:cutoff] = variable[::freq]
             variable[cutoff:] = np.NaN
         self.index = cutoff
 

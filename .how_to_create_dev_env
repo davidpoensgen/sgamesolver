@@ -10,11 +10,12 @@ Host gitlab
     User git
     Port 6622
     IdentityFile ~/.ssh/gitlab_eibie_net_ed25519
+    AddressFamily inet
 
 set up public ssh key on gitlab
 
 test ssh:
-ssh -o ConnectTimeout=5 -T gitlab 
+ssh -T gitlab
 
 
 
@@ -22,7 +23,7 @@ Step 2: create python environment
 ---------------------------------
 
 through conda:
-download requirements_dev.txt
+download .requirements_dev.txt
 conda create --name dsgamesolver-dev --file .requirements_dev.txt --channel conda-forge -y
 
 
@@ -33,12 +34,23 @@ Step 3: set up git project
 cd existing_folder
 git init
 
-git config --local user.name "USERNAME"
-git config --local user.email "EMAILADDRESS"
+git config --local user.name "{USERNAME}"
+git config --local user.email "{EMAILADDRESS}"
 
 git remote add origin ssh://git@gitlab.eibie.net:6622/steffen/dsgamesolver.git
-git config --local core.sshCommand "ssh -i ~/.ssh/gitlab_eibie_net_ed25519 -F /dev/null"
+git config --local core.sshCommand "ssh -o AddressFamily=inet -i ~/.ssh/gitlab_eibie_net_ed25519 -F /dev/null"
 
 git pull
+
+
+
+Step 4: set up git hooks
+------------------------
+
+pre-commit install-hooks
+pre-commit install
+
+pre-commit run
+
 
 

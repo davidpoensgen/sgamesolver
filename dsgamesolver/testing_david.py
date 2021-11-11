@@ -1,8 +1,8 @@
 import numpy as np
 
 from dsgamesolver.sgame import SGame
-from dsgamesolver.qre import QRE_np
-#from tests.timings import HomotopyTimer
+from dsgamesolver.qre import QRE_np, QRE_ct
+from tests.timings import HomotopyTimer
 
 # random game
 
@@ -38,13 +38,15 @@ si = game.centroid_strategy()
 qre = QRE_np(game)
 qre.initialize()
 
+"""
 import timeit
 
-# timeit.timeit("qre.H(qre.y0, old=True)", number=100000, globals=globals())
-# timeit.timeit("qre.H(qre.y0, old=False)", number=100000, globals=globals())
-#
-# %timeit qre.H(qre.y0, old=True)
-# %timeit qre.H(qre.y0, old=False)
+%timeit.timeit("qre.H(qre.y0, dev=True)", number=100000, globals=globals())
+%timeit.timeit("qre.H(qre.y0, dev=False)", number=100000, globals=globals())
+
+%timeit qre.H(qre.y0, dev=True)
+%timeit qre.H(qre.y0, dev=False)
+"""
 
 qre.solver.verbose = 2
 # qre.solver.max_steps = 50
@@ -55,8 +57,8 @@ print(sol)
 # sol2 = qre.solver.solve()
 
 # import timeit
-# %timeit -n 10 -r 10 qre.J(qre.y0, old=True)
-# %timeit -n 10 -r 10 qre.J(qre.y0, old=False)
+# %timeit -n 10 -r 10 qre.J(qre.y0, dev=True)
+# %timeit -n 10 -r 10 qre.J(qre.y0, dev=False)
 
 
 # cython test:
