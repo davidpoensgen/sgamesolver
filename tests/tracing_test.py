@@ -80,3 +80,26 @@ class TestTracingFixedEta:
         sigma, V, t = cls.hom_np.y_to_sigma_V_t(sol['y'])
         assert np.max(cls.game.check_equilibrium(sigma)) < 0.01
         # TODO: assert np.max(cls.game.check_equilibrium(sigma)) < cls.hom_np.tracking_parameters['normal']['eq_tol']
+
+
+# %% run large game
+
+
+if __name__ == '__main__':
+
+    num_s = 20
+    num_p = 5
+    num_a = 10
+    delta = 0.95
+    rng = np.random.RandomState(42)
+
+    game = SGame(*create_random_game(num_s, num_p, num_a, num_a, delta, delta, rng=rng))
+
+    hom = TracingFixedEta_ct(game)
+    hom.initialize()
+    hom.solver.store_path = True
+    hom.solver.max_steps = 1e6
+    hom.solver.verbose = 2
+
+    sol = hom.solver.solve()
+    print(sol)
