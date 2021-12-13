@@ -2,7 +2,7 @@
 
 
 import sys
-from datetime import datetime, date
+from datetime import datetime
 from itertools import product
 from typing import Optional
 
@@ -270,20 +270,51 @@ if __name__ == '__main__':
 
     # batch timings
 
-    homotopy_name = 'Tracing_ct'
+    # from datetime import date
+
+    # homotopy_name = 'Tracing_ct'
 
     # small
-    timer = HomotopyTimer(homotopy_name, rng=np.random.RandomState(42), log_filename=f"S_{date.today()}.xlsx")
-    timer.batch_timings(nums_s=[2, 5, 10, 20], nums_p=[2, 3], nums_a=[2, 5, 10], reps=20)
+    # timer = HomotopyTimer(homotopy_name, rng=np.random.RandomState(42), log_filename=f"S_{date.today()}.xlsx")
+    # timer.batch_timings(nums_s=[2, 5, 10, 20], nums_p=[2, 3], nums_a=[2, 5, 10], reps=100)
 
     # medium
-    timer = HomotopyTimer(homotopy_name, rng=np.random.RandomState(42), log_filename=f"M_{date.today()}.xlsx")
-    timer.batch_timings(nums_s=[2, 5, 10, 20], nums_p=[4], nums_a=[2, 5, 10], reps=10)
+    # timer = HomotopyTimer(homotopy_name, rng=np.random.RandomState(42), log_filename=f"M_{date.today()}.xlsx")
+    # timer.batch_timings(nums_s=[2, 5, 10, 20], nums_p=[4], nums_a=[2, 5, 10], reps=100)
 
     # large
-    timer = HomotopyTimer(homotopy_name, rng=np.random.RandomState(42), log_filename=f"L_{date.today()}.xlsx")
-    timer.batch_timings(nums_s=[2, 5, 10], nums_p=[5], nums_a=[2, 5, 10], reps=5)
+    # timer = HomotopyTimer(homotopy_name, rng=np.random.RandomState(42), log_filename=f"L_{date.today()}.xlsx")
+    # timer.batch_timings(nums_s=[2, 5, 10], nums_p=[5], nums_a=[2, 5, 10], reps=10)
 
     # extra large
-    timer = HomotopyTimer(homotopy_name, rng=np.random.RandomState(42), log_filename=f"XL_{date.today()}.xlsx")
-    timer.batch_timings(nums_s=[20], nums_p=[5], nums_a=[2, 5, 10], reps=3)
+    # timer = HomotopyTimer(
+    #     homotopy_name, max_steps=1e6, rng=np.random.RandomState(42), log_filename=f"XL_{date.today()}.xlsx"
+    # )
+    # timer.batch_timings(nums_s=[20], nums_p=[5], nums_a=[2, 5, 10], reps=5)
+
+    # print timings
+
+    import pandas as pd
+
+    filename = 'timings_2021-11-02.xlsx'
+    timings_df = pd.read_excel(filename, index_col=0)
+
+    timings_dict = {}
+    for s in np.unique(timings_df['num_s']):
+        for p in np.unique(timings_df['num_p']):
+            for a in np.unique(timings_df['num_a']):
+                sub_df = timings_df.loc[
+                    timings_df['success']
+                    & (timings_df['num_s'] == s)
+                    & (timings_df['num_p'] == p)
+                    & (timings_df['num_a'] == a)
+                ]
+                timings_dict[(s, p, a)] = {
+                    'seconds': {
+                        'mean': sub_df['seconds'].mean(),
+                        'std': sub_df['seconds'].std(),
+                    }
+                }
+
+    timer = HomotopyTimer()
+    timer.print_latex_table(timings=timings_dict)
