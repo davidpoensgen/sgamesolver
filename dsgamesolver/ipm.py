@@ -11,7 +11,7 @@ from typing import Union, Optional
 import numpy as np
 from numpy.typing import ArrayLike
 
-from dsgamesolver.sgame import SGame, SGameHomotopy
+from dsgamesolver.sgame import SGame, SGameHomotopy, LogStratHomotopy
 from dsgamesolver.homcont import HomCont
 
 

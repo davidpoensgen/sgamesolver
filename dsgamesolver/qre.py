@@ -19,7 +19,7 @@
 
 import numpy as np
 
-from dsgamesolver.sgame import SGame, SGameHomotopy
+from dsgamesolver.sgame import SGame, SGameHomotopy, LogStratHomotopy
 from dsgamesolver.homcont import HomCont
 
 ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -28,7 +28,7 @@ ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 # %% parent class for QRE homotopy
 
 
-class QRE(SGameHomotopy):
+class QRE(LogStratHomotopy):
     """QRE homotopy: base class"""
 
     def __init__(self, game: SGame) -> None:
@@ -255,7 +255,7 @@ class QRE_np(QRE):
 
         spa = num_s * num_p * num_a_max
         sp = num_s * num_p
-        H = np.zeros(spa+sp)
+        H = np.empty(spa+sp)
 
         # H_strat
         H[0:spa] = (self.T_H[0] + np.einsum('spaSPA,SPA->spa', self.T_H[1], sigma)

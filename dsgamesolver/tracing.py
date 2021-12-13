@@ -15,7 +15,7 @@ import numpy as np
 from numpy.typing import ArrayLike
 from scipy.optimize import brentq
 
-from dsgamesolver.sgame import SGame, SGameHomotopy
+from dsgamesolver.sgame import SGame, SGameHomotopy, LogStratHomotopy
 from dsgamesolver.homcont import HomCont
 
 ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -24,7 +24,7 @@ ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 # %% parent class for Tracing homotopy
 
 
-class Tracing(SGameHomotopy):
+class Tracing(LogStratHomotopy):
     """Tracing homotopy: base class"""
 
     def __init__(self, game: SGame, priors: Union[str, ArrayLike] = "centroid",
@@ -296,7 +296,7 @@ class Tracing_np(Tracing):
 
         spa = num_s * num_p * num_a_max
         sp = num_s * num_p
-        H = np.zeros(spa+sp)
+        H = np.empty(spa+sp)
 
         # H_val
         H[0:spa] = (Eu_tilde_a - np.repeat(V[:, :, np.newaxis], num_a_max, axis=2) + (1-t)**2 * self.eta
