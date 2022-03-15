@@ -342,9 +342,9 @@ class QRE_ct(QRE):
 
         # only import Cython module on class instantiation
         try:
-            import pyximport
-            pyximport.install(build_dir='./dsgamesolver/__build__/', build_in_temp=False, language_level=3,
-                              setup_args={'include_dirs': [np.get_include()]})
+            # import pyximport
+            # pyximport.install(build_dir='./dsgamesolver/__build__/', build_in_temp=False, language_level=3,
+            #                   setup_args={'include_dirs': [np.get_include()]})
             import dsgamesolver.homotopies.qre_ct as qre_ct
 
         except ImportError:

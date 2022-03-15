@@ -389,9 +389,9 @@ class Tracing_ct(Tracing):
 
         # only import Cython module on class instantiation
         try:
-            import pyximport
-            pyximport.install(build_dir='./dsgamesolver/__build__/', build_in_temp=False, language_level=3,
-                              setup_args={'include_dirs': [np.get_include()]})
+            # import pyximport
+            # pyximport.install(build_dir='./dsgamesolver/__build__/', build_in_temp=False, language_level=3,
+            #                   setup_args={'include_dirs': [np.get_include()]})
             import dsgamesolver.homotopies.tracing_ct as tracing_ct
 
         except ImportError:
