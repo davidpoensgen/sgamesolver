@@ -119,12 +119,11 @@ class SGame:
         - array / nested lists of dimension [num_states, num_actions]: number of actions for each agent
         """
         if isinstance(num_actions, int):
-            nums_a = np.ones((num_states, num_players))*num_actions
+            nums_a = np.ones((num_states, num_players), dtype=int)*num_actions
         elif isinstance(num_actions, (list, tuple, np.array)) and len(num_actions) == 2:
             nums_a = np.random.randint(low=num_actions[0], high=num_actions[1] + 1, size=(num_states, num_players))
         else:
             nums_a = num_actions
-
         u = [np.random.random((num_players, *nums_a[s, :])) for s in range(num_states)]
         phi = [np.random.exponential(scale=1, size=(*nums_a[s, :], num_states)) for s in range(num_states)]
         for s in range(num_states):
@@ -205,7 +204,8 @@ class SGame:
             raise "Failed to solve for state-player values: Transition matrix not invertible."
         return values
 
-    def flatten_values(self, values: ArrayLike) -> np.ndarray:
+    @staticmethod
+    def flatten_values(values: ArrayLike) -> np.ndarray:
         """Flatten an array with shape (num_states, num_players), e.g. state-player values."""
         return np.array(values).reshape(-1)
 
@@ -279,7 +279,7 @@ class SGameHomotopy:
         """Jacobian of homotopy function evaluated at y."""
         pass
 
-    def x_transformer(self, y: np.ndarray) -> Optional[np.ndarray]:
+    def x_transformer(self, y: np.ndarray) -> np.ndarray:
         """Transform vector y to vector x.
 
         Vector y is used during path tracing.
@@ -338,18 +338,7 @@ class LogStratHomotopy(SGameHomotopy):
         t = y[-1]
         return sigma, V, t
 
-    def x_transformer(self, y: np.ndarray) -> Optional[np.ndarray]:
-        """Transform vector y to vector x.
-
-        Vector y is used during path tracing.
-        Vector x is used to check for convergence.
-
-        Typical use case: Strategies are relevant for convergence, but are transformed during tracing.
-        Example: QRE, with uses log strategies beta=log(sigma) during tracing.
-
-        Note: If not using log strategies beta = log(sigma), simply overwrite.
-              If not needed, simply overwrite to None.
-        """
+    def x_transformer(self, y: np.ndarray) -> np.ndarray:
         x = np.empty_like(y)
         x[:self.game.num_actions_total] = np.exp(y[:self.game.num_actions_total])
         x[self.game.num_actions_total:] = y[self.game.num_actions_total:]

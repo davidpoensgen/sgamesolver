@@ -309,7 +309,7 @@ class LogGame_ct(LogGame):
             import pyximport
             pyximport.install(build_dir='./dsgamesolver/__build__/', build_in_temp=False, language_level=3,
                               setup_args={'include_dirs': [np.get_include()]})
-            import dsgamesolver.loggame_ct as loggame_ct
+            import dsgamesolver.homotopies.loggame_ct as loggame_ct
 
         except ImportError:
             raise ImportError("Cython implementation of LogGame homotopy could not be imported. ",

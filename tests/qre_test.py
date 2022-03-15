@@ -4,7 +4,7 @@
 import numpy as np
 
 from dsgamesolver.sgame import SGame
-from dsgamesolver.qre import QRE_np, QRE_ct
+from dsgamesolver.homotopies.qre import QRE_np, QRE_ct
 from tests.random_game import create_random_game
 
 

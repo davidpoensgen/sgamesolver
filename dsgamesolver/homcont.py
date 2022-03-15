@@ -556,13 +556,11 @@ class HomCont:
                 sys.stdout.flush()
             self.sign = -self.sign
 
-    def set_parameters(self, params: dict = {}, **kwargs):
+    def set_parameters(self, params: dict = None, **kwargs):
         """Set multiple parameters at once, given as dictionary and/or as kwargs."""
-        for key, value in params.items():
-            if not hasattr(self, key):
-                print(f'Warning: "{key}" is not a valid parameter.')
-            setattr(self, key, value)
-        for key, value in kwargs.items():
+        params = params or {}
+        inputs = {**params, **kwargs}
+        for key, value in inputs.items():
             if not hasattr(self, key):
                 print(f'Warning: "{key}" is not a valid parameter.')
             setattr(self, key, value)
@@ -668,7 +666,7 @@ class HomCont:
 
         Allows to re-start continuation from the current state later on.
         Note: H, J and parameters are not saved. User should make sure these can be recreated.
-        HomPath is not saved either.
+        Path history (HomPath) is not saved either.
         """
         import os
         import json
@@ -733,18 +731,17 @@ class HomPath:
         Function to transform x for plotting, by default lambda x : x.
     """
 
-    def __init__(self, dim: int, max_steps: int = 10000,
-                 x_transformer: callable = lambda x: x):
+    def __init__(self, dim: int, max_steps: int = 10000, x_transformer: callable = lambda x: x):
         self.max_steps = max_steps
         self.x_transformer = x_transformer
         self.dim = dim
 
-        self.y = np.nan * np.ones(shape=(max_steps, dim), dtype=np.float64)
-        self.s = np.nan * np.ones(shape=max_steps, dtype=np.float64)
-        self.cond = np.nan * np.ones(shape=max_steps, dtype=np.float64)
-        self.sign = np.nan * np.ones(shape=max_steps, dtype=np.float64)
-        self.step = np.nan * np.ones(shape=max_steps, dtype=np.float64)
-        self.ds = np.nan * np.ones(shape=max_steps, dtype=np.float64)
+        self.y = np.nan * np.empty(shape=(max_steps, dim), dtype=np.float64)
+        self.s = np.nan * np.empty(shape=max_steps, dtype=np.float64)
+        self.cond = np.nan * np.empty(shape=max_steps, dtype=np.float64)
+        self.sign = np.nan * np.empty(shape=max_steps, dtype=np.float64)
+        self.step = np.nan * np.empty(shape=max_steps, dtype=np.float64)
+        self.ds = np.nan * np.empty(shape=max_steps, dtype=np.float64)
 
         self.index = 0
 

@@ -15,7 +15,7 @@ import numpy as np
 from numpy.typing import ArrayLike
 from scipy.optimize import brentq
 
-from dsgamesolver.sgame import SGame, SGameHomotopy, LogStratHomotopy
+from dsgamesolver.sgame import SGame, LogStratHomotopy
 from dsgamesolver.homcont import HomCont
 
 ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -392,7 +392,7 @@ class Tracing_ct(Tracing):
             import pyximport
             pyximport.install(build_dir='./dsgamesolver/__build__/', build_in_temp=False, language_level=3,
                               setup_args={'include_dirs': [np.get_include()]})
-            import dsgamesolver.tracing_ct as tracing_ct
+            import dsgamesolver.homotopies.tracing_ct as tracing_ct
 
         except ImportError:
             raise ImportError("Cython implementation of Tracing homotopy could not be imported. ",

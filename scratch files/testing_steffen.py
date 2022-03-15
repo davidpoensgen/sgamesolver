@@ -4,10 +4,10 @@
 import numpy as np
 
 from dsgamesolver.sgame import SGame
-from dsgamesolver.qre import QRE_np, QRE_ct
-from dsgamesolver.tracing import Tracing_np, Tracing_ct, TracingFixedEta_np, TracingFixedEta_ct
-from dsgamesolver.loggame import LogGame_np, LogGame_ct
-from dsgamesolver.ipm import IPM_ct, IPM_sp
+from dsgamesolver.homotopies.qre import QRE_np, QRE_ct
+from dsgamesolver.homotopies.tracing import Tracing_np, Tracing_ct, TracingFixedEta_np, TracingFixedEta_ct
+from dsgamesolver.homotopies.loggame import LogGame_np, LogGame_ct
+from dsgamesolver.homotopies.ipm import IPM_ct, IPM_sp
 from tests.random_game import create_random_game
 from tests.timings import HomotopyTimer
 

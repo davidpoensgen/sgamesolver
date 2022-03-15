@@ -11,7 +11,7 @@ from typing import Union, Optional
 import numpy as np
 from numpy.typing import ArrayLike
 
-from dsgamesolver.sgame import SGame, SGameHomotopy, LogStratHomotopy
+from dsgamesolver.sgame import SGame, SGameHomotopy
 from dsgamesolver.homcont import HomCont
 
 
@@ -131,7 +131,7 @@ class IPM_ct(IPM):
             import pyximport
             pyximport.install(build_dir='./dsgamesolver/__build__/', build_in_temp=False, language_level=3,
                               setup_args={'include_dirs': [np.get_include()]})
-            import dsgamesolver.ipm_ct as ipm_ct
+            import dsgamesolver.homotopies.ipm_ct as ipm_ct
 
         except ImportError:
             raise ImportError("Cython implementation of IPM homotopy could not be imported. ",
