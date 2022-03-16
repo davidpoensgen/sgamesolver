@@ -306,10 +306,10 @@ class LogGame_ct(LogGame):
 
         # only import Cython module on class instantiation
         try:
-            import pyximport
-            pyximport.install(build_dir='./dsgamesolver/__build__/', build_in_temp=False, language_level=3,
-                              setup_args={'include_dirs': [np.get_include()]})
-            import dsgamesolver.homotopies.loggame_ct as loggame_ct
+            # import pyximport
+            # pyximport.install(build_dir='./dsgamesolver/__build__/', build_in_temp=False, language_level=3,
+            #                   setup_args={'include_dirs': [np.get_include()]})
+            import dsgamesolver.homotopy._loggame_ct as loggame_ct
 
         except ImportError:
             raise ImportError("Cython implementation of LogGame homotopy could not be imported. ",
@@ -331,31 +331,3 @@ class LogGame_ct(LogGame):
                                  self.game.num_states, self.game.num_players, self.game.nums_actions,
                                  self.game.num_actions_max, self.game.num_actions_total)
 
-
-# %% testing
-
-
-if __name__ == '__main__':
-
-    from tests.random_game import create_random_game
-    game = SGame(*create_random_game())
-
-    # numpy
-    loggame_np = LogGame_np(game)
-    loggame_np.initialize()
-    loggame_np.solver.solve()
-
-    y0 = loggame_np.find_y0()
-    """
-    %timeit loggame_np.H(y0)
-    %timeit loggame_np.J(y0)
-    """
-
-    # cython
-    loggame_ct = LogGame_ct(game)
-    loggame_ct.initialize()
-    loggame_ct.solver.solve()
-    """
-    %timeit loggame_ct.H(y0)
-    %timeit loggame_ct.J(y0)
-    """

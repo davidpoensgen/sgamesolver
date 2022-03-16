@@ -111,21 +111,24 @@ class SGame:
             self.transitions[:, p] = self.discount_factors[p] * transition_matrix
 
     @classmethod
-    def random_game(cls, num_states, num_players, num_actions, delta=0.95):
+    def random_game(cls, num_states, num_players, num_actions, delta=0.95, seed=None):
         """Generate an SGame of given size, with random payoff- and transition arrays.
         num_actions can be specified in the following ways:
         - integer: all agents have this same fixed number of actions
         - list of 2 integers: number of actions is randomized, the input determining [min, max]
         - array / nested lists of dimension [num_states, num_actions]: number of actions for each agent
         """
+        rng = np.random.default_rng(seed=seed)
+
         if isinstance(num_actions, int):
             nums_a = np.ones((num_states, num_players), dtype=int)*num_actions
         elif isinstance(num_actions, (list, tuple, np.array)) and len(num_actions) == 2:
-            nums_a = np.random.randint(low=num_actions[0], high=num_actions[1] + 1, size=(num_states, num_players))
+            nums_a = rng.randint(low=num_actions[0], high=num_actions[1] + 1, size=(num_states, num_players))
         else:
             nums_a = num_actions
-        u = [np.random.random((num_players, *nums_a[s, :])) for s in range(num_states)]
-        phi = [np.random.exponential(scale=1, size=(*nums_a[s, :], num_states)) for s in range(num_states)]
+
+        u = [rng.random((num_players, *nums_a[s, :])) for s in range(num_states)]
+        phi = [rng.exponential(scale=1, size=(*nums_a[s, :], num_states)) for s in range(num_states)]
         for s in range(num_states):
             for index, value in np.ndenumerate(np.sum(phi[s], axis=-1)):
                 phi[s][index] *= 1 / value
@@ -267,6 +270,18 @@ class SGameHomotopy:
         """
         pass
 
+    def solve(self) -> None:
+        """TODO: just playing with ideas to make things more accessible
+        """
+        self.initialize()
+        solution = self.solver.solve()
+        if solution['success']:
+            sigma, V, t = self.y_to_sigma_V_t(solution['y'])
+            # TODO: save these?
+            print(f'Path tracking successful.')
+        else:
+            pass
+
     def find_y0(self) -> np.ndarray:
         """Calculate starting point y0."""
         pass
@@ -344,32 +359,3 @@ class LogStratHomotopy(SGameHomotopy):
         x[self.game.num_actions_total:] = y[self.game.num_actions_total:]
         return x
 
-
-# %% testing
-
-
-if __name__ == '__main__':
-
-    from tests.random_game import create_random_game
-
-    # SGame
-
-    test_game = SGame(*create_random_game())
-
-    test_game.detect_symmetries()
-
-    test_sigma = test_game.centroid_strategy()
-    test_V = test_game.get_values(test_sigma)
-
-    test_losses = test_game.check_equilibrium(test_sigma)
-
-    test_sigma_flat = test_game.flatten_strategies(test_sigma)
-    test_V_flat = test_game.flatten_values(test_V)
-
-    test_y = np.concatenate([np.log(test_sigma_flat), test_V_flat, [0.0]])
-
-    # SGameHomotopy
-
-    test_homotopy = SGameHomotopy(test_game)
-
-    assert np.allclose(test_y, test_homotopy.sigma_V_t_to_y(test_sigma, test_V, 0.0))

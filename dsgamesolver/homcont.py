@@ -2,6 +2,8 @@ import numpy as np
 import time
 from datetime import timedelta
 import sys
+import os
+import json
 
 
 class HomCont:
@@ -116,7 +118,7 @@ class HomCont:
                  x_transformer: callable = lambda x: x,
                  verbose: int = 1,
                  store_path: bool = False,
-                 parameters: dict = {},
+                 parameters: dict = None,
                  **kwargs):
 
         self.H_func = H
@@ -135,9 +137,6 @@ class HomCont:
         self.max_steps = max_steps
         self.x_transformer = x_transformer
         self.verbose = verbose
-
-        # TODO: keep?
-        self.normalize_J = False
 
         # set default parameters
         self.x_tol = 1e-7
@@ -228,8 +227,6 @@ class HomCont:
         """Jacobian, evaluated at y."""
         if self._J_needs_update:
             self._J = self.J_func(self.y)
-            if self.normalize_J:
-                self._J /= np.abs(self._J).max(axis=1, keepdims=True)
             self._J_needs_update = False
         return self._J
 
@@ -262,8 +259,6 @@ class HomCont:
         """Jacobian, evaluated at y_pred."""
         if self._J_pred_needs_update:
             self._J_pred = self.J_func(self.y_pred)
-            if self.normalize_J:
-                self._J_pred /= np.abs(self._J_pred).max(axis=1, keepdims=True)
             self._J_pred_needs_update = False
         return self._J_pred
 
@@ -272,6 +267,9 @@ class HomCont:
         """Pseudo-inverse of Jacobian, evaluated at y_pred."""
         if self._Jpinv_needs_update:
             self._Jpinv = qr_inv(self.J_pred)
+            # TODO: found a few games where linalg.pinv might be faster after all. test some more.
+            # TODO: ideally, find a solution that requires no inverse at all
+            # self._Jpinv = np.linalg.pinv(self.J_pred)
             self._Jpinv_needs_update = False
         return self._Jpinv
 
@@ -329,6 +327,9 @@ class HomCont:
                                      f'Total time elapsed:{timedelta(seconds=int(time_sec))} \n')
                     sys.stdout.flush()
 
+                print('End homotopy continuation')
+                print('=' * 50)
+
                 return {'success': True,
                         'y': self.y,
                         's': self.s,
@@ -349,17 +350,21 @@ class HomCont:
             if self.failed:
                 time_sec = time.perf_counter() - start_time
                 if self.verbose >= 1:
+                    reason = ""
                     if self.failed == 'predictor':
                         reason = 'Could not find valid predictor: Likely hit a boundary of H\'s domain.'
                     elif self.failed == 'max_steps':
                         reason = 'Maximum number of steps reached without convergence. ' \
-                                 '(May increase max_steps, then solve() again.)'
+                                 '(You can increase max_steps, then solve() again.)'
                     elif self.failed == 'corrector':
                         reason = 'Corrector step failed, and ds is already minimal.'
                     sys.stdout.write(f'\nStep {self.step:5d}: {reason} \n')
                     sys.stdout.write(f'Step {self.step:5d}: Continuation failed. '
                                      f'Total time elapsed:{timedelta(seconds=int(time_sec))} \n')
                     sys.stdout.flush()
+
+                print('End homotopy continuation')
+                print('=' * 50)
 
                 return {'success': False,
                         'y': self.y,
@@ -446,9 +451,6 @@ class HomCont:
         # Use log determinant to deal with large matrices.
         self.J_corr = self.J_func(self.y_corr)
 
-        if self.normalize_J:
-            self.J_corr /= np.abs(self.J_corr).max(axis=1, keepdims=True)
-
         old_log_det = np.linalg.slogdet(np.vstack([self.J, self.tangent]))[1]
         new_log_det = np.linalg.slogdet(np.vstack([self.J_corr, self.tangent]))[1]
         log_det_diff = new_log_det - old_log_det
@@ -501,19 +503,19 @@ class HomCont:
 
     def adapt_stepsize(self):
         """Adapt stepsize at the end of a predictor-corrector cycle:
-       Increase ds if:
+        Increase ds if:
            - corrector step successful & took less than 10 iterates
-       Maintain ds if:
+        Maintain ds if:
             - corrector step successful, but required 10+ iterates
-       Decrease ds if:
+        Decrease ds if:
            - H could not be evaluated during corrections
              (indicates leaving H's domain)
            - corrector loop fails (too many iterates, corrector distance
              too large, or corrector distance increasing during loop)
            - corrector step was successful, but t_target was crossed
-       If ds is to be decreased below ds_min, continuation is failed.
+        If ds is to be decreased below ds_min, continuation is failed.
 
-       If t_target is finite, stepsize is capped so that the predictor will not cross t_target
+        If t_target is finite, stepsize is capped so that the predictor will not cross t_target
         """
         if self.failed:
             return
@@ -564,7 +566,7 @@ class HomCont:
             if not hasattr(self, key):
                 print(f'Warning: "{key}" is not a valid parameter.')
             setattr(self, key, value)
-        if 'ds0' in params or 'ds0' in kwargs:
+        if 'ds0' in inputs:
             self.ds = self.ds0
 
     def check_inputs(self):
@@ -659,7 +661,7 @@ class HomCont:
                 self.path.index = state['index'] + 1
                 print(f'Returning to step {self.step}.')
         else:
-            print('Path not stored and no HomPath assigned.')
+            print('There is no stored path.')
 
     def save_file(self, filename, overwrite: bool = False):
         """Save current state of the solver to a file.
@@ -668,8 +670,6 @@ class HomCont:
         Note: H, J and parameters are not saved. User should make sure these can be recreated.
         Path history (HomPath) is not saved either.
         """
-        import os
-        import json
         if os.path.isfile(filename) and not overwrite:
             answer = input(f'"{filename}" already exists. Overwrite content [y/N]?')
             if answer == '' or answer[0].lower() != 'y':
@@ -689,8 +689,6 @@ class HomCont:
 
     def load_file(self, filename):
         """Load solver state from a file created by save_file()."""
-        import os
-        import json
         if not os.path.isfile(filename):
             print(f'{filename} not found.')
             return

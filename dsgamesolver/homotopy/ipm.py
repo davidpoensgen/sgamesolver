@@ -128,10 +128,10 @@ class IPM_ct(IPM):
 
         # only import Cython module on class instantiation
         try:
-            import pyximport
-            pyximport.install(build_dir='./dsgamesolver/__build__/', build_in_temp=False, language_level=3,
-                              setup_args={'include_dirs': [np.get_include()]})
-            import dsgamesolver.homotopies.ipm_ct as ipm_ct
+            # import pyximport
+            # pyximport.install(build_dir='./dsgamesolver/__build__/', build_in_temp=False, language_level=3,
+            #                   setup_args={'include_dirs': [np.get_include()]})
+            import dsgamesolver.homotopy._ipm_ct as ipm_ct
 
         except ImportError:
             raise ImportError("Cython implementation of IPM homotopy could not be imported. ",
@@ -245,34 +245,3 @@ class IPM_sp(IPM):
     def J(self, y: np.ndarray) -> np.ndarray:
         return self.J_num(*tuple(np.array(y)))
 
-
-# %% testing
-
-
-if __name__ == '__main__':
-
-    from tests.random_game import create_random_game
-    game = SGame(*create_random_game())
-
-    # cython
-    ipm_ct = IPM_ct(game)
-    ipm_ct.initialize()
-    ipm_ct.solver.solve()
-
-    y0 = ipm_ct.y0
-    """
-    %timeit ipm_ct.H(y0)
-    %timeit ipm_ct.J(y0)
-    """
-
-    # sympy
-    ipm_sp = IPM_sp(game)
-    ipm_sp.initialize()
-    ipm_sp.solver.verbose = 2
-    ipm_sp.solver.solve()
-
-    """
-    assert np.allclose(ipm_sp.y0, y0)
-    %timeit ipm_sp.H(y0)
-    %timeit ipm_sp.J(y0)
-    """

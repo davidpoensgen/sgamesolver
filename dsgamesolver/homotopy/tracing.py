@@ -392,7 +392,7 @@ class Tracing_ct(Tracing):
             # import pyximport
             # pyximport.install(build_dir='./dsgamesolver/__build__/', build_in_temp=False, language_level=3,
             #                   setup_args={'include_dirs': [np.get_include()]})
-            import dsgamesolver.homotopies.tracing_ct as tracing_ct
+            import dsgamesolver.homotopy._tracing_ct as tracing_ct
 
         except ImportError:
             raise ImportError("Cython implementation of Tracing homotopy could not be imported. ",
@@ -569,41 +569,3 @@ class TracingFixedEta_ct(Tracing_ct):
                                            self.game.num_states, self.game.num_players, self.game.nums_actions,
                                            self.game.num_actions_max, self.game.num_actions_total)
 
-
-# %% testing
-
-
-if __name__ == '__main__':
-
-    from tests.random_game import create_random_game
-    game = SGame(*create_random_game())
-
-    # numpy
-    tracing_np = Tracing_np(game)
-    tracing_np.initialize()
-    tracing_np.solver.solve()
-
-    y0 = tracing_np.find_y0()
-    """
-    %timeit tracing_np.H(y0)
-    %timeit tracing_np.J(y0)
-    """
-
-    # cython
-    tracing_ct = Tracing_ct(game)
-    tracing_ct.initialize()
-    tracing_ct.solver.solve()
-    """
-    %timeit tracing_ct.H(y0)
-    %timeit tracing_ct.J(y0)
-    """
-
-    # Tracing with fixed eta
-
-    tracing_fixed_eta_np = TracingFixedEta_np(game)
-    tracing_fixed_eta_np.initialize()
-    tracing_fixed_eta_np.solver.solve()
-
-    tracing_fixed_eta_ct = TracingFixedEta_ct(game)
-    tracing_fixed_eta_ct.initialize()
-    tracing_fixed_eta_ct.solver.solve()
