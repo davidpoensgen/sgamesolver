@@ -110,6 +110,18 @@ class SGame:
         for p in range(self.num_players):
             self.transitions[:, p] = self.discount_factors[p] * transition_matrix
 
+        self.undiscounted_transitions = transition_matrix
+
+    # TODO: cleanup
+    def u_tilde(self, V):
+        """Payoffs including continuation values."""
+        return self.payoffs + np.einsum('sp...S,Sp->sp...', self.transitions, V)
+
+    def u_tilde_new(self, V):
+        """Payoffs including continuation values."""
+        discounted_V = V * self.discount_factors
+        return self.payoffs + np.einsum('s...S,Sp->sp...', self.undiscounted_transitions, discounted_V)
+
     @classmethod
     def random_game(cls, num_states, num_players, num_actions, delta=0.95, seed=None):
         """Generate an SGame of given size, with random payoff- and transition arrays.
@@ -123,7 +135,7 @@ class SGame:
         if isinstance(num_actions, int):
             nums_a = np.ones((num_states, num_players), dtype=int)*num_actions
         elif isinstance(num_actions, (list, tuple, np.array)) and len(num_actions) == 2:
-            nums_a = rng.randint(low=num_actions[0], high=num_actions[1] + 1, size=(num_states, num_players))
+            nums_a = rng.integers(low=num_actions[0], high=num_actions[1], size=(num_states, num_players), endpoint=True)
         else:
             nums_a = num_actions
 

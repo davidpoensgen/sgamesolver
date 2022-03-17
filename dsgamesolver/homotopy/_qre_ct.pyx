@@ -15,6 +15,14 @@ def u_tilde(u, V, phi):
     """Payoffs including continuation values."""
     return u + np.einsum('sp...S,Sp->sp...', phi, V)
 
+#TODO cleanup
+def u_tilde_new(u, V, phi, delta):
+    """Payoffs including continuation values."""
+    deltaV = V*delta
+    return u + np.einsum('s...S,Sp->sp...', phi, deltaV)
+
+def u_tilde_cython(u, V, phi, delta):
+    pass
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
