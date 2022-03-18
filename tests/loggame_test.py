@@ -4,7 +4,7 @@
 import numpy as np
 
 from dsgamesolver.sgame import SGame
-from dsgamesolver.homotopies.loggame import LogGame_np, LogGame_ct
+from dsgamesolver.homotopy.loggame import LogGame_np, LogGame_ct
 from tests.random_game import create_random_game
 
 

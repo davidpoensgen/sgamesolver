@@ -12,7 +12,7 @@ from typing import Optional
 import numpy as np
 from numpy.typing import ArrayLike
 
-from dsgamesolver.sgame import SGame, SGameHomotopy
+from dsgamesolver.sgame import SGame, LogStratHomotopy
 from dsgamesolver.homcont import HomCont
 
 ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -21,7 +21,7 @@ ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 # %% parent class for logarithmic game homotopy
 
 
-class LogGame(SGameHomotopy):
+class LogGame(LogStratHomotopy):
     """Logarithmic game homotopy: base class"""
 
     def __init__(self, game: SGame, weights: Optional[ArrayLike] = None) -> None:
@@ -72,7 +72,7 @@ class LogGame(SGameHomotopy):
         self.y0 = self.find_y0()
         self.solver = HomCont(self.H, self.y0, self.J, t_target=1.0,
                               parameters=self.tracking_parameters['normal'],
-                              x_transformer=self.x_transformer, store_path=True)
+                              x_transformer=self.x_transformer)
 
     def find_y0(self) -> np.ndarray:
         sigma = self.game.centroid_strategy(self.nu)

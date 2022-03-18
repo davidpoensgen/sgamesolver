@@ -35,6 +35,16 @@ qre.solver.verbose = 2
 sol = qre.solver.solve()
 print(sol)
 
+ABC="ABCDEFGH"
+num_players=4
+einsum_eq_u = ('sp' + ABC[0:num_players] +
+               ',s' + ',s'.join(ABC[p] for p in range(num_players)) + '->sp')
+einsum_eq_u2 = f'sp{ABC[0:num_players]},s{",s".join(ABC[p] for p in range(num_players))}->sp'
+
+einsum_eq_phi = ('sp' + ABC[0:num_players] + 't,s' +
+                 ',s'.join(ABC[p] for p in range(num_players)) + '->spt')
+einsum_eq_phi2 = f'sp{ABC[0:num_players]}t,s{",s".join(ABC[p] for p in range(num_players))}->spt'
+
 # qre.solver.return_to_step(5)
 # sol2 = qre.solver.solve()
 

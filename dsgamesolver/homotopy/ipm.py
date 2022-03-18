@@ -90,7 +90,7 @@ class IPM(SGameHomotopy):
         # Note: homotopy parameter t goes from 1 to 0
         self.solver = HomCont(self.H, self.y0, self.J, t_target=0.0,
                               parameters=self.tracking_parameters['normal'],
-                              x_transformer=self.x_transformer, store_path=True)
+                              x_transformer=self.x_transformer)
 
     def find_y0(self) -> np.ndarray:
         V = np.ones((self.game.num_states, self.game.num_players))

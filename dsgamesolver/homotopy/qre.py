@@ -72,7 +72,7 @@ class QRE(LogStratHomotopy):
         self.y0 = self.find_y0()
         self.solver = HomCont(self.H, self.y0, self.J, t_target=target_lambda,
                               parameters=self.tracking_parameters['normal'],
-                              x_transformer=self.x_transformer, store_path=store_path)
+                              x_transformer=self.x_transformer)
 
     def find_y0(self) -> np.ndarray:
         sigma = self.game.centroid_strategy()
@@ -346,8 +346,6 @@ class QRE_ct(QRE):
             # pyximport.install(build_dir='./dsgamesolver/__build__/', build_in_temp=False, language_level=3,
             #                   setup_args={'include_dirs': [np.get_include()]})
             import dsgamesolver.homotopy._qre_ct as qre_ct
-            import dsgamesolver.homotopy._qre_ct_2 as qre_ct_2
-            # TODO: cleanup!
 
         except ImportError:
             raise ImportError("Cython implementation of QRE homotopy could not be imported. ",
@@ -358,8 +356,6 @@ class QRE_ct(QRE):
                               "For Linux, make sure the Python package gxx_linux-64 is installed in your environment.")
 
         self.qre_ct = qre_ct
-        self.qre_ct_2 = qre_ct_2
-        # TODO: cleanup
 
     def H(self, y: np.ndarray) -> np.ndarray:
         return self.qre_ct.H(y, self.game.payoffs, self.game.transitions, self.game.num_states, self.game.num_players,
@@ -368,32 +364,4 @@ class QRE_ct(QRE):
     def J(self, y: np.ndarray) -> np.ndarray:
         return self.qre_ct.J(y, self.game.payoffs, self.game.transitions, self.game.num_states, self.game.num_players,
                              self.game.nums_actions, self.game.num_actions_max, self.game.num_actions_total)
-
-    # TODO: cleanup
-    def J_2(self, y: np.ndarray) -> np.ndarray:
-        return self.qre_ct_2.J(y, self.game.payoffs, self.game.transitions, self.game.num_states, self.game.num_players,
-                             self.game.nums_actions, self.game.num_actions_max, self.game.num_actions_total)
-
-
-# TODO: cleanup?
-# %% experimental: Numpy implementation of QRE with Numba boost
-# some trouble with custom classes...
-
-
-# from numba import njit
-
-
-# class QRE_nb(QRE_np):
-#     """QRE homotopy: Numpy implementation with Numba boost."""
-
-#     # def __init__(self, game: SGame) -> None:
-#     #     super().__init__(game)
-
-#     @njit
-#     def H(self, y: np.ndarray) -> np.ndarray:
-#         return super().H(y)
-
-#     @njit
-#     def J(self, y: np.ndarray, old: bool = True) -> np.ndarray:
-#         return super().J(y, old)
 

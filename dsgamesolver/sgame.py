@@ -20,13 +20,13 @@ ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 class SGame:
     """A stochastic game."""
 
-    def __init__(self, payoff_matrices: list[ArrayLike], transition_matrices: Optional[list[ArrayLike]] = None,
+    def __init__(self, payoff_matrices: list[ArrayLike], transition_matrices: list[ArrayLike],
                  discount_factors: Union[ArrayLike, float, int] = 0.0) -> None:
         """Inputs:
 
         payoff_matrices:      list of array-like, one for each state: payoff_matrices[s][p,A]
 
-        transition_matrices:  list of array-like, one for each from_state: transition_matrices[s][p,A,s']
+        transition_matrices:  list of array-like, one for each from_state: transition_matrices[s][A,s']
                               or None (-> separated repeated game)
 
         discount_factors:     array-like: discount_factors[p]
@@ -84,17 +84,7 @@ class SGame:
         # TODO
 
         # bring transition_matrices to list of np.ndarray, one array for each state
-        if transition_matrices is not None:
-            transition_matrices = [np.array(transition_matrices[s], dtype=np.float64)
-                                   for s in range(self.num_states)]
-        else:
-            # If no transitions are specified, specification will default to separated repeated games:
-            # phi(s,s') = 1 if s==s' and 0 else, for all action profiles.
-            transition_matrices = []
-            for s in range(self.num_states):
-                phi_s = np.zeros((*self.nums_actions[s], self.num_states))
-                phi_s[..., s] = 1
-                transition_matrices.append(phi_s)
+        transition_matrices = [np.array(transition_matrices[s], dtype=np.float64) for s in range(self.num_states)]
 
         # build big transition matrix [s,A,s'] from list of small transition matrices [A,s'] for each s
         transition_matrix = np.zeros((self.num_states, *[self.num_actions_max]*self.num_players, self.num_states))
@@ -110,42 +100,50 @@ class SGame:
         for p in range(self.num_players):
             self.transitions[:, p] = self.discount_factors[p] * transition_matrix
 
-        self.undiscounted_transitions = transition_matrix
-
-    # TODO: cleanup
-    def u_tilde(self, V):
-        """Payoffs including continuation values."""
-        return self.payoffs + np.einsum('sp...S,Sp->sp...', self.transitions, V)
-
-    def u_tilde_new(self, V):
-        """Payoffs including continuation values."""
-        discounted_V = V * self.discount_factors
-        return self.payoffs + np.einsum('s...S,Sp->sp...', self.undiscounted_transitions, discounted_V)
 
     @classmethod
     def random_game(cls, num_states, num_players, num_actions, delta=0.95, seed=None):
-        """Generate an SGame of given size, with random payoff- and transition arrays.
+        """Creates an SGame of given size, with random payoff- and transition arrays.
         num_actions can be specified in the following ways:
         - integer: all agents have this same fixed number of actions
-        - list of 2 integers: number of actions is randomized, the input determining [min, max]
-        - array / nested lists of dimension [num_states, num_actions]: number of actions for each agent
+        - list/tuple of 2 integers: number of actions is randomized, the input determining [min, max]
+        - array of dimension [num_states, num_actions]: number of actions for each agent
+
+        A seed can be passed to the random number generator, ensuring that the game can be recreated later or by others.
         """
         rng = np.random.default_rng(seed=seed)
 
-        if isinstance(num_actions, int):
-            nums_a = np.ones((num_states, num_players), dtype=int)*num_actions
-        elif isinstance(num_actions, (list, tuple, np.array)) and len(num_actions) == 2:
-            nums_a = rng.integers(low=num_actions[0], high=num_actions[1], size=(num_states, num_players), endpoint=True)
-        else:
-            nums_a = num_actions
+        # if num_actions passed as int -> fixed number for all agents:
+        if isinstance(num_actions, (int, float)):
+            num_actions = np.ones((num_states, num_players), dtype=int) * num_actions
+        # if given as (min, max) -> randomize accordingly
+        elif isinstance(num_actions, (list, tuple)) and np.array(num_actions).shape == (2,):
+            num_actions = rng.integers(low=num_actions[0], high=num_actions[1],
+                                       size=(num_states, num_players), endpoint=True)
+        # else, assume it is an array that fully specifies the game size
+        num_actions = np.array(num_actions, dtype=int)
 
-        u = [rng.random((num_players, *nums_a[s, :])) for s in range(num_states)]
-        phi = [rng.exponential(scale=1, size=(*nums_a[s, :], num_states)) for s in range(num_states)]
+        u = [rng.random((num_players, *num_actions[s, :])) for s in range(num_states)]
+
+        phi = [rng.exponential(scale=1, size=(*num_actions[s, :], num_states)) for s in range(num_states)]
         for s in range(num_states):
             for index, value in np.ndenumerate(np.sum(phi[s], axis=-1)):
                 phi[s][index] *= 1 / value
 
+        if isinstance(delta, (int, float)):
+            delta = np.ones(num_players)*delta
+        elif isinstance(delta, (list, tuple)) and len(delta) == 2:
+            delta = rng.uniform(delta[0], delta[1], size=num_players)
+
         return cls(u, phi, delta)
+
+    @classmethod
+    def one_shot_game(cls, payoff_matrix: ArrayLike):
+        """Creates a one-shot (=single-state/simultaneous) game from a payoff array."""
+        # phi: zeros with shape like u, but dropping first dimension (player)
+        # and appending a len-1-dimension for to-state
+        phi = np.zeros((*payoff_matrix.shape[1:], 1))
+        return cls([payoff_matrix], [phi], 0)
 
     def detect_symmetries(self) -> None:
         """Detect symmetries between agents."""
@@ -202,10 +200,9 @@ class SGame:
         sigma = np.nan_to_num(strategy_profile)
         sigma_list = [sigma[:, p, :] for p in range(self.num_players)]
 
-        einsum_eq_u = ('sp' + ABC[0:self.num_players] + ',s' +
-                       ',s'.join(ABC[p] for p in range(self.num_players)) + '->sp')
-        einsum_eq_phi = ('sp' + ABC[0:self.num_players] + 't,s' +
-                         ',s'.join(ABC[p] for p in range(self.num_players)) + '->spt')
+        # einsum eqs: u: 'spABC...,sA,sB,sC,...->sp' ; phi: 'spAB...t,sA,sB,sC,...->spt'
+        einsum_eq_u = f'sp{ABC[0:self.num_players]},s{",s".join(ABC[p] for p in range(self.num_players))}->sp'
+        einsum_eq_phi = f'sp{ABC[0:self.num_players]}t,s{",s".join(ABC[p] for p in range(self.num_players))}->spt'
 
         u = np.einsum(einsum_eq_u, self.payoffs, *sigma_list)
         phi = np.einsum(einsum_eq_phi, self.transitions, *sigma_list)
@@ -262,7 +259,6 @@ class SGameHomotopy:
     """General homotopy class for some SGame.
 
     TODO: document order of (beta, V, T) in y
-
     TODO: document order of equations in H (and thus J)
     """
 
@@ -271,6 +267,7 @@ class SGameHomotopy:
         self.y0 = None
         self.tracking_parameters = {}
         self.solver = None
+        self.equilibrium = None
 
     def initialize(self) -> None:
         """Any steps in preparation to start solver:
@@ -283,16 +280,22 @@ class SGameHomotopy:
         pass
 
     def solve(self) -> None:
-        """TODO: just playing with ideas to make things more accessible
+        """TODO: just playing with ideas to make things more easily usable
         """
-        self.initialize()
+        if not self.solver:
+            print('Please run .initialize() first to set up the solver.')
+            return
         solution = self.solver.solve()
         if solution['success']:
             sigma, V, t = self.y_to_sigma_V_t(solution['y'])
-            # TODO: save these?
-            print(f'Path tracking successful.')
+            self.equilibrium = {'strategies': sigma,
+                                'values': V,
+                                'homotopy_parameter': t
+                                }
+            print(f'An equilibrium was found via homotopy continuation.')
         else:
-            pass
+            print(f'The solver failed to find an equilibrium. Please refer to the manual'
+                  f' for suggestions how to proceed.')  # TODO: link manual perhaps?
 
     def find_y0(self) -> np.ndarray:
         """Calculate starting point y0."""

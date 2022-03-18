@@ -114,7 +114,7 @@ class Tracing(LogStratHomotopy):
         # TODO: silence warning of transversality at starting point?
         self.solver = HomCont(self.H, self.y0, self.J, t_target=1.0,
                               parameters=self.tracking_parameters['normal'],
-                              x_transformer=self.x_transformer, store_path=True)
+                              x_transformer=self.x_transformer)
 
     def find_y0(self, tol: Union[float, int] = 1e-12, max_iter: int = 10000) -> np.ndarray:
         """Value function iteration."""

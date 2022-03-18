@@ -117,7 +117,6 @@ class HomCont:
                  sign: int = None,
                  x_transformer: callable = lambda x: x,
                  verbose: int = 1,
-                 store_path: bool = False,
                  parameters: dict = None,
                  **kwargs):
 
@@ -161,11 +160,6 @@ class HomCont:
         self.tangent_old = self.tangent
         self.ds = self.ds0
 
-        self.store_path = store_path
-        if store_path:
-            self.path = HomPath(dim=len(self.y), x_transformer=self.x_transformer)
-            self.path.update(y=self.y, s=0, cond=self.cond, sign=self.sign, step=0, ds=self.ds)
-
         # attributes to be used later
         self.step = 0
         self.s = 0
@@ -195,6 +189,10 @@ class HomCont:
         self.set_parameters(parameters, **kwargs)
 
         self.check_inputs()
+
+        self.store_path = False
+        self.path = None
+        self.store_cond = False
 
     # Properties
     @property
@@ -267,9 +265,6 @@ class HomCont:
         """Pseudo-inverse of Jacobian, evaluated at y_pred."""
         if self._Jpinv_needs_update:
             self._Jpinv = qr_inv(self.J_pred)
-            # TODO: found a few games where linalg.pinv might be faster after all. test some more.
-            # TODO: ideally, find a solution that requires no inverse at all
-            # self._Jpinv = np.linalg.pinv(self.J_pred)
             self._Jpinv_needs_update = False
         return self._Jpinv
 
@@ -315,9 +310,10 @@ class HomCont:
                 self.check_bifurcation()
 
                 if self.verbose >= 2:
-                    sys.stdout.write(f'\rStep {self.step:5d}: t = {self.t:#.4g},  '
-                                     f's = {self.s:#.4g},  ds = {self.ds:#.4g},  '
-                                     f'cond(J) = {self.cond:#.4g}      ')
+                    output = f'\rStep {self.step:5d}: t = {self.t:#6.4g}, s = {self.s:#6.4g}, ds = {self.ds:#6.4g}'
+                    if self.store_cond:  # TODO: should this conditions stay as is?
+                        output += f', Cond(J) = {self.cond:#6.4g}'
+                    sys.stdout.write(output)
                     sys.stdout.flush()
 
             if self.converged:
@@ -344,8 +340,8 @@ class HomCont:
 
             self.adapt_stepsize()
 
-            if self.corrector_success and self.store_path:
-                self.path.update(y=self.y, s=self.s, cond=self.cond, sign=self.sign, step=self.step, ds=self.ds)
+            if self.store_path and self.corrector_success:
+                self.update_path()
 
             if self.failed:
                 time_sec = time.perf_counter() - start_time
@@ -444,11 +440,9 @@ class HomCont:
                 return
 
         # Corrector loop has converged.
-        # Monitor change in determinant of augmented Jacobian.
-        # This is an indicator of potential segment jumping.
-        # If change is too large, discard new point.
-        # Reduce stepsize and repeat predictor step.
-        # Use log determinant to deal with large matrices.
+        # Monitor change in determinant of augmented Jacobian. This is an indicator of potential segment jumping.
+        # If change is too large, discard new point. Reduce stepsize and repeat predictor step.
+        # Use log determinant to avoid over-/underflow issues with det of large matrices.
         self.J_corr = self.J_func(self.y_corr)
 
         old_log_det = np.linalg.slogdet(np.vstack([self.J, self.tangent]))[1]
@@ -627,9 +621,9 @@ class HomCont:
     def set_greedy_sign(self):
         """Set sign so that continuation starts towards t_target."""
         self.sign = 1
-        t_dir_current = np.sign(self.tangent[-1])
-        t_dir_desired = np.sign(self.t_target - self.t)
-        if t_dir_current != t_dir_desired:
+        t_direction_current = np.sign(self.tangent[-1])
+        t_direction_desired = np.sign(self.t_target - self.t)
+        if t_direction_current != t_direction_desired:
             self.sign = -1
 
     def load_state(self, y: np.ndarray, sign: int = None,  s: float = None, step: int = 0, ds: float = None, **kwargs):
@@ -682,8 +676,7 @@ class HomCont:
                      's': self.s,
                      'sign': self.sign,
                      'ds': self.ds,
-                     'y': self.y.tolist(),
-                     }
+                     'y': self.y.tolist(),}
             json.dump(state, file, indent=4)
             print(f'Current state saved as {filename}.')
 
@@ -697,6 +690,25 @@ class HomCont:
             state['y'] = np.array(state['y'])
             self.load_state(**state)
             print(f'State successfully loaded from {filename}.')
+
+    def start_storing_path(self, max_steps: int = 1000):
+        """"""
+        self.store_path = True
+        if not self.path:
+            self.path = HomPath(dim=len(self.y), x_transformer=self.x_transformer, max_steps=max_steps)
+            self.update_path()
+
+    def end_storing_path(self):
+        self.path = None
+        self.store_path = False
+
+    def update_path(self):
+        """Writes current state to path."""
+        if self.store_cond:
+            cond = self.cond
+        else:
+            cond = np.NaN
+        self.path.update(y=self.y, s=self.s, cond=cond, sign=self.sign, step=self.step, ds=self.ds)
 
 
 def qr_inv(array):
@@ -729,7 +741,7 @@ class HomPath:
         Function to transform x for plotting, by default lambda x : x.
     """
 
-    def __init__(self, dim: int, max_steps: int = 10000, x_transformer: callable = lambda x: x):
+    def __init__(self, dim: int, max_steps: int = 1000, x_transformer: callable = lambda x: x):
         self.max_steps = max_steps
         self.x_transformer = x_transformer
         self.dim = dim
