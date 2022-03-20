@@ -9,8 +9,8 @@ from typing import Optional
 import numpy as np
 
 from dsgamesolver.sgame import SGame
-from dsgamesolver.qre import QRE_np, QRE_ct
-from dsgamesolver.tracing import Tracing_np, Tracing_ct, TracingFixedEta_np, TracingFixedEta_ct
+from dsgamesolver.homotopies.qre import QRE_np, QRE_ct
+from dsgamesolver.homotopies.tracing import Tracing_np, Tracing_ct, TracingFixedEta_np, TracingFixedEta_ct
 from tests.random_game import create_random_game
 
 

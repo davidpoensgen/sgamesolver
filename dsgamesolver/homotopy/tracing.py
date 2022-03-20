@@ -15,7 +15,7 @@ import numpy as np
 from numpy.typing import ArrayLike
 from scipy.optimize import brentq
 
-from dsgamesolver.sgame import SGame, SGameHomotopy, LogStratHomotopy
+from dsgamesolver.sgame import SGame, LogStratHomotopy
 from dsgamesolver.homcont import HomCont
 
 ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -114,7 +114,7 @@ class Tracing(LogStratHomotopy):
         # TODO: silence warning of transversality at starting point?
         self.solver = HomCont(self.H, self.y0, self.J, t_target=1.0,
                               parameters=self.tracking_parameters['normal'],
-                              x_transformer=self.x_transformer, store_path=True)
+                              x_transformer=self.x_transformer)
 
     def find_y0(self, tol: Union[float, int] = 1e-12, max_iter: int = 10000) -> np.ndarray:
         """Value function iteration."""
@@ -389,10 +389,10 @@ class Tracing_ct(Tracing):
 
         # only import Cython module on class instantiation
         try:
-            import pyximport
-            pyximport.install(build_dir='./dsgamesolver/__build__/', build_in_temp=False, language_level=3,
-                              setup_args={'include_dirs': [np.get_include()]})
-            import dsgamesolver.tracing_ct as tracing_ct
+            # import pyximport
+            # pyximport.install(build_dir='./dsgamesolver/__build__/', build_in_temp=False, language_level=3,
+            #                   setup_args={'include_dirs': [np.get_include()]})
+            import dsgamesolver.homotopy._tracing_ct as tracing_ct
 
         except ImportError:
             raise ImportError("Cython implementation of Tracing homotopy could not be imported. ",
@@ -569,41 +569,3 @@ class TracingFixedEta_ct(Tracing_ct):
                                            self.game.num_states, self.game.num_players, self.game.nums_actions,
                                            self.game.num_actions_max, self.game.num_actions_total)
 
-
-# %% testing
-
-
-if __name__ == '__main__':
-
-    from tests.random_game import create_random_game
-    game = SGame(*create_random_game())
-
-    # numpy
-    tracing_np = Tracing_np(game)
-    tracing_np.initialize()
-    tracing_np.solver.solve()
-
-    y0 = tracing_np.find_y0()
-    """
-    %timeit tracing_np.H(y0)
-    %timeit tracing_np.J(y0)
-    """
-
-    # cython
-    tracing_ct = Tracing_ct(game)
-    tracing_ct.initialize()
-    tracing_ct.solver.solve()
-    """
-    %timeit tracing_ct.H(y0)
-    %timeit tracing_ct.J(y0)
-    """
-
-    # Tracing with fixed eta
-
-    tracing_fixed_eta_np = TracingFixedEta_np(game)
-    tracing_fixed_eta_np.initialize()
-    tracing_fixed_eta_np.solver.solve()
-
-    tracing_fixed_eta_ct = TracingFixedEta_ct(game)
-    tracing_fixed_eta_ct.initialize()
-    tracing_fixed_eta_ct.solver.solve()

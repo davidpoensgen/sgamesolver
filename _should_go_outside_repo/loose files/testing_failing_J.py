@@ -4,7 +4,7 @@
 import numpy as np
 
 from dsgamesolver.sgame import SGame
-from dsgamesolver.tracing import Tracing_ct
+from dsgamesolver.homotopies.tracing import Tracing_ct
 from tests.random_game import create_random_game
 
 
