@@ -6,8 +6,8 @@ import numpy as np
 from dsgamesolver.sgame import SGame
 from dsgamesolver.qre import QRE_np, QRE_ct
 from dsgamesolver.tracing import Tracing_np, Tracing_ct, TracingFixedEta_np, TracingFixedEta_ct
-from dsgamesolver.loggame import LogGame_np, LogGame_ct
-from dsgamesolver.ipm import IPM_ct, IPM_sp
+# from dsgamesolver.loggame import LogGame_np, LogGame_ct
+# from dsgamesolver.ipm import IPM_ct, IPM_sp
 from tests.random_game import create_random_game
 from tests.timings import HomotopyTimer
 
@@ -18,10 +18,10 @@ np.random.seed(42)
 # %% random game
 
 
-num_s = 10          # number of states
-num_p = 4           # number of players
-num_a_max = 10      # maximum number of actions
-num_a_min = 10      # minimum number of actions
+num_s = 5           # number of states
+num_p = 5           # number of players
+num_a_max = 5       # maximum number of actions
+num_a_min = 5       # minimum number of actions
 delta_max = 0.95    # maximum discount factor
 delta_min = 0.95    # minimum discount factor
 
@@ -40,11 +40,11 @@ game = SGame(u, phi, delta)
 y_rand = np.random.random(game.num_actions_total + game.num_states*game.num_players + 1)
 
 
-tracing_ct = Tracing_ct(game)
-tracing_ct.initialize()
-tracing_ct.solver.verbose = 2
-tracing_ct.solver.max_steps = 9000
-sol_tracing_ct = tracing_ct.solver.solve()
+# tracing_ct = Tracing_ct(game)
+# tracing_ct.initialize()
+# tracing_ct.solver.verbose = 2
+# tracing_ct.solver.max_steps = 9000
+# sol_tracing_ct = tracing_ct.solver.solve()
 
 
 # %% run all
@@ -53,66 +53,70 @@ sol_tracing_ct = tracing_ct.solver.solve()
 
 qre_np = QRE_np(game)
 qre_np.initialize()
-sol_qre_np = qre_np.solver.solve()
+# sol_qre_np = qre_np.solver.solve()
 
 qre_ct = QRE_ct(game)
 qre_ct.initialize()
 qre_ct.solver.verbose = 2
-sol_qre_ct = qre_ct.solver.solve()
+# sol_qre_ct = qre_ct.solver.solve()
 
-assert np.allclose(sol_qre_np["y"], sol_qre_ct["y"])
+# assert np.allclose(sol_qre_np["y"], sol_qre_ct["y"])
+
 
 # Tracing:
 
 tracing_np = Tracing_np(game)
 tracing_np.initialize()
-sol_tracing_np = tracing_np.solver.solve()
+# sol_tracing_np = tracing_np.solver.solve()
 
 tracing_ct = Tracing_ct(game)
 tracing_ct.initialize()
 tracing_ct.solver.verbose = 2
-sol_tracing_ct = tracing_ct.solver.solve()
+# sol_tracing_ct = tracing_ct.solver.solve()
 
-assert np.allclose(sol_tracing_np["y"], sol_tracing_ct["y"])
+# assert np.allclose(sol_tracing_np["y"], sol_tracing_ct["y"])
+
 
 # Tracing with fixed eta:
 
 tracing_fixed_eta_np = TracingFixedEta_np(game)
 tracing_fixed_eta_np.initialize()
-sol_tracing_fixed_eta_np = tracing_fixed_eta_np.solver.solve()
+# sol_tracing_fixed_eta_np = tracing_fixed_eta_np.solver.solve()
 
-tracing_fixed_eta_ct = TracingFixedEta_ct(game)
+tracing_fixed_eta_ct = TracingFixedEta_ct(game, scale=0.1)
 tracing_fixed_eta_ct.initialize()
 tracing_fixed_eta_ct.solver.verbose = 2
 sol_tracing_fixed_eta_ct = tracing_fixed_eta_ct.solver.solve()
 
 # assert np.allclose(sol_tracing_fixed_eta_np["y"], sol_tracing_fixed_eta_ct["y"])
 
+
 # LogGame:
 
-log_game_np = LogGame_np(game)
-log_game_np.initialize()
-sol_log_game_np = log_game_np.solver.solve()
+# log_game_np = LogGame_np(game)
+# log_game_np.initialize()
+# sol_log_game_np = log_game_np.solver.solve()
 
-log_game_ct = LogGame_ct(game)
-log_game_ct.initialize()
-sol_log_game_ct = log_game_ct.solver.solve()
+# log_game_ct = LogGame_ct(game)
+# log_game_ct.initialize()
+# sol_log_game_ct = log_game_ct.solver.solve()
 
-assert np.allclose(sol_log_game_np["y"], sol_log_game_ct["y"])
+# assert np.allclose(sol_log_game_np["y"], sol_log_game_ct["y"])
+
 
 # IPM:
 
-ipm_ct = IPM_ct(game)
-ipm_ct.initialize()
-sol_ipm_ct = ipm_ct.solver.solve()
+# ipm_ct = IPM_ct(game)
+# ipm_ct.initialize()
+# sol_ipm_ct = ipm_ct.solver.solve()
 
-ipm_sp = IPM_sp(game)
-ipm_sp.initialize()
+# ipm_sp = IPM_sp(game)
+# ipm_sp.initialize()
 # sol_ipm_sp = ipm_sp.solver.solve()
 
 # assert np.allclose(sol_ipm_ct["y"], sol_ipm_sp["y"])
-assert np.allclose(ipm_ct.H(ipm_ct.y0), ipm_sp.H(ipm_ct.y0))
-assert np.allclose(ipm_ct.H(y_rand), ipm_sp.H(y_rand))
+# assert np.allclose(ipm_ct.H(ipm_ct.y0), ipm_sp.H(ipm_ct.y0))
+# assert np.allclose(ipm_ct.H(y_rand), ipm_sp.H(y_rand))
 
 
 # %% time Jacobian

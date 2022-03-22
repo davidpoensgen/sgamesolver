@@ -15,7 +15,7 @@ import numpy as np
 from numpy.typing import ArrayLike
 from scipy.optimize import brentq
 
-from dsgamesolver.sgame import SGame, SGameHomotopy, LogStratHomotopy
+from dsgamesolver.sgame import SGame, LogStratHomotopy
 from dsgamesolver.homcont import HomCont
 
 ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -42,10 +42,10 @@ class Tracing(LogStratHomotopy):
             'ds_defl': 0.5,
             'ds_min': 1e-9,
             'ds_max': 100,
-            'corr_steps_max': 20,
-            'corr_dist_max': 0.5,
-            'corr_ratio_max': 0.5,
-            'detJ_change_max': 1.5,
+            'corr_steps_max': 20,  # 20
+            'corr_dist_max': 10,  # 0.5
+            'corr_ratio_max': 0.9,  # 0.5
+            'detJ_change_max': 2,  # 1.5
             'bifurc_angle_min': 175,
         }
 
@@ -576,23 +576,25 @@ class TracingFixedEta_ct(Tracing_ct):
 if __name__ == '__main__':
 
     from tests.random_game import create_random_game
-    game = SGame(*create_random_game())
+    rng = np.random.RandomState(42)
+    game = SGame(*create_random_game(num_states=5, num_players=5, num_actions_min=5, num_actions_max=5,
+                                     discount_factor_min=0.95, discount_factor_max=0.95, rng=rng))
 
     # numpy
-    tracing_np = Tracing_np(game)
-    tracing_np.initialize()
-    tracing_np.solver.solve()
+    # tracing_np = Tracing_np(game)
+    # tracing_np.initialize()
+    # tracing_np.solver.solve()
 
-    y0 = tracing_np.find_y0()
+    # y0 = tracing_np.find_y0()
     """
     %timeit tracing_np.H(y0)
     %timeit tracing_np.J(y0)
     """
 
     # cython
-    tracing_ct = Tracing_ct(game)
-    tracing_ct.initialize()
-    tracing_ct.solver.solve()
+    # tracing_ct = Tracing_ct(game)
+    # tracing_ct.initialize()
+    # tracing_ct.solver.solve()
     """
     %timeit tracing_ct.H(y0)
     %timeit tracing_ct.J(y0)
@@ -600,10 +602,11 @@ if __name__ == '__main__':
 
     # Tracing with fixed eta
 
-    tracing_fixed_eta_np = TracingFixedEta_np(game)
-    tracing_fixed_eta_np.initialize()
-    tracing_fixed_eta_np.solver.solve()
+    # tracing_fixed_eta_np = TracingFixedEta_np(game)
+    # tracing_fixed_eta_np.initialize()
+    # tracing_fixed_eta_np.solver.solve()
 
-    tracing_fixed_eta_ct = TracingFixedEta_ct(game)
+    tracing_fixed_eta_ct = TracingFixedEta_ct(game, scale=0.1)
     tracing_fixed_eta_ct.initialize()
+    tracing_fixed_eta_ct.solver.verbose = 2
     tracing_fixed_eta_ct.solver.solve()
