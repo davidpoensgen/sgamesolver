@@ -19,7 +19,7 @@
 
 import numpy as np
 
-from dsgamesolver.sgame import SGame, SGameHomotopy, LogStratHomotopy
+from dsgamesolver.sgame import SGame, LogStratHomotopy
 from dsgamesolver.homcont import HomCont
 
 ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -68,11 +68,11 @@ class QRE(LogStratHomotopy):
             'bifurc_angle_min': 175,
         }
 
-    def initialize(self, target_lambda: float = np.inf) -> None:
+    def initialize(self, target_lambda: float = np.inf, store_path: bool = True) -> None:
         self.y0 = self.find_y0()
         self.solver = HomCont(self.H, self.y0, self.J, t_target=target_lambda,
                               parameters=self.tracking_parameters['normal'],
-                              x_transformer=self.x_transformer, store_path=True)
+                              x_transformer=self.x_transformer)
 
     def find_y0(self) -> np.ndarray:
         sigma = self.game.centroid_strategy()
@@ -342,10 +342,10 @@ class QRE_ct(QRE):
 
         # only import Cython module on class instantiation
         try:
-            import pyximport
-            pyximport.install(build_dir='./dsgamesolver/__build__/', build_in_temp=False, language_level=3,
-                              setup_args={'include_dirs': [np.get_include()]})
-            import dsgamesolver.qre_ct as qre_ct
+            # import pyximport
+            # pyximport.install(build_dir='./dsgamesolver/__build__/', build_in_temp=False, language_level=3,
+            #                   setup_args={'include_dirs': [np.get_include()]})
+            import dsgamesolver.homotopy._qre_ct as qre_ct
 
         except ImportError:
             raise ImportError("Cython implementation of QRE homotopy could not be imported. ",
@@ -365,63 +365,3 @@ class QRE_ct(QRE):
         return self.qre_ct.J(y, self.game.payoffs, self.game.transitions, self.game.num_states, self.game.num_players,
                              self.game.nums_actions, self.game.num_actions_max, self.game.num_actions_total)
 
-
-# %% experimental: Numpy implementation of QRE with Numba boost
-# some trouble with custom classes...
-
-
-# from numba import njit
-
-
-# class QRE_nb(QRE_np):
-#     """QRE homotopy: Numpy implementation with Numba boost."""
-
-#     # def __init__(self, game: SGame) -> None:
-#     #     super().__init__(game)
-
-#     @njit
-#     def H(self, y: np.ndarray) -> np.ndarray:
-#         return super().H(y)
-
-#     @njit
-#     def J(self, y: np.ndarray, old: bool = True) -> np.ndarray:
-#         return super().J(y, old)
-
-
-# %% testing
-
-
-if __name__ == '__main__':
-
-    from tests.random_game import create_random_game
-    game = SGame(*create_random_game())
-
-    # numpy
-    qre_np = QRE_np(game)
-    qre_np.initialize()
-    qre_np.solver.solve()
-
-    y0 = qre_np.find_y0()
-    """
-    %timeit qre_np.H(y0)
-    %timeit qre_np.J(y0)
-    """
-
-    # cython
-    qre_ct = QRE_ct(game)
-    qre_ct.initialize()
-    qre_ct.solver.solve()
-
-    """
-    %timeit qre_ct.H(y0)
-    %timeit qre_ct.J(y0)
-    """
-
-    # numba
-    # qre_nb = QRE_nb(game)
-    # qre_nb.initialize()
-    # qre_nb.solver.solve()
-    # """
-    # %timeit qre_nb.H(y0)
-    # %timeit qre_nb.J(y0)
-    # """

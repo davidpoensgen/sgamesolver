@@ -1,8 +1,11 @@
+# cython: profile=True
+
 """Cython implementation of QRE homotopy."""
 
 import cython
 import numpy as np
 cimport numpy as np
+np.import_array()
 
 
 # %% auxiliary functions
@@ -92,7 +95,7 @@ def u_tilde_sia_partial_beta(np.ndarray[np.float64_t, ndim=1] u_tilde_ravel, np.
                     out_[state, player, loop_profile[player+1], player_j, loop_profile[player_j+1]] += (
                         temp_prob * u_tilde_ravel[flat_index]
                         )
-                flat_index += 1 
+                flat_index += 1
 
                 loop_profile[num_p] += 1
                 for n in range(num_p):

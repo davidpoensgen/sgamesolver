@@ -1,7 +1,7 @@
 import numpy as np
 
-from dsgamesolver.sgame import SGame
-from dsgamesolver.qre import QRE_np, QRE_ct
+from ..dsgamesolver.sgame import SGame
+from dsgamesolver.homotopies.qre import QRE_np, QRE_ct
 from tests.timings import HomotopyTimer
 
 # random game
@@ -13,26 +13,8 @@ num_a_min = 2       # minimum number of actions
 delta_max = 0.95    # maximum discount factor
 delta_min = 0.90    # minimum discount factor
 
-# np.random.seed(0)
-nums_a = np.random.randint(low=num_a_min, high=num_a_max + 1, size=(num_s, num_p), dtype=np.int32)
 
-a = 0
-b = 1
-payoffMatrices = [a + b * np.random.random((num_p, *nums_a[s, :])) for s in range(num_s)]
-
-# stop normalization for testing
-A = (0,) * num_p
-payoffMatrices[0][(0,) + A] = 0
-payoffMatrices[1][(0,) + A] = 1
-
-transitionMatrices = [np.random.exponential(scale=1, size=(*nums_a[s, :], num_s)) for s in range(num_s)]
-for s in range(num_s):
-    for index, value in np.ndenumerate(np.sum(transitionMatrices[s], axis=-1)):
-        transitionMatrices[s][index] *= 1 / value
-discountFactors = np.random.uniform(low=delta_min, high=delta_max, size=num_p)
-
-
-game = SGame(payoffMatrices, transitionMatrices, discountFactors)
+game = SGame.random_game(num_s, num_p, num_actions=(2, 4), delta=0.95)
 si = game.centroid_strategy()
 
 qre = QRE_np(game)
@@ -52,6 +34,16 @@ qre.solver.verbose = 2
 # qre.solver.max_steps = 50
 sol = qre.solver.solve()
 print(sol)
+
+ABC="ABCDEFGH"
+num_players=4
+einsum_eq_u = ('sp' + ABC[0:num_players] +
+               ',s' + ',s'.join(ABC[p] for p in range(num_players)) + '->sp')
+einsum_eq_u2 = f'sp{ABC[0:num_players]},s{",s".join(ABC[p] for p in range(num_players))}->sp'
+
+einsum_eq_phi = ('sp' + ABC[0:num_players] + 't,s' +
+                 ',s'.join(ABC[p] for p in range(num_players)) + '->spt')
+einsum_eq_phi2 = f'sp{ABC[0:num_players]}t,s{",s".join(ABC[p] for p in range(num_players))}->spt'
 
 # qre.solver.return_to_step(5)
 # sol2 = qre.solver.solve()

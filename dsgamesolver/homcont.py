@@ -2,6 +2,8 @@ import numpy as np
 import time
 from datetime import timedelta
 import sys
+import os
+import json
 
 
 class HomCont:
@@ -115,8 +117,7 @@ class HomCont:
                  sign: int = None,
                  x_transformer: callable = lambda x: x,
                  verbose: int = 1,
-                 store_path: bool = False,
-                 parameters: dict = {},
+                 parameters: dict = None,
                  **kwargs):
 
         self.H_func = H
@@ -135,9 +136,6 @@ class HomCont:
         self.max_steps = max_steps
         self.x_transformer = x_transformer
         self.verbose = verbose
-
-        # TODO: keep?
-        self.normalize_J = False
 
         # set default parameters
         self.x_tol = 1e-7
@@ -161,11 +159,6 @@ class HomCont:
 
         self.tangent_old = self.tangent
         self.ds = self.ds0
-
-        self.store_path = store_path
-        if store_path:
-            self.path = HomPath(dim=len(self.y), x_transformer=self.x_transformer)
-            self.path.update(y=self.y, s=0, cond=self.cond, sign=self.sign, step=0, ds=self.ds)
 
         # attributes to be used later
         self.step = 0
@@ -196,6 +189,10 @@ class HomCont:
         self.set_parameters(parameters, **kwargs)
 
         self.check_inputs()
+
+        self.store_path = False
+        self.path = None
+        self.store_cond = False
 
     # Properties
     @property
@@ -228,8 +225,6 @@ class HomCont:
         """Jacobian, evaluated at y."""
         if self._J_needs_update:
             self._J = self.J_func(self.y)
-            if self.normalize_J:
-                self._J /= np.abs(self._J).max(axis=1, keepdims=True)
             self._J_needs_update = False
         return self._J
 
@@ -262,8 +257,6 @@ class HomCont:
         """Jacobian, evaluated at y_pred."""
         if self._J_pred_needs_update:
             self._J_pred = self.J_func(self.y_pred)
-            if self.normalize_J:
-                self._J_pred /= np.abs(self._J_pred).max(axis=1, keepdims=True)
             self._J_pred_needs_update = False
         return self._J_pred
 
@@ -317,9 +310,10 @@ class HomCont:
                 self.check_bifurcation()
 
                 if self.verbose >= 2:
-                    sys.stdout.write(f'\rStep {self.step:5d}: t = {self.t:#.4g},  '
-                                     f's = {self.s:#.4g},  ds = {self.ds:#.4g},  '
-                                     f'cond(J) = {self.cond:#.4g}      ')
+                    output = f'\rStep {self.step:5d}: t = {self.t:#6.4g}, s = {self.s:#6.4g}, ds = {self.ds:#6.4g}'
+                    if self.store_cond:  # TODO: should this conditions stay as is?
+                        output += f', Cond(J) = {self.cond:#6.4g}'
+                    sys.stdout.write(output)
                     sys.stdout.flush()
 
             if self.converged:
@@ -328,6 +322,9 @@ class HomCont:
                     sys.stdout.write(f'\nStep {self.step:5d}: Continuation successful. '
                                      f'Total time elapsed:{timedelta(seconds=int(time_sec))} \n')
                     sys.stdout.flush()
+
+                print('End homotopy continuation')
+                print('=' * 50)
 
                 return {'success': True,
                         'y': self.y,
@@ -343,23 +340,27 @@ class HomCont:
 
             self.adapt_stepsize()
 
-            if self.corrector_success and self.store_path:
-                self.path.update(y=self.y, s=self.s, cond=self.cond, sign=self.sign, step=self.step, ds=self.ds)
+            if self.store_path and self.corrector_success:
+                self.update_path()
 
             if self.failed:
                 time_sec = time.perf_counter() - start_time
                 if self.verbose >= 1:
+                    reason = ""
                     if self.failed == 'predictor':
                         reason = 'Could not find valid predictor: Likely hit a boundary of H\'s domain.'
                     elif self.failed == 'max_steps':
                         reason = 'Maximum number of steps reached without convergence. ' \
-                                 '(May increase max_steps, then solve() again.)'
+                                 '(You can increase max_steps, then solve() again.)'
                     elif self.failed == 'corrector':
                         reason = 'Corrector step failed, and ds is already minimal.'
                     sys.stdout.write(f'\nStep {self.step:5d}: {reason} \n')
                     sys.stdout.write(f'Step {self.step:5d}: Continuation failed. '
                                      f'Total time elapsed:{timedelta(seconds=int(time_sec))} \n')
                     sys.stdout.flush()
+
+                print('End homotopy continuation')
+                print('=' * 50)
 
                 return {'success': False,
                         'y': self.y,
@@ -439,15 +440,10 @@ class HomCont:
                 return
 
         # Corrector loop has converged.
-        # Monitor change in determinant of augmented Jacobian.
-        # This is an indicator of potential segment jumping.
-        # If change is too large, discard new point.
-        # Reduce stepsize and repeat predictor step.
-        # Use log determinant to deal with large matrices.
+        # Monitor change in determinant of augmented Jacobian. This is an indicator of potential segment jumping.
+        # If change is too large, discard new point. Reduce stepsize and repeat predictor step.
+        # Use log determinant to avoid over-/underflow issues with det of large matrices.
         self.J_corr = self.J_func(self.y_corr)
-
-        if self.normalize_J:
-            self.J_corr /= np.abs(self.J_corr).max(axis=1, keepdims=True)
 
         old_log_det = np.linalg.slogdet(np.vstack([self.J, self.tangent]))[1]
         new_log_det = np.linalg.slogdet(np.vstack([self.J_corr, self.tangent]))[1]
@@ -501,19 +497,19 @@ class HomCont:
 
     def adapt_stepsize(self):
         """Adapt stepsize at the end of a predictor-corrector cycle:
-       Increase ds if:
+        Increase ds if:
            - corrector step successful & took less than 10 iterates
-       Maintain ds if:
+        Maintain ds if:
             - corrector step successful, but required 10+ iterates
-       Decrease ds if:
+        Decrease ds if:
            - H could not be evaluated during corrections
              (indicates leaving H's domain)
            - corrector loop fails (too many iterates, corrector distance
              too large, or corrector distance increasing during loop)
            - corrector step was successful, but t_target was crossed
-       If ds is to be decreased below ds_min, continuation is failed.
+        If ds is to be decreased below ds_min, continuation is failed.
 
-       If t_target is finite, stepsize is capped so that the predictor will not cross t_target
+        If t_target is finite, stepsize is capped so that the predictor will not cross t_target
         """
         if self.failed:
             return
@@ -556,17 +552,15 @@ class HomCont:
                 sys.stdout.flush()
             self.sign = -self.sign
 
-    def set_parameters(self, params: dict = {}, **kwargs):
+    def set_parameters(self, params: dict = None, **kwargs):
         """Set multiple parameters at once, given as dictionary and/or as kwargs."""
-        for key, value in params.items():
+        params = params or {}
+        inputs = {**params, **kwargs}
+        for key, value in inputs.items():
             if not hasattr(self, key):
                 print(f'Warning: "{key}" is not a valid parameter.')
             setattr(self, key, value)
-        for key, value in kwargs.items():
-            if not hasattr(self, key):
-                print(f'Warning: "{key}" is not a valid parameter.')
-            setattr(self, key, value)
-        if 'ds0' in params or 'ds0' in kwargs:
+        if 'ds0' in inputs:
             self.ds = self.ds0
 
     def check_inputs(self):
@@ -627,9 +621,9 @@ class HomCont:
     def set_greedy_sign(self):
         """Set sign so that continuation starts towards t_target."""
         self.sign = 1
-        t_dir_current = np.sign(self.tangent[-1])
-        t_dir_desired = np.sign(self.t_target - self.t)
-        if t_dir_current != t_dir_desired:
+        t_direction_current = np.sign(self.tangent[-1])
+        t_direction_desired = np.sign(self.t_target - self.t)
+        if t_direction_current != t_direction_desired:
             self.sign = -1
 
     def load_state(self, y: np.ndarray, sign: int = None,  s: float = None, step: int = 0, ds: float = None, **kwargs):
@@ -661,17 +655,15 @@ class HomCont:
                 self.path.index = state['index'] + 1
                 print(f'Returning to step {self.step}.')
         else:
-            print('Path not stored and no HomPath assigned.')
+            print('There is no stored path.')
 
     def save_file(self, filename, overwrite: bool = False):
         """Save current state of the solver to a file.
 
         Allows to re-start continuation from the current state later on.
         Note: H, J and parameters are not saved. User should make sure these can be recreated.
-        HomPath is not saved either.
+        Path history (HomPath) is not saved either.
         """
-        import os
-        import json
         if os.path.isfile(filename) and not overwrite:
             answer = input(f'"{filename}" already exists. Overwrite content [y/N]?')
             if answer == '' or answer[0].lower() != 'y':
@@ -684,15 +676,12 @@ class HomCont:
                      's': self.s,
                      'sign': self.sign,
                      'ds': self.ds,
-                     'y': self.y.tolist(),
-                     }
+                     'y': self.y.tolist(),}
             json.dump(state, file, indent=4)
             print(f'Current state saved as {filename}.')
 
     def load_file(self, filename):
         """Load solver state from a file created by save_file()."""
-        import os
-        import json
         if not os.path.isfile(filename):
             print(f'{filename} not found.')
             return
@@ -701,6 +690,25 @@ class HomCont:
             state['y'] = np.array(state['y'])
             self.load_state(**state)
             print(f'State successfully loaded from {filename}.')
+
+    def start_storing_path(self, max_steps: int = 1000):
+        """"""
+        self.store_path = True
+        if not self.path:
+            self.path = HomPath(dim=len(self.y), x_transformer=self.x_transformer, max_steps=max_steps)
+            self.update_path()
+
+    def end_storing_path(self):
+        self.path = None
+        self.store_path = False
+
+    def update_path(self):
+        """Writes current state to path."""
+        if self.store_cond:
+            cond = self.cond
+        else:
+            cond = np.NaN
+        self.path.update(y=self.y, s=self.s, cond=cond, sign=self.sign, step=self.step, ds=self.ds)
 
 
 def qr_inv(array):
@@ -733,18 +741,17 @@ class HomPath:
         Function to transform x for plotting, by default lambda x : x.
     """
 
-    def __init__(self, dim: int, max_steps: int = 10000,
-                 x_transformer: callable = lambda x: x):
+    def __init__(self, dim: int, max_steps: int = 1000, x_transformer: callable = lambda x: x):
         self.max_steps = max_steps
         self.x_transformer = x_transformer
         self.dim = dim
 
-        self.y = np.nan * np.ones(shape=(max_steps, dim), dtype=np.float64)
-        self.s = np.nan * np.ones(shape=max_steps, dtype=np.float64)
-        self.cond = np.nan * np.ones(shape=max_steps, dtype=np.float64)
-        self.sign = np.nan * np.ones(shape=max_steps, dtype=np.float64)
-        self.step = np.nan * np.ones(shape=max_steps, dtype=np.float64)
-        self.ds = np.nan * np.ones(shape=max_steps, dtype=np.float64)
+        self.y = np.nan * np.empty(shape=(max_steps, dim), dtype=np.float64)
+        self.s = np.nan * np.empty(shape=max_steps, dtype=np.float64)
+        self.cond = np.nan * np.empty(shape=max_steps, dtype=np.float64)
+        self.sign = np.nan * np.empty(shape=max_steps, dtype=np.float64)
+        self.step = np.nan * np.empty(shape=max_steps, dtype=np.float64)
+        self.ds = np.nan * np.empty(shape=max_steps, dtype=np.float64)
 
         self.index = 0
 

@@ -4,7 +4,7 @@
 import numpy as np
 
 from dsgamesolver.sgame import SGame
-from dsgamesolver.ipm import IPM_ct, IPM_sp
+from dsgamesolver.homotopy.ipm import IPM_ct, IPM_sp
 from tests.random_game import create_random_game
 
 

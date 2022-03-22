@@ -20,13 +20,13 @@ ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 class SGame:
     """A stochastic game."""
 
-    def __init__(self, payoff_matrices: list[ArrayLike], transition_matrices: Optional[list[ArrayLike]] = None,
+    def __init__(self, payoff_matrices: list[ArrayLike], transition_matrices: list[ArrayLike],
                  discount_factors: Union[ArrayLike, float, int] = 0.0) -> None:
         """Inputs:
 
         payoff_matrices:      list of array-like, one for each state: payoff_matrices[s][p,A]
 
-        transition_matrices:  list of array-like, one for each from_state: transition_matrices[s][p,A,s']
+        transition_matrices:  list of array-like, one for each from_state: transition_matrices[s][A,s']
                               or None (-> separated repeated game)
 
         discount_factors:     array-like: discount_factors[p]
@@ -84,17 +84,7 @@ class SGame:
         # TODO
 
         # bring transition_matrices to list of np.ndarray, one array for each state
-        if transition_matrices is not None:
-            transition_matrices = [np.array(transition_matrices[s], dtype=np.float64)
-                                   for s in range(self.num_states)]
-        else:
-            # If no transitions are specified, specification will default to separated repeated games:
-            # phi(s,s') = 1 if s==s' and 0 else, for all action profiles.
-            transition_matrices = []
-            for s in range(self.num_states):
-                phi_s = np.zeros((*self.nums_actions[s], self.num_states))
-                phi_s[..., s] = 1
-                transition_matrices.append(phi_s)
+        transition_matrices = [np.array(transition_matrices[s], dtype=np.float64) for s in range(self.num_states)]
 
         # build big transition matrix [s,A,s'] from list of small transition matrices [A,s'] for each s
         transition_matrix = np.zeros((self.num_states, *[self.num_actions_max]*self.num_players, self.num_states))
@@ -110,28 +100,50 @@ class SGame:
         for p in range(self.num_players):
             self.transitions[:, p] = self.discount_factors[p] * transition_matrix
 
+
     @classmethod
-    def random_game(cls, num_states, num_players, num_actions, delta=0.95):
-        """Generate an SGame of given size, with random payoff- and transition arrays.
+    def random_game(cls, num_states, num_players, num_actions, delta=0.95, seed=None):
+        """Creates an SGame of given size, with random payoff- and transition arrays.
         num_actions can be specified in the following ways:
         - integer: all agents have this same fixed number of actions
-        - list of 2 integers: number of actions is randomized, the input determining [min, max]
-        - array / nested lists of dimension [num_states, num_actions]: number of actions for each agent
-        """
-        if isinstance(num_actions, int):
-            nums_a = np.ones((num_states, num_players))*num_actions
-        elif isinstance(num_actions, (list, tuple, np.array)) and len(num_actions) == 2:
-            nums_a = np.random.randint(low=num_actions[0], high=num_actions[1] + 1, size=(num_states, num_players))
-        else:
-            nums_a = num_actions
+        - list/tuple of 2 integers: number of actions is randomized, the input determining [min, max]
+        - array of dimension [num_states, num_actions]: number of actions for each agent
 
-        u = [np.random.random((num_players, *nums_a[s, :])) for s in range(num_states)]
-        phi = [np.random.exponential(scale=1, size=(*nums_a[s, :], num_states)) for s in range(num_states)]
+        A seed can be passed to the random number generator, ensuring that the game can be recreated later or by others.
+        """
+        rng = np.random.default_rng(seed=seed)
+
+        # if num_actions passed as int -> fixed number for all agents:
+        if isinstance(num_actions, (int, float)):
+            num_actions = np.ones((num_states, num_players), dtype=int) * num_actions
+        # if given as (min, max) -> randomize accordingly
+        elif isinstance(num_actions, (list, tuple)) and np.array(num_actions).shape == (2,):
+            num_actions = rng.integers(low=num_actions[0], high=num_actions[1],
+                                       size=(num_states, num_players), endpoint=True)
+        # else, assume it is an array that fully specifies the game size
+        num_actions = np.array(num_actions, dtype=int)
+
+        u = [rng.random((num_players, *num_actions[s, :])) for s in range(num_states)]
+
+        phi = [rng.exponential(scale=1, size=(*num_actions[s, :], num_states)) for s in range(num_states)]
         for s in range(num_states):
             for index, value in np.ndenumerate(np.sum(phi[s], axis=-1)):
                 phi[s][index] *= 1 / value
 
+        if isinstance(delta, (int, float)):
+            delta = np.ones(num_players)*delta
+        elif isinstance(delta, (list, tuple)) and len(delta) == 2:
+            delta = rng.uniform(delta[0], delta[1], size=num_players)
+
         return cls(u, phi, delta)
+
+    @classmethod
+    def one_shot_game(cls, payoff_matrix: ArrayLike):
+        """Creates a one-shot (=single-state/simultaneous) game from a payoff array."""
+        # phi: zeros with shape like u, but dropping first dimension (player)
+        # and appending a len-1-dimension for to-state
+        phi = np.zeros((*payoff_matrix.shape[1:], 1))
+        return cls([payoff_matrix], [phi], 0)
 
     def detect_symmetries(self) -> None:
         """Detect symmetries between agents."""
@@ -188,10 +200,9 @@ class SGame:
         sigma = np.nan_to_num(strategy_profile)
         sigma_list = [sigma[:, p, :] for p in range(self.num_players)]
 
-        einsum_eq_u = ('sp' + ABC[0:self.num_players] + ',s' +
-                       ',s'.join(ABC[p] for p in range(self.num_players)) + '->sp')
-        einsum_eq_phi = ('sp' + ABC[0:self.num_players] + 't,s' +
-                         ',s'.join(ABC[p] for p in range(self.num_players)) + '->spt')
+        # einsum eqs: u: 'spABC...,sA,sB,sC,...->sp' ; phi: 'spAB...t,sA,sB,sC,...->spt'
+        einsum_eq_u = f'sp{ABC[0:self.num_players]},s{",s".join(ABC[p] for p in range(self.num_players))}->sp'
+        einsum_eq_phi = f'sp{ABC[0:self.num_players]}t,s{",s".join(ABC[p] for p in range(self.num_players))}->spt'
 
         u = np.einsum(einsum_eq_u, self.payoffs, *sigma_list)
         phi = np.einsum(einsum_eq_phi, self.transitions, *sigma_list)
@@ -205,7 +216,8 @@ class SGame:
             raise "Failed to solve for state-player values: Transition matrix not invertible."
         return values
 
-    def flatten_values(self, values: ArrayLike) -> np.ndarray:
+    @staticmethod
+    def flatten_values(values: ArrayLike) -> np.ndarray:
         """Flatten an array with shape (num_states, num_players), e.g. state-player values."""
         return np.array(values).reshape(-1)
 
@@ -247,7 +259,6 @@ class SGameHomotopy:
     """General homotopy class for some SGame.
 
     TODO: document order of (beta, V, T) in y
-
     TODO: document order of equations in H (and thus J)
     """
 
@@ -256,6 +267,7 @@ class SGameHomotopy:
         self.y0 = None
         self.tracking_parameters = {}
         self.solver = None
+        self.equilibrium = None
 
     def initialize(self) -> None:
         """Any steps in preparation to start solver:
@@ -266,6 +278,24 @@ class SGameHomotopy:
         - set up homCont to solve the game
         """
         pass
+
+    def solve(self) -> None:
+        """TODO: just playing with ideas to make things more easily usable
+        """
+        if not self.solver:
+            print('Please run .initialize() first to set up the solver.')
+            return
+        solution = self.solver.solve()
+        if solution['success']:
+            sigma, V, t = self.y_to_sigma_V_t(solution['y'])
+            self.equilibrium = {'strategies': sigma,
+                                'values': V,
+                                'homotopy_parameter': t
+                                }
+            print(f'An equilibrium was found via homotopy continuation.')
+        else:
+            print(f'The solver failed to find an equilibrium. Please refer to the manual'
+                  f' for suggestions how to proceed.')  # TODO: link manual perhaps?
 
     def find_y0(self) -> np.ndarray:
         """Calculate starting point y0."""
@@ -279,7 +309,7 @@ class SGameHomotopy:
         """Jacobian of homotopy function evaluated at y."""
         pass
 
-    def x_transformer(self, y: np.ndarray) -> Optional[np.ndarray]:
+    def x_transformer(self, y: np.ndarray) -> np.ndarray:
         """Transform vector y to vector x.
 
         Vector y is used during path tracing.
@@ -338,49 +368,9 @@ class LogStratHomotopy(SGameHomotopy):
         t = y[-1]
         return sigma, V, t
 
-    def x_transformer(self, y: np.ndarray) -> Optional[np.ndarray]:
-        """Transform vector y to vector x.
-
-        Vector y is used during path tracing.
-        Vector x is used to check for convergence.
-
-        Typical use case: Strategies are relevant for convergence, but are transformed during tracing.
-        Example: QRE, with uses log strategies beta=log(sigma) during tracing.
-
-        Note: If not using log strategies beta = log(sigma), simply overwrite.
-              If not needed, simply overwrite to None.
-        """
+    def x_transformer(self, y: np.ndarray) -> np.ndarray:
         x = np.empty_like(y)
         x[:self.game.num_actions_total] = np.exp(y[:self.game.num_actions_total])
         x[self.game.num_actions_total:] = y[self.game.num_actions_total:]
         return x
 
-
-# %% testing
-
-
-if __name__ == '__main__':
-
-    from tests.random_game import create_random_game
-
-    # SGame
-
-    test_game = SGame(*create_random_game())
-
-    test_game.detect_symmetries()
-
-    test_sigma = test_game.centroid_strategy()
-    test_V = test_game.get_values(test_sigma)
-
-    test_losses = test_game.check_equilibrium(test_sigma)
-
-    test_sigma_flat = test_game.flatten_strategies(test_sigma)
-    test_V_flat = test_game.flatten_values(test_V)
-
-    test_y = np.concatenate([np.log(test_sigma_flat), test_V_flat, [0.0]])
-
-    # SGameHomotopy
-
-    test_homotopy = SGameHomotopy(test_game)
-
-    assert np.allclose(test_y, test_homotopy.sigma_V_t_to_y(test_sigma, test_V, 0.0))
