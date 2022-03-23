@@ -11,17 +11,17 @@ with open('README.md', 'r', encoding='utf-8') as readme:
 # Ideally, we'll wheel anyways.
 # https://docs.python.org/3/distutils/setupscript.html -> 2.3.5
 
-ext_modules = [Extension('dsgamesolver.homotopy._ipm_ct', ['dsgamesolver/homotopy/_ipm_ct.pyx'],
+ext_modules = [Extension('sgamesolver.homotopy._ipm_ct', ['sgamesolver/homotopy/_ipm_ct.pyx'],
                          include_dirs=[np.get_include()]),
-               Extension('dsgamesolver.homotopy._loggame_ct', ['dsgamesolver/homotopy/_loggame_ct.pyx'],
+               Extension('sgamesolver.homotopy._loggame_ct', ['sgamesolver/homotopy/_loggame_ct.pyx'],
                          include_dirs=[np.get_include()]),
-               Extension('dsgamesolver.homotopy._qre_ct', ['dsgamesolver/homotopy/_qre_ct.pyx'],
+               Extension('sgamesolver.homotopy._qre_ct', ['sgamesolver/homotopy/_qre_ct.pyx'],
                          include_dirs=[np.get_include()]),
-               Extension('dsgamesolver.homotopy._tracing_ct', ['dsgamesolver/homotopy/_tracing_ct.pyx'],
+               Extension('sgamesolver.homotopy._tracing_ct', ['sgamesolver/homotopy/_tracing_ct.pyx'],
                          include_dirs=[np.get_include()]),
                ]
 
-setup(name='dsgamesolver',
+setup(name='sgamesolver',
       version='0.1',
       description='A homotopy-based solver for stochastic games',
       long_description=long_description,
@@ -43,7 +43,7 @@ setup(name='dsgamesolver',
       keywords='game theory, stochastic games, homotopy method, computational economics',
 
       cmdclass={'build_ext': build_ext},
-      packages=['dsgamesolver', 'dsgamesolver.homotopy'],
+      packages=['sgamesolver', 'sgamesolver.homotopy'],
       ext_modules=ext_modules,
 
       python_requires='>=3.6',

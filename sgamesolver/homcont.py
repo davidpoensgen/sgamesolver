@@ -5,6 +5,7 @@ import sys
 import os
 import json
 
+#TODO - x_transformer out of docstrings. Distance into docstrings.
 
 class HomCont:
     """Class to perform homotopy continuation to solve a nonlinear system of equations: F(x) = H(x, t_target) = 0.
@@ -70,7 +71,7 @@ class HomCont:
 
             The parameters are:
             ----------
-            x_tol : float
+            x_tol : float #TODO: rename to distance_tol?
                 Continuation is considered to have converged successfully once max(|x_new-x_old|) / ds < x_tol,
                 i.e. x has stabilized. x is transformed by x_transformer for this criterion, if provided.
                 Active only if t_target = np.inf. Defaults to 1e-7.
@@ -115,7 +116,7 @@ class HomCont:
                  t_target: float = np.inf,
                  max_steps: float = np.inf,
                  sign: int = None,
-                 x_transformer: callable = lambda x: x,
+                 distance_function: callable = None,
                  verbose: int = 1,
                  parameters: dict = None,
                  **kwargs):
@@ -134,7 +135,11 @@ class HomCont:
 
         self.t_target = t_target
         self.max_steps = max_steps
-        self.x_transformer = x_transformer
+        if distance_function is not None:
+            self.distance = distance_function
+        else:
+            self.distance = self.distance_function
+
         self.verbose = verbose
 
         # set default parameters
@@ -165,7 +170,6 @@ class HomCont:
         self.s = 0
         self.corrector_success = False
         self.converged = False
-        self.failed = False
 
         self.H_pred = None
         self.y_corr = None
@@ -277,7 +281,7 @@ class HomCont:
     def x(self):
         return self._y[:-1]
 
-    def solve(self):  # sourcery no-metrics
+    def loop(self):  # sourcery no-metrics
         """Main loop of predictor-corrector steps,
         with step size adaptation between iterations.
         """
@@ -287,80 +291,71 @@ class HomCont:
         start_time = time.perf_counter()
 
         self.converged = False
-        self.failed = False
 
         while not self.converged:
-            self.step += 1
+            try:
+                self.step += 1
 
-            self.predict()
-            self.correct()
-            if self.corrector_success:
-                self.check_convergence()
+                self.predict()
+                self.correct()
+                if self.corrector_success:
+                    self.check_convergence()
 
-            # separate if-clause is necessary, because check_convergence may
-            # rescind corrector success (if t_target is overshot).
-            if self.corrector_success:
-                self.tangent_old = self.tangent
-                self.s += np.linalg.norm(self.y - self.y_corr)
-                self.y = self.y_corr
+                # separate if-clause is necessary, because check_convergence may
+                # rescind corrector success (if t_target is overshot).
+                if self.corrector_success:
+                    self.tangent_old = self.tangent
+                    self.s += np.linalg.norm(self.y - self.y_corr)
+                    self.y = self.y_corr
 
-                # J at y_corr has already been computed and can be reused:
-                self.J = self.J_corr
+                    # J at y_corr has already been computed and can be reused:
+                    self.J = self.J_corr
 
-                self.check_bifurcation()
+                    self.check_bifurcation()
 
-                if self.verbose >= 2:
-                    output = f'\rStep {self.step:5d}: t = {self.t:#6.4g}, s = {self.s:#6.4g}, ds = {self.ds:#6.4g}'
-                    if self.store_cond:  # TODO: should this conditions stay as is?
-                        output += f', Cond(J) = {self.cond:#6.4g}'
-                    sys.stdout.write(output)
-                    sys.stdout.flush()
+                    if self.verbose >= 2:
+                        output = f'\rStep {self.step:5d}: t = {self.t:#6.4g}, s = {self.s:#6.4g}, ds = {self.ds:#6.4g}'
+                        if self.store_cond:  # TODO: should this condition stay as is?
+                            output += f', Cond(J) = {self.cond:#6.4g}'
+                        sys.stdout.write(output)
+                        sys.stdout.flush()
 
-            if self.converged:
+                if self.converged:
+                    time_sec = time.perf_counter() - start_time
+                    if self.verbose >= 1:
+                        sys.stdout.write(f'\nStep {self.step:5d}: Continuation successful. '
+                                         f'Total time elapsed:{timedelta(seconds=int(time_sec))} \n')
+                        sys.stdout.flush()
+
+                    print('End homotopy continuation')
+                    print('=' * 50)
+
+                    return {'success': True,
+                            'y': self.y,
+                            's': self.s,
+                            'steps': self.step,
+                            'sign': self.sign,
+                            'time': time_sec,
+                            'failure reason': False,
+                            }
+
+                self.adapt_stepsize()
+
+                if self.store_path and self.corrector_success:
+                    self.update_path()
+
+                if self.step >= self.max_steps:
+                    raise ContinuationFailed('max_steps')
+
+            except ContinuationFailed as failure:
                 time_sec = time.perf_counter() - start_time
                 if self.verbose >= 1:
-                    sys.stdout.write(f'\nStep {self.step:5d}: Continuation successful. '
-                                     f'Total time elapsed:{timedelta(seconds=int(time_sec))} \n')
-                    sys.stdout.flush()
-
-                print('End homotopy continuation')
-                print('=' * 50)
-
-                return {'success': True,
-                        'y': self.y,
-                        's': self.s,
-                        'steps': self.step,
-                        'sign': self.sign,
-                        'time': time_sec,
-                        'failure reason': False,
-                        }
-
-            if self.step >= self.max_steps:
-                self.failed = 'max_steps'
-
-            self.adapt_stepsize()
-
-            if self.store_path and self.corrector_success:
-                self.update_path()
-
-            if self.failed:
-                time_sec = time.perf_counter() - start_time
-                if self.verbose >= 1:
-                    reason = ""
-                    if self.failed == 'predictor':
-                        reason = 'Could not find valid predictor: Likely hit a boundary of H\'s domain.'
-                    elif self.failed == 'max_steps':
-                        reason = 'Maximum number of steps reached without convergence. ' \
-                                 '(You can increase max_steps, then solve() again.)'
-                    elif self.failed == 'corrector':
-                        reason = 'Corrector step failed, and ds is already minimal.'
-                    sys.stdout.write(f'\nStep {self.step:5d}: {reason} \n')
+                    sys.stdout.write(f'\nStep {self.step:5d}: Failure reason: {failure.message} \n')
                     sys.stdout.write(f'Step {self.step:5d}: Continuation failed. '
                                      f'Total time elapsed:{timedelta(seconds=int(time_sec))} \n')
                     sys.stdout.flush()
-
-                print('End homotopy continuation')
-                print('=' * 50)
+                    print('End homotopy continuation')
+                    print('=' * 50)
 
                 return {'success': False,
                         'y': self.y,
@@ -368,7 +363,7 @@ class HomCont:
                         'steps': self.step,
                         'sign': self.sign,
                         'time': time_sec,
-                        'failure reason': self.failed,
+                        'failure reason': failure.reason,
                         }
 
     def predict(self):
@@ -383,17 +378,15 @@ class HomCont:
                 self.ds = max(self.ds_defl*self.ds, self.ds_min)
                 self.predict()
             else:
-                self.failed = 'predictor'
+                raise ContinuationFailed('predictor')
 
-    def correct(self):  # sourcery no-metrics
+    def correct(self):
         """Perform corrector iteration.
 
         Method is quasi-Newton: Jacobian pseudo-inverse is computed once at
         predictor point, not anew at each Newton iteration.
         """
         self.corrector_success = False
-        if self.failed:
-            return
 
         corr_dist_old = np.inf
         self.corr_step = 0
@@ -483,17 +476,21 @@ class HomCont:
         if not np.isinf(self.t_target):
             if np.abs(self.y_corr[-1] - self.t_target) < self.t_tol:
                 self.converged = True
-            # also check whether t_target was accidentally crossed.
+            # otherwise, check whether t_target was accidentally crossed.
             elif (self.t - self.t_target) * (self.y_corr[-1] - self.t_target) < 0:
                 self.corrector_success = False
 
         # Case b): t_target is infinite
         elif np.isinf(self.t_target):
             if self.ds >= self.ds_max:
-                conv_test = (np.max(np.abs(self.x_transformer(self.y[:-1]) - self.x_transformer(self.y_corr[:-1])))
-                             / self.ds)
-                if conv_test < self.x_tol:
+                if self.distance(y_new=self.y_corr, y_old=self.y, ds=self.ds) < self.x_tol:
                     self.converged = True
+
+                # TODO: discuss normalisation by self.ds - > keep? how does this work best with distance?
+                # conv_test = (np.max(np.abs(self.x_transformer(self.y[:-1]) - self.x_transformer(self.y_corr[:-1])))
+                #              / self.ds)
+                # if conv_test < self.x_tol:
+                #     self.converged = True
 
     def adapt_stepsize(self):
         """Adapt stepsize at the end of a predictor-corrector cycle:
@@ -511,8 +508,6 @@ class HomCont:
 
         If t_target is finite, stepsize is capped so that the predictor will not cross t_target
         """
-        if self.failed:
-            return
 
         if self.corrector_success and self.corr_step < 10:
             self.ds = min(self.ds * self.ds_infl, self.ds_max)
@@ -521,7 +516,7 @@ class HomCont:
             if self.ds > self.ds_min:
                 self.ds = max(self.ds_defl * self.ds, self.ds_min)
             else:
-                self.failed = "corrector"
+                raise ContinuationFailed("corrector")
 
         if not np.isinf(self.t_target):
             try:
@@ -600,16 +595,6 @@ class HomCont:
         if J0.shape != (len(self.y) - 1, len(self.y)):
             raise ValueError(f'"J(y0)" should have shape {(len(self.y) - 1, len(self.y))}, but has shape {J0.shape}.')
 
-        # check x_transformer(self.y[:-1])
-        try:
-            x0 = self.x_transformer(self.y[:-1])
-        except Exception:
-            raise ValueError('"x_transformer(y0[:-1])" cannot be evaluated.')
-        if np.isnan(x0).any():
-            raise ValueError('"x_transformer(y0[:-1])" produces NaN.')
-        if len(x0.shape) != 1:
-            raise ValueError(f'"x_transformer(y0[:-1])" should be a 1D vector, but has shape {x0.shape}.')
-
         # Check transversality at starting point
         t_axis = np.zeros(len(self.tangent))
         t_axis[-1] = 1
@@ -625,6 +610,11 @@ class HomCont:
         t_direction_desired = np.sign(self.t_target - self.t)
         if t_direction_current != t_direction_desired:
             self.sign = -1
+
+    @staticmethod
+    def distance_function(y_new, y_old, ds):
+        """Distance between y' and y, normalized by current step length. Possible convergence criterion."""
+        return np.max(np.abs(y_new-y_old))/ds
 
     def load_state(self, y: np.ndarray, sign: int = None,  s: float = None, step: int = 0, ds: float = None, **kwargs):
         """Load y, and potentially other state variables. Prepare to start continuation at this point."""
@@ -695,7 +685,7 @@ class HomCont:
         """"""
         self.store_path = True
         if not self.path:
-            self.path = HomPath(dim=len(self.y), x_transformer=self.x_transformer, max_steps=max_steps)
+            self.path = HomPath(dim=len(self.y), max_steps=max_steps)
             self.update_path()
 
     def end_storing_path(self):
@@ -741,9 +731,8 @@ class HomPath:
         Function to transform x for plotting, by default lambda x : x.
     """
 
-    def __init__(self, dim: int, max_steps: int = 1000, x_transformer: callable = lambda x: x):
+    def __init__(self, dim: int, max_steps: int = 1000):
         self.max_steps = max_steps
-        self.x_transformer = x_transformer
         self.dim = dim
 
         self.y = np.nan * np.empty(shape=(max_steps, dim), dtype=np.float64)
@@ -782,7 +771,7 @@ class HomPath:
             sample_freq = 1
         rows = slice(0, self.index, sample_freq)
 
-        x_plot = self.x_transformer(self.y[rows, :-1])
+        x_plot = self.y[rows, :-1]
         t_plot = self.y[rows, -1]
         s_plot = self.s[rows]
         cond_plot = self.cond[rows]
@@ -859,3 +848,22 @@ class HomPath:
 
         except ValueError:
             print(f'Could not find data for any step preceding {step_no}.')
+
+
+class ContinuationFailed(Exception):
+    def __init__(self, reason):
+        self.reason = reason
+        if reason == 'predictor':
+            self.message = 'Could not find valid predictor: Likely hit a boundary of H\'s domain.'
+        elif reason == 'max_steps':
+            self.message = 'Maximum number of steps reached without convergence. ' \
+                           '(To continue, increase max_steps, then start again.)'
+        elif reason == 'corrector':
+            self.message = 'Corrector step failed, and ds is already minimal.'
+        else:
+            self.message = 'Continuation failed for an unspecified reason.'
+
+        super().__init__(self, self.message)
+
+    def __str__(self):
+        return self.message

@@ -15,8 +15,8 @@ import numpy as np
 from numpy.typing import ArrayLike
 from scipy.optimize import brentq
 
-from dsgamesolver.sgame import SGame, LogStratHomotopy
-from dsgamesolver.homcont import HomCont
+from sgamesolver.sgame import SGame, LogStratHomotopy
+from sgamesolver.homcont import HomCont
 
 ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 

@@ -285,12 +285,12 @@ class SGameHomotopy:
         if not self.solver:
             print('Please run .initialize() first to set up the solver.')
             return
-        solution = self.solver.solve()
+        solution = self.solver.loop()
         if solution['success']:
             sigma, V, t = self.y_to_sigma_V_t(solution['y'])
             self.equilibrium = {'strategies': sigma,
                                 'values': V,
-                                'homotopy_parameter': t
+                                'homotopy_parameter': t,
                                 }
             print(f'An equilibrium was found via homotopy continuation.')
         else:
@@ -374,3 +374,8 @@ class LogStratHomotopy(SGameHomotopy):
         x[self.game.num_actions_total:] = y[self.game.num_actions_total:]
         return x
 
+    def distance(self, y_new, y_old, ds):
+        """Returns the distance in strategies sigma between y_old and y_new,
+        in the maximum norm, normalized by step length ds."""
+        difference = np.exp(y_new[:self.game.num_actions_total]) - np.exp(y_old[:self.game.num_actions_total])
+        return np.max(np.abs(difference))/ds

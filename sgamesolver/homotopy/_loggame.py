@@ -12,8 +12,8 @@ from typing import Optional
 import numpy as np
 from numpy.typing import ArrayLike
 
-from dsgamesolver.sgame import SGame, LogStratHomotopy
-from dsgamesolver.homcont import HomCont
+from sgamesolver.sgame import SGame, LogStratHomotopy
+from sgamesolver.homcont import HomCont
 
 ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
@@ -306,10 +306,7 @@ class LogGame_ct(LogGame):
 
         # only import Cython module on class instantiation
         try:
-            # import pyximport
-            # pyximport.install(build_dir='./dsgamesolver/__build__/', build_in_temp=False, language_level=3,
-            #                   setup_args={'include_dirs': [np.get_include()]})
-            import dsgamesolver.homotopy._loggame_ct as loggame_ct
+            import sgamesolver.homotopy._loggame_ct as loggame_ct
 
         except ImportError:
             raise ImportError("Cython implementation of LogGame homotopy could not be imported. ",
