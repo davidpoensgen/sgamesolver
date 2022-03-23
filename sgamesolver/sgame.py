@@ -309,17 +309,6 @@ class SGameHomotopy:
         """Jacobian of homotopy function evaluated at y."""
         pass
 
-    def x_transformer(self, y: np.ndarray) -> np.ndarray:
-        """Transform vector y to vector x.
-
-        Vector y is used during path tracing.
-        Vector x is used to check for convergence.
-
-        Typical use case: Strategies are relevant for convergence, but are transformed during tracing.
-        Example: QRE, which uses log strategies beta=log(sigma) during tracing.
-        """
-        return y
-
     def H_reduced(self, y: np.ndarray) -> np.ndarray:
         """H evaluated at y, reduced by exploiting symmetries."""
         # TODO: to be implemented here
@@ -345,6 +334,18 @@ class SGameHomotopy:
         t = y[-1]
         return sigma, V, t
 
+    def print_equilibrium(self):
+        if self.equilibrium is None:
+            print('Please solve for an equilibrium first.')
+            return
+        else:
+            for state in range(self.game.num_states):
+                print(f'+++++++ state{state} +++++++')
+                for player in range(self.game.num_players):
+                    v = self.equilibrium['values'][state, player]
+                    sigma = self.equilibrium['strategies'][state, player, :self.game.nums_actions[state, player]]
+                    print(f'player{player}: v={v:#6.4g}, '
+                          f's={np.array2string(sigma,formatter={"float_kind":lambda x: "%.3f" % x})}')
 
 class LogStratHomotopy(SGameHomotopy):
     """Base class for homotopies using logarithmized strategies
@@ -368,14 +369,9 @@ class LogStratHomotopy(SGameHomotopy):
         t = y[-1]
         return sigma, V, t
 
-    def x_transformer(self, y: np.ndarray) -> np.ndarray:
-        x = np.empty_like(y)
-        x[:self.game.num_actions_total] = np.exp(y[:self.game.num_actions_total])
-        x[self.game.num_actions_total:] = y[self.game.num_actions_total:]
-        return x
-
-    def distance(self, y_new, y_old, ds):
-        """Returns the distance in strategies sigma between y_old and y_new,
-        in the maximum norm, normalized by step length ds."""
-        difference = np.exp(y_new[:self.game.num_actions_total]) - np.exp(y_old[:self.game.num_actions_total])
-        return np.max(np.abs(difference))/ds
+    def distance(self, y_new, y_old):
+        """Calculates the distance in strategies sigma between y_old and y_new,
+        in the maximum norm, normalized by distance in homotopy parameter t."""
+        sigma_difference = np.exp(y_new[:self.game.num_actions_total]) - np.exp(y_old[:self.game.num_actions_total])
+        sigma_distance = np.max(np.abs(sigma_difference))
+        return sigma_distance / np.abs(y_new[-1] - y_old[-1])

@@ -1,5 +1,7 @@
 """Interior point method homotopy."""
 
+# TODO: @Steffen, please re-write to remove x-transformer; write a distance function instead if desired
+
 # TODO: check user-provided initial_strategies and weights?
 # TODO: adjust tracking parameters with "scale" of game
 # TODO: think about Cython import

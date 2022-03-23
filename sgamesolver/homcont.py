@@ -293,6 +293,7 @@ class HomCont:
         self.converged = False
 
         while not self.converged:
+            # try-except block: allows sub-functions to stop the loop by raising ContinuationFailed
             try:
                 self.step += 1
 
@@ -483,7 +484,7 @@ class HomCont:
         # Case b): t_target is infinite
         elif np.isinf(self.t_target):
             if self.ds >= self.ds_max:
-                if self.distance(y_new=self.y_corr, y_old=self.y, ds=self.ds) < self.x_tol:
+                if self.distance(y_new=self.y_corr, y_old=self.y) < self.x_tol:
                     self.converged = True
 
                 # TODO: discuss normalisation by self.ds - > keep? how does this work best with distance?
@@ -612,9 +613,12 @@ class HomCont:
             self.sign = -1
 
     @staticmethod
-    def distance_function(y_new, y_old, ds):
-        """Distance between y' and y, normalized by current step length. Possible convergence criterion."""
-        return np.max(np.abs(y_new-y_old))/ds
+    def distance_function(y_new, y_old):
+        """Calculate max difference in y[:-1], normalized by difference in t.
+        Possible convergence criterion.
+        """
+        abs_difference = np.abs(y_new - y_old)
+        return np.max(abs_difference[:-1]) / abs_difference[-1]
 
     def load_state(self, y: np.ndarray, sign: int = None,  s: float = None, step: int = 0, ds: float = None, **kwargs):
         """Load y, and potentially other state variables. Prepare to start continuation at this point."""
@@ -757,8 +761,8 @@ class HomPath:
         if self.index >= self.max_steps:
             self.downsample(10)
 
-    def plot(self, x_name: str = 'Variables', max_plotted: int = 1000):
-        """Plot path."""
+    def plot(self, max_plotted: int = 1000, y_indices: list = None):
+        """Plot path. If a list or array of y_indices is given, only these are plotted."""
         try:
             import matplotlib.pyplot as plt
         except ModuleNotFoundError:
@@ -771,7 +775,11 @@ class HomPath:
             sample_freq = 1
         rows = slice(0, self.index, sample_freq)
 
-        x_plot = self.y[rows, :-1]
+        if y_indices is None:
+            x_plot = self.y[rows, :-1]
+        else:
+            x_plot = self.y[rows, y_indices]
+
         t_plot = self.y[rows, -1]
         s_plot = self.s[rows]
         cond_plot = self.cond[rows]
@@ -789,9 +797,9 @@ class HomPath:
         ax1.grid()
         # path length -> variables
         ax2 = fig.add_subplot(222)
-        ax2.set_title(fr'{x_name}')
+        ax2.set_title(fr'Variables in y')
         ax2.set_xlabel(r'path length $s$')
-        ax2.set_ylabel(fr'{x_name}')
+        ax2.set_ylabel(fr'$y_i$')
         ax2.set_ylim(x_plot_min, x_plot_max)
         ax2.plot(s_plot, x_plot)
         ax2.grid()
@@ -804,9 +812,9 @@ class HomPath:
         ax3.grid()
         # t -> y
         ax4 = fig.add_subplot(224)
-        ax4.set_title(fr'{x_name} II')
+        ax4.set_title(fr'Variables in y II')
         ax4.set_xlabel(r'homotopy parameter $t$')
-        ax4.set_ylabel(fr'{x_name}')
+        ax4.set_ylabel(fr'$y_i$')
         ax4.set_ylim(x_plot_min, x_plot_max)
         ax4.plot(t_plot, x_plot)
         ax4.grid()

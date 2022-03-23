@@ -114,7 +114,7 @@ class Tracing(LogStratHomotopy):
         # TODO: silence warning of transversality at starting point?
         self.solver = HomCont(self.H, self.y0, self.J, t_target=1.0,
                               parameters=self.tracking_parameters['normal'],
-                              x_transformer=self.x_transformer)
+                              distance_function=self.distance)
 
     def find_y0(self, tol: Union[float, int] = 1e-12, max_iter: int = 10000) -> np.ndarray:
         """Value function iteration."""
@@ -392,7 +392,7 @@ class Tracing_ct(Tracing):
             # import pyximport
             # pyximport.install(build_dir='./dsgamesolver/__build__/', build_in_temp=False, language_level=3,
             #                   setup_args={'include_dirs': [np.get_include()]})
-            import dsgamesolver.homotopy._tracing_ct as tracing_ct
+            import sgamesolver.homotopy._tracing_ct as tracing_ct
 
         except ImportError:
             raise ImportError("Cython implementation of Tracing homotopy could not be imported. ",
