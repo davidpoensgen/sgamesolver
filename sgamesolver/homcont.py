@@ -51,10 +51,10 @@ class HomCont:
             (TODO: comment?)
         verbose : int, optional
             Determines how much feedback is displayed during continuation:
-            0 : silent, no reports at all.
-            1 : only start and end of continuation are reported. This is the default.
-            2 : current progress is reported continuously. also reports special occurrences, e.g. orientation reversals.
-            3 : additional reports for parameter tuning or debugging. Includes failed corrector loops,
+            0 : Silent, no reports at all.
+            1 : Current progress is reported continuously. This is the default.
+            2 : Also reports special occurrences, e.g. orientation reversals.
+            3 : Additional reports for parameter tuning or debugging. Includes failed corrector loops,
                 discarded steps due to potential segment jumping.
 
         store_path: bool, optional
@@ -117,7 +117,7 @@ class HomCont:
                  max_steps: float = np.inf,
                  sign: int = None,
                  distance_function: callable = None,
-                 verbose: int = 1,
+                 verbose: int = 2,
                  parameters: dict = None,
                  **kwargs):
 
@@ -314,9 +314,9 @@ class HomCont:
 
                     self.check_bifurcation()
 
-                    if self.verbose >= 2:
+                    if self.verbose >= 1:
                         output = f'\rStep {self.step:5d}: t = {self.t:#6.4g}, s = {self.s:#6.4g}, ds = {self.ds:#6.4g}'
-                        if self.store_cond:  # TODO: should this condition stay as is?
+                        if self.store_cond:
                             output += f', Cond(J) = {self.cond:#6.4g}'
                         sys.stdout.write(output)
                         sys.stdout.flush()
@@ -670,7 +670,7 @@ class HomCont:
                      's': self.s,
                      'sign': self.sign,
                      'ds': self.ds,
-                     'y': self.y.tolist(),}
+                     'y': self.y.tolist()}
             json.dump(state, file, indent=4)
             print(f'Current state saved as {filename}.')
 
@@ -686,15 +686,12 @@ class HomCont:
             print(f'State successfully loaded from {filename}.')
 
     def start_storing_path(self, max_steps: int = 1000):
-        """"""
+        """Initialises path storing. This will allow to return to earlier steps,
+        or plot the progression of variables along the path."""
         self.store_path = True
         if not self.path:
             self.path = HomPath(dim=len(self.y), max_steps=max_steps)
             self.update_path()
-
-    def end_storing_path(self):
-        self.path = None
-        self.store_path = False
 
     def update_path(self):
         """Writes current state to path."""
@@ -731,8 +728,6 @@ class HomPath:
         Number of variables to be tracked (i.e. len(y))
     max_steps : int, optional
         Maximum number of steps to be tracked, by default 10000.
-    x_transformer : callable, optional
-        Function to transform x for plotting, by default lambda x : x.
     """
 
     def __init__(self, dim: int, max_steps: int = 1000):
@@ -767,7 +762,7 @@ class HomPath:
             import matplotlib.pyplot as plt
         except ModuleNotFoundError:
             print('Path cannot be plotted: Package matplotlib is required.')
-            return None
+            return
 
         if self.index > max_plotted:
             sample_freq = int(np.ceil(max_plotted/self.index))
@@ -859,6 +854,7 @@ class HomPath:
 
 
 class ContinuationFailed(Exception):
+    """Exception raised by subfunctions to exit main predictor-corrector-loop."""
     def __init__(self, reason):
         self.reason = reason
         if reason == 'predictor':

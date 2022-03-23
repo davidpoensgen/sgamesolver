@@ -58,7 +58,7 @@ class SGame:
                 self.action_mask[s, p, 0:self.nums_actions[s, p]] = 1
 
         # payoff_mask allows to normalize and de-normalize payoffs
-        self.payoff_mask = np.zeros((self.num_states, self.num_players, *[self.num_actions_max]*self.num_players),
+        self.payoff_mask = np.zeros((self.num_states, self.num_players, *[self.num_actions_max] * self.num_players),
                                     dtype=bool)
         for s in range(self.num_states):
             for p in range(self.num_players):
@@ -66,7 +66,7 @@ class SGame:
                     self.payoff_mask[(s, p) + A] = 1
 
         # generate array representing payoffs [s,p,A]
-        self.payoffs = np.zeros((self.num_states, self.num_players, *[self.num_actions_max]*self.num_players))
+        self.payoffs = np.zeros((self.num_states, self.num_players, *[self.num_actions_max] * self.num_players))
         for s in range(self.num_states):
             for p in range(self.num_players):
                 for A in np.ndindex(*self.nums_actions[s]):
@@ -87,19 +87,18 @@ class SGame:
         transition_matrices = [np.array(transition_matrices[s], dtype=np.float64) for s in range(self.num_states)]
 
         # build big transition matrix [s,A,s'] from list of small transition matrices [A,s'] for each s
-        transition_matrix = np.zeros((self.num_states, *[self.num_actions_max]*self.num_players, self.num_states))
+        transition_matrix = np.zeros((self.num_states, *[self.num_actions_max] * self.num_players, self.num_states))
         for s0 in range(self.num_states):
             for A in np.ndindex(*self.nums_actions[s0]):
                 for s1 in range(self.num_states):
-                    transition_matrix[(s0,)+A+(s1,)] = transition_matrices[s0][A+(s1,)]
+                    transition_matrix[(s0,) + A + (s1,)] = transition_matrices[s0][A + (s1,)]
 
         # generate array representing transitions, including discounting: delta * phi [s,p,A,s']
         # (player index due to potentially player-specific discount factors)
-        self.transitions = np.zeros((self.num_states, self.num_players, *[self.num_actions_max]*self.num_players,
+        self.transitions = np.zeros((self.num_states, self.num_players, *[self.num_actions_max] * self.num_players,
                                      self.num_states))
         for p in range(self.num_players):
             self.transitions[:, p] = self.discount_factors[p] * transition_matrix
-
 
     @classmethod
     def random_game(cls, num_states, num_players, num_actions, delta=0.95, seed=None):
@@ -131,7 +130,7 @@ class SGame:
                 phi[s][index] *= 1 / value
 
         if isinstance(delta, (int, float)):
-            delta = np.ones(num_players)*delta
+            delta = np.ones(num_players) * delta
         elif isinstance(delta, (list, tuple)) and len(delta) == 2:
             delta = rng.uniform(delta[0], delta[1], size=num_players)
 
@@ -334,18 +333,47 @@ class SGameHomotopy:
         t = y[-1]
         return sigma, V, t
 
-    def print_equilibrium(self):
+    def equilibrium_string(self):
+        """Returns a (relatively) human-readable string of an equilibrium found by the solver."""
         if self.equilibrium is None:
             print('Please solve for an equilibrium first.')
             return
+
+        string = ""
+        for state in range(self.game.num_states):
+            string += f'+++++++ state{state} +++++++\n'
+            for player in range(self.game.num_players):
+                v = self.equilibrium['values'][state, player]
+                sigma = self.equilibrium['strategies'][state, player, :self.game.nums_actions[state, player]]
+                string += f'player{player}: v={v:#5.2f}, ' \
+                          f's={np.array2string(sigma, formatter={"float_kind": lambda x: "%.3f" % x})}\n'
+        return string
+
+    def plot_path(self, max_plotted=1000):
+        if not self.solver or not self.solver.path:
+            print('No solver or no stored path.')
+            return
+        try:
+            import matplotlib.pyplot as plt
+        except ModuleNotFoundError:
+            print('Path cannot be plotted: Package matplotlib is required.')
+            return None
+
+        path = self.solver.path
+        if path.index > max_plotted:
+            sample_freq = int(np.ceil(max_plotted / path.index))
         else:
-            for state in range(self.game.num_states):
-                print(f'+++++++ state{state} +++++++')
-                for player in range(self.game.num_players):
-                    v = self.equilibrium['values'][state, player]
-                    sigma = self.equilibrium['strategies'][state, player, :self.game.nums_actions[state, player]]
-                    print(f'player{player}: v={v:#6.4g}, '
-                          f's={np.array2string(sigma,formatter={"float_kind":lambda x: "%.3f" % x})}')
+            sample_freq = 1
+        rows = slice(0, path.index, sample_freq)
+
+        s_plot = path.s[rows]
+        t_plot = path.y[-1][rows]
+
+        num_rows = len(s_plot)
+        sigma_plot = np.empty((num_rows, self.game.num_states, self.game.num_players, self.game.num_actions_max))
+        for row in range(path.index)[rows]:
+            sigma_plot[row, :] = self.y_to_sigma_V_t(path.y[row])[0]
+
 
 class LogStratHomotopy(SGameHomotopy):
     """Base class for homotopies using logarithmized strategies
