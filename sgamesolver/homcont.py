@@ -272,14 +272,10 @@ class HomCont:
             self._Jpinv_needs_update = False
         return self._Jpinv
 
-    # shorthands
+    # shorthand for t = y[-1]
     @property
     def t(self):
         return self._y[-1]
-
-    @property
-    def x(self):
-        return self._y[:-1]
 
     def loop(self):  # sourcery no-metrics
         """Main loop of predictor-corrector steps,
@@ -293,7 +289,7 @@ class HomCont:
         self.converged = False
 
         while not self.converged:
-            # try-except block: allows sub-functions to stop the loop by raising ContinuationFailed
+            # try-except block: sub-functions exit stop the main loop by raising ContinuationFailed
             try:
                 self.step += 1
 
@@ -486,12 +482,6 @@ class HomCont:
             if self.ds >= self.ds_max:
                 if self.distance(y_new=self.y_corr, y_old=self.y) < self.x_tol:
                     self.converged = True
-
-                # TODO: discuss normalisation by self.ds - > keep? how does this work best with distance?
-                # conv_test = (np.max(np.abs(self.x_transformer(self.y[:-1]) - self.x_transformer(self.y_corr[:-1])))
-                #              / self.ds)
-                # if conv_test < self.x_tol:
-                #     self.converged = True
 
     def adapt_stepsize(self):
         """Adapt stepsize at the end of a predictor-corrector cycle:
@@ -694,7 +684,7 @@ class HomCont:
             self.update_path()
 
     def update_path(self):
-        """Writes current state to path."""
+        """Saves current state to path."""
         if self.store_cond:
             cond = self.cond
         else:
@@ -742,6 +732,7 @@ class HomPath:
         self.ds = np.nan * np.empty(shape=max_steps, dtype=np.float64)
 
         self.index = 0
+        self.downsample_frequency = 10
 
     def update(self, y: np.ndarray, s: float, cond: float, sign: int, step: int, ds: float):
 
@@ -754,10 +745,13 @@ class HomPath:
 
         self.index += 1
         if self.index >= self.max_steps:
-            self.downsample(10)
+            self.downsample(self.downsample_frequency)
 
     def plot(self, max_plotted: int = 1000, y_indices: list = None):
-        """Plot path. If a list or array of y_indices is given, only these are plotted."""
+        """Plot path.
+        If a list or array of y_indices is given, only these are plotted.
+        To plot a range of indices, one can use np.arange, e.g. y_indices = np.arange(10, 20).
+        """
         try:
             import matplotlib.pyplot as plt
         except ModuleNotFoundError:
@@ -798,13 +792,24 @@ class HomPath:
         ax2.set_ylim(x_plot_min, x_plot_max)
         ax2.plot(s_plot, x_plot)
         ax2.grid()
-        # s -> cond(J)
-        ax3 = fig.add_subplot(223)
-        ax3.set_title('Numerical stability')
-        ax3.set_xlabel(r'path length $s$')
-        ax3.set_ylabel(r'condition number $cond(J)$')
-        ax3.plot(s_plot, cond_plot)
-        ax3.grid()
+        # s -> cond(J): plot only if cond has been stored.
+        if np.invert(np.isnan(cond_plot)).any():
+            ax3 = fig.add_subplot(223)
+            ax3.set_title('Numerical stability')
+            ax3.set_xlabel(r'path length $s$')
+            ax3.set_ylabel(r'condition number $cond(J)$')
+            ax3.plot(s_plot, cond_plot)
+            ax3.grid()
+        else:
+            # alternatively: sign on axis 4
+            sign_plot = self.sign[rows]
+            ax3 = fig.add_subplot(224)
+            ax3.set_title('Orientation')
+            ax3.set_xlabel(r'path length $s$')
+            ax3.set_ylabel('sign of tangent')
+            ax3.set_ylim(-1.5,1.5)
+            ax3.plot(s_plot, sign_plot)
+            ax3.grid()
         # t -> y
         ax4 = fig.add_subplot(224)
         ax4.set_title(fr'Variables in y II')
@@ -813,15 +818,6 @@ class HomPath:
         ax4.set_ylim(x_plot_min, x_plot_max)
         ax4.plot(t_plot, x_plot)
         ax4.grid()
-        # alternatively: sign on axis 4
-        # sign_plot = self.sign[rows]
-        # ax4 = fig.add_subplot(224)
-        # ax4.set_title('Orientation')
-        # ax4.set_xlabel(r'path length $s$')
-        # ax4.set_ylabel('sign of tangent')
-        # ax4.set_ylim(-1.5,1.5)
-        # ax4.plot(s_plot, sign_plot)
-        # ax4.grid()
         plt.tight_layout()
         plt.show()
         return fig
