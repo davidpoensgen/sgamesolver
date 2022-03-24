@@ -657,7 +657,7 @@ class HomCont:
         else:
             print('There is no stored path.')
 
-    def save_file(self, filename, overwrite=False, description=""):
+    def save_file(self, filename, overwrite=False):
         """Save current state of the solver to a file.
 
         Allows to re-start continuation from the current state later on.
@@ -671,7 +671,7 @@ class HomCont:
                 return
 
         with open(filename, 'w') as file:
-            state = {'description': f'HomCont state saved on {time.ctime()}. {description}',
+            state = {'description': f'HomCont state saved on {time.ctime()}.',
                      'step': self.step,
                      's': self.s,
                      'sign': self.sign,
