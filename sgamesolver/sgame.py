@@ -349,12 +349,13 @@ class SGameHomotopy:
                           f's={np.array2string(sigma, formatter={"float_kind": lambda x: "%.3f" % x})}\n'
         return string
 
-    def plot_path(self, max_plotted=1000):
+    def plot_path(self, x_axis="s", max_plotted=1000):
         if not self.solver or not self.solver.path:
             print('No solver or no stored path.')
             return
         try:
             import matplotlib.pyplot as plt
+            import matplotlib.lines
         except ModuleNotFoundError:
             print('Path cannot be plotted: Package matplotlib is required.')
             return None
@@ -366,13 +367,38 @@ class SGameHomotopy:
             sample_freq = 1
         rows = slice(0, path.index, sample_freq)
 
-        s_plot = path.s[rows]
-        t_plot = path.y[-1][rows]
+        if x_axis == "s":
+            x_plot = path.s[rows]
+        elif x_axis == "t":
+            x_plot = path.y[rows, -1]
 
-        num_rows = len(s_plot)
+        num_rows = len(x_plot)
         sigma_plot = np.empty((num_rows, self.game.num_states, self.game.num_players, self.game.num_actions_max))
         for row in range(path.index)[rows]:
             sigma_plot[row, :] = self.y_to_sigma_V_t(path.y[row])[0]
+        figure, axis = plt.subplots(nrows=self.game.num_states, ncols=self.game.num_players,
+                                    figsize=(self.game.num_players * 2, self.game.num_states * 1.5),
+                                    squeeze=False)
+
+        for state in range(self.game.num_states):
+            for player in range(self.game.num_players):
+                axis[state, player].plot(x_plot, sigma_plot[:, state, player, :])
+                axis[state, player].set_ylim((-.05, 1.05))
+                axis[state, player].label_outer()
+                if player == 0:
+                    axis[state, player].set_ylabel(f'state{state}', rotation=90, size='large')
+                if state == 0:
+                    axis[state, player].set_title(f'player{player}')
+        figure.tight_layout()
+        figure.subplots_adjust(bottom=0.4 / self.game.num_states)
+
+        prop_cycle = plt.rcParams['axes.prop_cycle']
+        colors = prop_cycle.by_key()['color']
+        legend_elements = [matplotlib.lines.Line2D([0], [0], color=colors[i], label=f'a{i}')
+                           for i in range(self.game.num_actions_max)]
+        figure.legend(handles=legend_elements, ncol=self.game.num_actions_max,
+                      loc='lower center', bbox_to_anchor=(0.5, 0))
+        return figure
 
 
 class LogStratHomotopy(SGameHomotopy):
