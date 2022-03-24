@@ -5,108 +5,121 @@ import sys
 import os
 import json
 
-#TODO - x_transformer out of docstrings. Distance into docstrings.
+
+# TODO - x_transformer out of docstrings. Distance into docstrings.
+
 
 class HomCont:
     """Class to perform homotopy continuation to solve a nonlinear system of equations: F(x) = H(x, t_target) = 0.
 
-        Given:  1) System of equations H(x,t) = 0 with homotopy parameter t.
-                2) Known solution x0 at t0, i.e. H(x0, t0) = 0.
+    Given:  1) System of equations H(x,t) = 0 with homotopy parameter t.
+            2) Known solution x0 at t0, i.e. H(x0, t0) = 0.
 
-        Wanted: A solution x* at t_target, i.e. H(x*, t_target) = 0.
+    Wanted: A solution x* at t_target, i.e. H(x*, t_target) = 0.
 
-        Idea:   Start at y0 = (x0,t0) and trace implied path up to y* = (x*, t_target).
+    Idea:   Start at y0 = (x0,t0) and trace implied path up to y* = (x*, t_target).
 
-        x is a vector of dimension N
-        t is a homotopy parameter
-        y is shorthand for vector (x, t)
+    x is a vector of dimension N
+    t is a homotopy parameter
+    y is shorthand for vector (x, t)
 
-        Main inputs
-        -----------
-        H : callable
-            Homotopy function: R^(N+1) -> R^N
-        y0 : np.ndarray
-            The starting point for homotopy continuation.
-            Must be 1D array.
-            Must (approximately) solve the system H(y0) = 0.
-            The homotopy parameter t is stored in the last entry.
-            The variables of interest x are stored in the other entries.
-        J : callable, optional
-            Jacobian matrix of H: R^(N+1) -> R^N x R^(N+1)
-            If not provided by user, a finite difference approximation is used (requires package numdifftools).
+    Main inputs
+    -----------
+    H : callable
+        Homotopy function: R^(N+1) -> R^N
+    y0 : np.ndarray
+        The starting point for homotopy continuation.
+        Must be 1D array.
+        Must (approximately) solve the system H(y0) = 0.
+        The homotopy parameter t is stored in the last entry.
+        The variables of interest x are stored in the other entries.
+    J : callable, optional
+        Jacobian matrix of H: R^(N+1) -> R^N x R^(N+1)
+        If not provided by user, a finite difference approximation is used (requires package numdifftools).
 
-        t_target : float, optional
-            Target value of the homotopy parameter, by default np.inf.
-            If np.inf, iteration continues until all components of x converge.
-            (Convergence is checked using values transformed by x_transformer - see below.)
-        sign: int, +1, -1, or None
-            Orientation in which the path is traced.
-            If None (default), program will choose orientation so that tracing starts towards t_target.
-            (Usually this should simply be left at None, unless the user has a specific reason to set a
-              certain orientation.)
-        max_steps : float, optional
-            Maximum number of predictor-corrector iterations, by default np.inf.
-        x_transformer : callable, optional
-            Transformation of x to check for convergence, by default lambda x : x.
-            (TODO: comment?)
-        verbose : int, optional
-            Determines how much feedback is displayed during continuation:
-            0 : Silent, no reports at all.
-            1 : Current progress is reported continuously. This is the default.
-            2 : Also reports special occurrences, e.g. orientation reversals.
-            3 : Additional reports for parameter tuning or debugging. Includes failed corrector loops,
-                discarded steps due to potential segment jumping.
+    Convergence criteria
+    -----------
+    t_target : float, optional
+    t_tol: float, optional
+    x_tol: float, optional
+    distance_function: callable, optional
 
-        store_path: bool, optional
-            If True, the path traversed during continuation is stored as HomPath, accessible as this.path.
-            Allows to graph the path afterwards, and also to restart continuation at previous points.
-            Will slow down solution somewhat, and increases memory footprint.
+        The solver allows 2 possible modes to determine convergence:
+        a) if t_target is a real number, the solver will attempt to find a solution to H(x, t_target) = 0.
+           Specifically, the solver stops once solution to H(x,t) = 0 is found for which |t-t_target| < t_tol.
+        b) if t_target is np.inf (the default), the solver will let t increase without bounds, but continuously
+           monitor whether all other variables, i.e. x, have converged. Concretely, the convergence criterion is
+           max(|x_new - x_old|) / |t_new - t_old| < x_tol.
+           If desired, one can pass a distance_function to the solver to be used for this criterion instead.
+           This function should take 2 arguments, the vectors y_new and y_old, and return a non-negative
+           real number. Convergence then requires distance_function(y_new, y_old) < x_tol.
+           A possible use case: H takes variables as input that are a transformation of those one is actually
+           interested in, e.g. logarithms; then one can use a custom distance_function to monitor whether the
+           original, non-transformed variables have converged.
+           Note that it is also possible to define convergence criteria in this manner that are not actually
+           distances. An example from the economic context might be to have distance_function calculate the
+           epsilon-deviation from optimal behavior for y_new, and terminate once this is lower than x_tol.
+
+    sign: int, +1, -1, or None
+        Orientation in which the path is traced.
+        If None (default), program will choose orientation so that tracing starts towards t_target.
+        (Usually this should simply be left at None, unless the user has a specific reason to set a
+          certain orientation.)
+    max_steps : int, optional
+        Maximum number of predictor-corrector iterations, by default np.inf.
+    verbose : int, optional
+        Determines how much feedback is displayed during continuation:
+        0 : Silent, no reports at all.
+        1 : Current progress is reported continuously. This is the default.
+        2 : Also reports special occurrences, e.g. orientation reversals.
+        3 : Additional reports for parameter tuning or debugging. Includes failed corrector loops,
+            discarded steps due to potential segment jumping.
 
 
-        parameters : dict
-            Collection of parameters for path tracing, which will override the defaults.
-            May alternatively be passed as kwargs.
-            Method .set_parameters() allows to adjust parameters after construction,
-            again passed as dict or kwargs.
+    parameters : dict
+        Collection of parameters for path tracing, which will override the defaults.
+        May alternatively be passed as kwargs.
+        Method .set_parameters() allows to adjust parameters after construction,
+        again passed as dict or kwargs.
 
-            The parameters are:
-            ----------
-            x_tol : float #TODO: rename to distance_tol?
-                Continuation is considered to have converged successfully once max(|x_new-x_old|) / ds < x_tol,
-                i.e. x has stabilized. x is transformed by x_transformer for this criterion, if provided.
-                Active only if t_target = np.inf. Defaults to 1e-7.
-            t_tol : float
-                Continuation is considered to have converged successfully once |t - t_target| < t_tol.
-                Active only if t_target < np.inf. Defaults to 1e-7.
-            ds0 : float
-                Initial step size, defaults to 0.01.
-            ds_infl : float
-                Step size inflation factor, defaults to 1.2.
-            ds_defl : float
-                Step size deflation factor, defaults to 0.5.
-            ds_min : float
-                Minimum step size, defaults to 1e-9.
-            ds_max : float
-                Maximum step size, defaults to 1000.
-            H_tol : float
-                Convergence criterion used for corrector step: max(H(y_corr)) < H_tol.
-                Defaults to 1e-7.
-            corr_steps_max : int
-                Maximum number of corrector steps, defaults to 20.
-            corr_dist_max : float
-                Maximum distance of corrector steps, defaults to 0.3.
-            corr_ratio_max : float
-                Maximum ratio between consecutive corrector steps, defaults to 0.3.
-            detJ_change_max : float
-                Maximum relative change of determinant of augmented Jacobian between consecutive
-                predictor-corrector steps: Steps are discarded unless
-                detJ_change_max < |detJ_new|/|det_j_old| < 1/detJ_change_max.
-                (Large relative changes in augmented determinant indicate potential segment jumping.)
-                Defaults to 0.5.
-            bifurc_angle_min : float
-                Minimum angle (in degrees) between two consecutive predictor
-                tangents to be considered a bifurcation, defaults to 177.5.
-                If a bifurcations is crossed, path orientation is swapped.
+        The parameters are:
+        ----------
+        x_tol : float  # TODO: rename to distance_tol? merge parameters x_tol, t_tol, since it's only ever one that matters?
+            Continuation is considered to have converged successfully once max(|x_new-x_old|) / ds < x_tol,
+            i.e. x has stabilized. x is transformed by x_transformer for this criterion, if provided.
+            Active only if t_target = np.inf. Defaults to 1e-7.
+        t_tol : float
+            Continuation is considered to have converged successfully once |t - t_target| < t_tol.
+            Active only if t_target < np.inf. Defaults to 1e-7.
+        ds0 : float
+            Initial step size, defaults to 0.01.
+        ds_infl : float
+            Step size inflation factor, defaults to 1.2.
+        ds_defl : float
+            Step size deflation factor, defaults to 0.5.
+        ds_min : float
+            Minimum step size, defaults to 1e-9.
+        ds_max : float
+            Maximum step size, defaults to 1000.
+        H_tol : float
+            Convergence criterion used for corrector step: max(H(y_corr)) < H_tol.
+            Defaults to 1e-7.
+        corr_steps_max : int
+            Maximum number of corrector steps, defaults to 20.
+        corr_dist_max : float
+            Maximum distance of corrector steps, defaults to 0.3.
+        corr_ratio_max : float
+            Maximum ratio between consecutive corrector steps, defaults to 0.3.
+        detJ_change_max : float
+            Maximum relative change of determinant of augmented Jacobian between consecutive
+            predictor-corrector steps: Steps are discarded unless
+            detJ_change_max < |detJ_new|/|det_j_old| < 1/detJ_change_max.
+            (Large relative changes in augmented determinant indicate potential segment jumping.)
+            Defaults to 0.5.
+        bifurc_angle_min : float
+            Minimum angle (in degrees) between two consecutive predictor
+            tangents to be considered a bifurcation, defaults to 177.5.
+            If a bifurcations is crossed, path orientation is swapped.
     """
 
     def __init__(self,
@@ -114,7 +127,7 @@ class HomCont:
                  y0: np.ndarray,
                  J: callable = None,
                  t_target: float = np.inf,
-                 max_steps: float = np.inf,
+                 max_steps: int = np.inf,
                  sign: int = None,
                  distance_function: callable = None,
                  verbose: int = 2,
@@ -277,7 +290,7 @@ class HomCont:
     def t(self):
         return self._y[-1]
 
-    def loop(self):  # sourcery no-metrics
+    def loop(self):
         """Main loop of predictor-corrector steps,
         with step size adaptation between iterations.
         """
@@ -289,7 +302,8 @@ class HomCont:
         self.converged = False
 
         while not self.converged:
-            # try-except block: sub-functions exit stop the main loop by raising ContinuationFailed
+            # try-except block: in case of failure, sub-functions
+            # will exit the main loop by raising ContinuationFailed
             try:
                 self.step += 1
 
@@ -459,15 +473,15 @@ class HomCont:
         """Check whether convergence is achieved.
 
        2 possible criteria:
-           a) t_target is given and finite.
+           a) t_target is a finite real number.
               Then convergence is achieved if |t_target - t_current| < t_tol.
               [This function also checks if corrector accidentally crossed t_target.
                This should be rare, due to stepsize control. In that case, the current
                step is discarded, the algorithm reduces ds is and returns to the prediction step.]
            b) t_target is inf.
-              Then convergence is achieved once all variables (besides t)
-              have stabilized, and step size is maximal.
-              [If x_transformer is specified, the transformed variables are used for this criterion.]
+              Then convergence is achieved once all variables (besides t) have stabilized, and step size is maximal.
+              Convergence is measured by default using the method distance_function; it is possible to specify an
+              alternative function to be used instead.
         """
         # Case a): t_target is finite
         if not np.isinf(self.t_target):
@@ -587,7 +601,8 @@ class HomCont:
             raise ValueError(f'"J(y0)" should have shape {(len(self.y) - 1, len(self.y))}, but has shape {J0.shape}.')
 
         # Check transversality at starting point
-        t_axis = np.zeros(len(self.tangent))
+        # TODO: is this correct? if tangent is very close to t-axis, isn't it very transversal?
+        t_axis = np.zeros_like(self.tangent)
         t_axis[-1] = 1
         tangent_angle = angle(self.tangent, t_axis)
         if abs(tangent_angle) < 2.5:
@@ -597,6 +612,7 @@ class HomCont:
     def set_greedy_sign(self):
         """Set sign so that continuation starts towards t_target."""
         self.sign = 1
+        self._tangent_needs_update = True
         t_direction_current = np.sign(self.tangent[-1])
         t_direction_desired = np.sign(self.t_target - self.t)
         if t_direction_current != t_direction_desired:
@@ -604,14 +620,14 @@ class HomCont:
 
     @staticmethod
     def distance_function(y_new, y_old):
-        """Calculate max difference in y[:-1], normalized by difference in t.
+        """Calculate maximum difference in y[:-1], normalized by difference in t.
         Possible convergence criterion.
         """
         abs_difference = np.abs(y_new - y_old)
         return np.max(abs_difference[:-1]) / abs_difference[-1]
 
     def load_state(self, y: np.ndarray, sign: int = None,  s: float = None, step: int = 0, ds: float = None, **kwargs):
-        """Load y, and potentially other state variables. Prepare to start continuation at this point."""
+        """Load y and other state variables. Prepare to start continuation at this point."""
         self.y = y
         if sign is None or sign == 0 or np.isnan(sign):
             self.set_greedy_sign()
@@ -641,7 +657,7 @@ class HomCont:
         else:
             print('There is no stored path.')
 
-    def save_file(self, filename, overwrite: bool = False):
+    def save_file(self, filename, overwrite=False, description=""):
         """Save current state of the solver to a file.
 
         Allows to re-start continuation from the current state later on.
@@ -655,7 +671,7 @@ class HomCont:
                 return
 
         with open(filename, 'w') as file:
-            state = {'description': f'HomCont state saved on {time.ctime()}.',
+            state = {'description': f'HomCont state saved on {time.ctime()}. {description}',
                      'step': self.step,
                      's': self.s,
                      'sign': self.sign,
@@ -807,7 +823,7 @@ class HomPath:
             ax3.set_title('Orientation')
             ax3.set_xlabel(r'path length $s$')
             ax3.set_ylabel('sign of tangent')
-            ax3.set_ylim(-1.5,1.5)
+            ax3.set_ylim(-1.5, 1.5)
             ax3.plot(s_plot, sign_plot)
             ax3.grid()
         # t -> y
@@ -861,7 +877,7 @@ class ContinuationFailed(Exception):
         elif reason == 'corrector':
             self.message = 'Corrector step failed, and ds is already minimal.'
         else:
-            self.message = 'Continuation failed for an unspecified reason.'
+            self.message = "Something unexpected happened."
 
         super().__init__(self, self.message)
 
