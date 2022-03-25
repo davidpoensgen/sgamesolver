@@ -2,9 +2,7 @@
 
 # TODO: check user-provided weights?
 
-# TODO: play with einsum_path
 # TODO: adjust tracking parameters with "scale" of game
-# TODO: think about Cython import
 
 
 from typing import Optional
@@ -180,10 +178,6 @@ class LogGame_np(LogGame):
             'u_ab': [['s' + ABC[0:num_p] + ',s'.join(['']+[ABC[p_] for p_ in range(num_p) if p_ not in [p, q]])
                       + '->s' + ABC[p] + (ABC[q] if q != p else '') for q in range(num_p)] for p in range(num_p)]
         }
-
-        # optimal paths to be used by einsum
-        # TODO
-        self.einsum_paths = {}
 
     def H(self, y: np.ndarray) -> np.ndarray:
         """Homotopy function."""

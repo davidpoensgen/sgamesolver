@@ -85,8 +85,8 @@ class HomCont:
         The parameters are:
         ----------
         x_tol : float  # TODO: rename to distance_tol? merge parameters x_tol, t_tol, since it's only ever one that matters?
-            Continuation is considered to have converged successfully once max(|x_new-x_old|) / ds < x_tol,
-            i.e. x has stabilized. x is transformed by x_transformer for this criterion, if provided.
+            Continuation is considered to have converged successfully once max(|x_new-x_old|) / |t_new-t_old| < x_tol,
+            i.e. x has stabilized. If a distance_function is provided, it is used to calculate the distance instead.
             Active only if t_target = np.inf. Defaults to 1e-7.
         t_tol : float
             Continuation is considered to have converged successfully once |t - t_target| < t_tol.
@@ -117,9 +117,8 @@ class HomCont:
             (Large relative changes in augmented determinant indicate potential segment jumping.)
             Defaults to 0.5.
         bifurc_angle_min : float
-            Minimum angle (in degrees) between two consecutive predictor
-            tangents to be considered a bifurcation, defaults to 177.5.
-            If a bifurcations is crossed, path orientation is swapped.
+            Minimum angle (in degrees) between two consecutive predictor tangents to be considered a bifurcation,
+            defaults to 177.5. If a bifurcations is crossed, path orientation is swapped.
     """
 
     def __init__(self,
@@ -451,19 +450,21 @@ class HomCont:
 
         old_log_det = np.linalg.slogdet(np.vstack([self.J, self.tangent]))[1]
         new_log_det = np.linalg.slogdet(np.vstack([self.J_corr, self.tangent]))[1]
-        log_det_diff = new_log_det - old_log_det
+        log_det_diff = np.abs(new_log_det - old_log_det)
         # det_ratio = np.exp(new_log_det - old_log_det)
+        # TODO: discuss if checking this even makes sense -
+        # TODO: tracing e.g. regularly has det ratios > 2 even for very small ds
 
         # TODO: remove old version
         # det_ratio = np.abs(np.linalg.det(np.vstack([self.J_corr, self.tangent])) /
         #                    np.linalg.det(np.vstack([self.J, self.tangent])))
         # if det_ratio > self.detJ_change_max or det_ratio < 1/self.detJ_change_max:
 
-        if log_det_diff > np.log(self.detJ_change_max) or log_det_diff < np.log(1/self.detJ_change_max):
+        if log_det_diff > np.abs(np.log(self.detJ_change_max)):
             if self.verbose >= 3:
                 sys.stdout.write(f'\nStep {self.step:5d}: Possible segment jump, discarding step. '
                                  # f'Ratio of augmented determinants: det(J_new)/det(J_old) = {det_ratio:0.2f}\n')
-                                 f'Augmented determinants: logdet(J_new) - logdet(J_old) = {log_det_diff:0.2f}\n')
+                                 f'Ratio of augmented determinants: |det(J_new) / det(J_old)| = {np.exp(log_det_diff):0.2f}\n')
                 sys.stdout.flush()
             return
 

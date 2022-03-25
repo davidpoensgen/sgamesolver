@@ -21,6 +21,9 @@ ext_modules = [Extension('sgamesolver.homotopy._ipm_ct', ['sgamesolver/homotopy/
                          include_dirs=[np.get_include()]),
                ]
 
+for e in ext_modules:
+    e.cython_directives = {'language_level': "3"}
+
 setup(name='sgamesolver',
       version='0.1',
       description='A homotopy-based solver for stochastic games',
