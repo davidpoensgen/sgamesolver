@@ -602,11 +602,10 @@ class HomCont:
             raise ValueError(f'"J(y0)" should have shape {(len(self.y) - 1, len(self.y))}, but has shape {J0.shape}.')
 
         # Check transversality at starting point
-        # TODO: is this correct? if tangent is very close to t-axis, isn't it very transversal?
         t_axis = np.zeros_like(self.tangent)
         t_axis[-1] = 1
         tangent_angle = angle(self.tangent, t_axis)
-        if abs(tangent_angle) < 2.5:
+        if abs(90 - tangent_angle) < 2.5:  # TODO: @Steffen: this seems wrong: tangent close to t-axis => very transversal
             print(f'Warning: Tangent has angle {tangent_angle:.1f}° '
                   'relative to t-axis. Starting point may violate transversality.')
 
