@@ -129,7 +129,7 @@ class HomCont:
                  max_steps: int = np.inf,
                  sign: int = None,
                  distance_function: callable = None,
-                 verbose: int = 2,
+                 verbose: int = 1,
                  parameters: dict = None,
                  **kwargs):
 
@@ -164,6 +164,7 @@ class HomCont:
         self.ds_min = 1e-9
         self.ds_max = 1000
         self.corr_steps_max = 20
+        self.ds_infl_max_corr_steps = 9
         self.corr_dist_max = 0.3
         self.corr_ratio_max = 0.3
         self.detJ_change_max = 0.5
@@ -209,6 +210,17 @@ class HomCont:
         self.store_path = False
         self.path = None
         self.store_cond = False
+
+        # ToDo: log for debugging.
+        self.debug = False
+        if kwargs.get('debug', False):
+            self.debug = True
+            self.log = {
+                'corrector_steps': np.zeros(self.corr_steps_max),
+                'corrector_dist_crossed': np.zeros(self.corr_steps_max),
+                'corrector_ratio_crossed': np.zeros(self.corr_steps_max),
+                'segment_jumps': 0,
+            }
 
     # Properties
     @property
@@ -290,9 +302,7 @@ class HomCont:
         return self._y[-1]
 
     def loop(self):
-        """Main loop of predictor-corrector steps,
-        with step size adaptation between iterations.
-        """
+        """Main loop of predictor-corrector steps, with step size adaptation between iterations."""
         if self.verbose >= 1:
             print('=' * 50)
             print('Start homotopy continuation')
@@ -301,8 +311,7 @@ class HomCont:
         self.converged = False
 
         while not self.converged:
-            # try-except block: in case of failure, sub-functions
-            # will exit the main loop by raising ContinuationFailed
+            # try-except block: allows sub-functions to exit the main loop by raising ContinuationFailed
             try:
                 self.step += 1
 
@@ -462,9 +471,8 @@ class HomCont:
 
         if log_det_diff > np.abs(np.log(self.detJ_change_max)):
             if self.verbose >= 3:
-                sys.stdout.write(f'\nStep {self.step:5d}: Possible segment jump, discarding step. '
-                                 # f'Ratio of augmented determinants: det(J_new)/det(J_old) = {det_ratio:0.2f}\n')
-                                 f'Ratio of augmented determinants: |det(J_new) / det(J_old)| = {np.exp(log_det_diff):0.2f}\n')
+                sys.stdout.write(f'\nStep {self.step:5d}: Possible segment jump, discarding step. Ratio of augmented'
+                                 f' determinants: |det(J_new) / det(J_old)| = {np.exp(log_det_diff):0.2f}\n')
                 sys.stdout.flush()
             return
 
@@ -481,7 +489,7 @@ class HomCont:
                step is discarded, the algorithm reduces ds is and returns to the prediction step.]
            b) t_target is inf.
               Then convergence is achieved once all variables (besides t) have stabilized, and step size is maximal.
-              Convergence is measured by default using the method distance_function; it is possible to specify an
+              By default, convergence is measured using the method distance_function; it is possible to pass an
               alternative function to be used instead.
         """
         # Case a): t_target is finite
@@ -515,7 +523,7 @@ class HomCont:
         If t_target is finite, stepsize is capped so that the predictor will not cross t_target
         """
 
-        if self.corrector_success and self.corr_step < 10:
+        if self.corrector_success and self.corr_step <= self.ds_infl_max_corr_steps:
             self.ds = min(self.ds * self.ds_infl, self.ds_max)
 
         elif not self.corrector_success:
@@ -605,7 +613,7 @@ class HomCont:
         t_axis = np.zeros_like(self.tangent)
         t_axis[-1] = 1
         tangent_angle = angle(self.tangent, t_axis)
-        if abs(90 - tangent_angle) < 2.5:  # TODO: @Steffen: this seems wrong: tangent close to t-axis => very transversal
+        if abs(90 - tangent_angle) < 2.5:  # TODO: @Steffen: this seems wrong
             print(f'Warning: Tangent has angle {tangent_angle:.1f}° '
                   'relative to t-axis. Starting point may violate transversality.')
 
@@ -827,6 +835,7 @@ class HomPath:
             ax3.plot(s_plot, sign_plot)
             ax3.grid()
         # t -> y
+        # TODO: discuss what exactly does this plot?
         ax4 = fig.add_subplot(224)
         ax4.set_title(fr'Variables in y II')
         ax4.set_xlabel(r'homotopy parameter $t$')
