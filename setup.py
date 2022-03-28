@@ -2,10 +2,8 @@ from setuptools import setup, Extension
 from Cython.Distutils import build_ext
 import numpy as np
 
-
 with open('README.md', 'r', encoding='utf-8') as readme:
     long_description = readme.read()
-
 
 # TODO: could later use optional for extensions - to continue installation if building exts fails.
 # Ideally, we'll wheel anyways.
