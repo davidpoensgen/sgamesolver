@@ -111,7 +111,7 @@ class HomotopyTimer:
         self.game_memory.replace_current_game(game)
 
         hom = self.Homotopy(game)
-        hom.initialize()
+        hom.solver_setup()
         hom.solver.store_path = False
         hom.solver.max_steps = self.max_steps
         hom.solver.verbose = 0

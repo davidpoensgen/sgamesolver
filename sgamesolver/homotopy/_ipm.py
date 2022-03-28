@@ -63,7 +63,7 @@ class IPM(SGameHomotopy):
             'detJ_change_max': 1.3,
             'bifurc_angle_min': 175,
         }
-
+        # TODO: use SGame methods
         if initial_strategies == "centroid":
             self.sigma_0 = np.zeros((self.game.num_states, self.game.num_players, self.game.num_actions_max))
             for s in range(self.game.num_states):
@@ -87,7 +87,7 @@ class IPM(SGameHomotopy):
             # TODO: document how weights should be specified / should they be checked?
             self.nu = weights
 
-    def initialize(self) -> None:
+    def solver_setup(self) -> None:
         self.y0 = self.find_y0()
         # Note: homotopy parameter t goes from 1 to 0
         self.solver = HomCont(self.H, self.y0, self.J, t_target=0.0,

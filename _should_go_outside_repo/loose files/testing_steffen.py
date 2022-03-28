@@ -41,7 +41,7 @@ y_rand = np.random.random(game.num_actions_total + game.num_states*game.num_play
 
 
 tracing_ct = Tracing_ct(game)
-tracing_ct.initialize()
+tracing_ct.solver_setup()
 tracing_ct.solver.verbose = 2
 tracing_ct.solver.max_steps = 9000
 sol_tracing_ct = tracing_ct.solver.solve()
@@ -52,11 +52,11 @@ sol_tracing_ct = tracing_ct.solver.solve()
 # QRE:
 
 qre_np = QRE_np(game)
-qre_np.initialize()
+qre_np.solver_setup()
 sol_qre_np = qre_np.solver.solve()
 
 qre_ct = QRE_ct(game)
-qre_ct.initialize()
+qre_ct.solver_setup()
 qre_ct.solver.verbose = 2
 sol_qre_ct = qre_ct.solver.solve()
 
@@ -65,11 +65,11 @@ assert np.allclose(sol_qre_np["y"], sol_qre_ct["y"])
 # Tracing:
 
 tracing_np = Tracing_np(game)
-tracing_np.initialize()
+tracing_np.solver_setup()
 sol_tracing_np = tracing_np.solver.solve()
 
 tracing_ct = Tracing_ct(game)
-tracing_ct.initialize()
+tracing_ct.solver_setup()
 tracing_ct.solver.verbose = 2
 sol_tracing_ct = tracing_ct.solver.solve()
 
@@ -78,11 +78,11 @@ assert np.allclose(sol_tracing_np["y"], sol_tracing_ct["y"])
 # Tracing with fixed eta:
 
 tracing_fixed_eta_np = TracingFixedEta_np(game)
-tracing_fixed_eta_np.initialize()
+tracing_fixed_eta_np.solver_setup()
 sol_tracing_fixed_eta_np = tracing_fixed_eta_np.solver.solve()
 
 tracing_fixed_eta_ct = TracingFixedEta_ct(game)
-tracing_fixed_eta_ct.initialize()
+tracing_fixed_eta_ct.solver_setup()
 tracing_fixed_eta_ct.solver.verbose = 2
 sol_tracing_fixed_eta_ct = tracing_fixed_eta_ct.solver.solve()
 
@@ -91,11 +91,11 @@ sol_tracing_fixed_eta_ct = tracing_fixed_eta_ct.solver.solve()
 # LogGame:
 
 log_game_np = LogGame_np(game)
-log_game_np.initialize()
+log_game_np.solver_setup()
 sol_log_game_np = log_game_np.solver.solve()
 
 log_game_ct = LogGame_ct(game)
-log_game_ct.initialize()
+log_game_ct.solver_setup()
 sol_log_game_ct = log_game_ct.solver.solve()
 
 assert np.allclose(sol_log_game_np["y"], sol_log_game_ct["y"])
@@ -103,11 +103,11 @@ assert np.allclose(sol_log_game_np["y"], sol_log_game_ct["y"])
 # IPM:
 
 ipm_ct = IPM_ct(game)
-ipm_ct.initialize()
+ipm_ct.solver_setup()
 sol_ipm_ct = ipm_ct.solver.solve()
 
 ipm_sp = IPM_sp(game)
-ipm_sp.initialize()
+ipm_sp.solver_setup()
 # sol_ipm_sp = ipm_sp.solver.solve()
 
 # assert np.allclose(sol_ipm_ct["y"], sol_ipm_sp["y"])

@@ -109,12 +109,12 @@ class Tracing(LogStratHomotopy):
             self.u_rho = self.game.payoffs
             self.phi_rho = self.game.transitions
 
-    def initialize(self) -> None:
+    def solver_setup(self) -> None:
         self.y0 = self.find_y0()
         # TODO: silence warning of transversality at starting point?
         self.solver = HomCont(self.H, self.y0, self.J, t_target=1.0,
                               parameters=self.tracking_parameters['normal'],
-                              distance_function=self.distance)
+                              distance_function=self.sigma_distance)
 
     def find_y0(self, tol: Union[float, int] = 1e-12, max_iter: int = 10000) -> np.ndarray:
         """Value function iteration."""

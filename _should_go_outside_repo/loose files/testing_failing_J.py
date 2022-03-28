@@ -34,7 +34,7 @@ game = SGame(u, phi, delta)
 
 
 tracing = Tracing_ct(game)
-tracing.initialize()
+tracing.solver_setup()
 
 tracing.solver.load_file('tracing_failing_Jacobian.json')
 tracing.solver.verbose = 2

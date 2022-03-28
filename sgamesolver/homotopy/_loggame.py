@@ -2,9 +2,6 @@
 
 # TODO: check user-provided weights?
 
-# TODO: adjust tracking parameters with "scale" of game
-
-
 from typing import Optional
 
 import numpy as np
@@ -66,11 +63,11 @@ class LogGame(LogStratHomotopy):
             # TODO: document how weights should be specified / should they be checked?
             self.nu = weights
 
-    def initialize(self) -> None:
+    def solver_setup(self) -> None:
         self.y0 = self.find_y0()
         self.solver = HomCont(self.H, self.y0, self.J, t_target=1.0,
                               parameters=self.tracking_parameters['normal'],
-                              distance_function=self.distance)
+                              distance_function=self.sigma_distance)
 
     def find_y0(self) -> np.ndarray:
         sigma = self.game.centroid_strategy(self.nu)

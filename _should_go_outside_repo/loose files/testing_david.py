@@ -18,7 +18,7 @@ game = SGame.random_game(num_s, num_p, num_actions=(2, 4), delta=0.95)
 si = game.centroid_strategy()
 
 qre = QRE_np(game)
-qre.initialize()
+qre.solver_setup()
 
 """
 import timeit
@@ -55,7 +55,7 @@ einsum_eq_phi2 = f'sp{ABC[0:num_players]}t,s{",s".join(ABC[p] for p in range(num
 
 # cython test:
 qre2 = QRE_ct(game)
-qre2.initialize()
+qre2.solver_setup()
 sol2 = qre2.solver.solve()
 
 

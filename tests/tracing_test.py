@@ -16,7 +16,7 @@ class TestTracing:
     game = SGame(*create_random_game())
     y_rand = np.random.random(game.num_actions_total + game.num_states * game.num_players + 1)
     hom_np = Tracing_np(game)
-    hom_np.initialize()
+    hom_np.solver_setup()
     hom_ct = Tracing_ct(game)
 
     def test_H_np_equal_ct(cls):
@@ -53,7 +53,7 @@ class TestTracingFixedEta:
     game = SGame(*create_random_game())
     y_rand = np.random.random(game.num_actions_total + game.num_states * game.num_players + 1)
     hom_np = TracingFixedEta_np(game)
-    hom_np.initialize()
+    hom_np.solver_setup()
     hom_ct = TracingFixedEta_ct(game)
 
     def test_H_np_equal_ct(cls):
@@ -96,7 +96,7 @@ if __name__ == '__main__':
     game = SGame(*create_random_game(num_s, num_p, num_a, num_a, delta, delta, rng=rng))
 
     hom = TracingFixedEta_ct(game)
-    hom.initialize()
+    hom.solver_setup()
     hom.solver.store_path = True
     hom.solver.max_steps = 1e6
     hom.solver.verbose = 2

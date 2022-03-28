@@ -211,17 +211,6 @@ class HomCont:
         self.path = None
         self.store_cond = False
 
-        # ToDo: log for debugging.
-        self.debug = False
-        if kwargs.get('debug', False):
-            self.debug = True
-            self.log = {
-                'corrector_steps': np.zeros(self.corr_steps_max),
-                'corrector_dist_crossed': np.zeros(self.corr_steps_max),
-                'corrector_ratio_crossed': np.zeros(self.corr_steps_max),
-                'segment_jumps': 0,
-            }
-
     # Properties
     @property
     def y(self):
@@ -301,7 +290,7 @@ class HomCont:
     def t(self):
         return self._y[-1]
 
-    def loop(self):
+    def start(self):
         """Main loop of predictor-corrector steps, with step size adaptation between iterations."""
         if self.verbose >= 1:
             print('=' * 50)
@@ -355,7 +344,7 @@ class HomCont:
                             'steps': self.step,
                             'sign': self.sign,
                             'time': time_sec,
-                            'failure reason': False,
+                            'failure reason': 'none',
                             }
 
                 self.adapt_stepsize()
@@ -433,16 +422,20 @@ class HomCont:
             # If corrector step violates restrictions given by parameters:
             # Correction failed, reduce stepsize and predict again.
             # Note: corr_dist_max has to be relaxed for large ds: thus, * max(ds, 1)
-            if (corr_dist > self.corr_dist_max * max(self.ds, 1)
-                    or corr_ratio > self.corr_ratio_max
-                    or self.corr_step > self.corr_steps_max):
+            # TODO: current implementation of corr_steps_max is not sensible: checks violation after performing step?
+            # in general, re-think the flow of this loop: it checks failure criteria after computing a new corrector
+            # point, but without checking whether that point may be valid.
+            corr_dist_exceeded = corr_dist > self.corr_dist_max * max(self.ds, 1)
+            corr_ratio_exceeded = corr_ratio > self.corr_ratio_max
+            corr_steps_exceeded = self.corr_step > self.corr_steps_max
+            if corr_dist_exceeded or corr_ratio_exceeded or corr_steps_exceeded:
                 if self.verbose >= 3:
                     err_msg = 'Corrector loop failed.'
-                    if corr_dist > self.corr_dist_max * max(self.ds, 1):
+                    if corr_dist_exceeded:
                         err_msg += f' corr_dist = {corr_dist/max(self.ds, 1):0.4f} (max: {self.corr_dist_max:0.4f});'
-                    if corr_ratio > self.corr_ratio_max:
+                    if corr_ratio_exceeded:
                         err_msg += f' corr_ratio = {corr_ratio:0.4f} (max: {self.corr_ratio_max:0.4f});'
-                    if self.corr_step > self.corr_steps_max:
+                    if corr_steps_exceeded:
                         err_msg += f' corr_step = {self.corr_step} (max: {self.corr_steps_max});'
                     cond = np.linalg.cond(self.J_pred)
                     err_msg += f' cond(J_pred) = {cond:#.4g}'
@@ -463,6 +456,7 @@ class HomCont:
         # det_ratio = np.exp(new_log_det - old_log_det)
         # TODO: discuss if checking this even makes sense -
         # TODO: tracing e.g. regularly has det ratios > 2 even for very small ds
+        # (more testing: even > 20 seems to happen along the path)
 
         # TODO: remove old version
         # det_ratio = np.abs(np.linalg.det(np.vstack([self.J_corr, self.tangent])) /
@@ -613,7 +607,7 @@ class HomCont:
         t_axis = np.zeros_like(self.tangent)
         t_axis[-1] = 1
         tangent_angle = angle(self.tangent, t_axis)
-        if abs(90 - tangent_angle) < 2.5:  # TODO: @Steffen: this seems wrong
+        if abs(90 - tangent_angle) < 2.5:
             print(f'Warning: Tangent has angle {tangent_angle:.1f}° '
                   'relative to t-axis. Starting point may violate transversality.')
 
@@ -634,7 +628,7 @@ class HomCont:
         abs_difference = np.abs(y_new - y_old)
         return np.max(abs_difference[:-1]) / abs_difference[-1]
 
-    def load_state(self, y: np.ndarray, sign: int = None,  s: float = None, step: int = 0, ds: float = None, **kwargs):
+    def _load_state(self, y: np.ndarray, sign: int = None, s: float = None, step: int = 0, ds: float = None, **kwargs):
         """Load y and other state variables. Prepare to start continuation at this point."""
         self.y = y
         if sign is None or sign == 0 or np.isnan(sign):
@@ -659,7 +653,7 @@ class HomCont:
         if self.store_path:
             state = self.path.get_step(step_no)
             if state is not None:
-                self.load_state(**state)
+                self._load_state(**state)
                 self.path.index = state['index'] + 1
                 print(f'Returning to step {self.step}.')
         else:
@@ -696,7 +690,7 @@ class HomCont:
         with open(filename) as file:
             state = json.load(file)
             state['y'] = np.array(state['y'])
-            self.load_state(**state)
+            self._load_state(**state)
             print(f'State successfully loaded from {filename}.')
 
     def start_storing_path(self, max_steps: int = 1000):
@@ -748,12 +742,12 @@ class HomPath:
         self.max_steps = max_steps
         self.dim = dim
 
-        self.y = np.nan * np.empty(shape=(max_steps, dim), dtype=np.float64)
-        self.s = np.nan * np.empty(shape=max_steps, dtype=np.float64)
-        self.cond = np.nan * np.empty(shape=max_steps, dtype=np.float64)
-        self.sign = np.nan * np.empty(shape=max_steps, dtype=np.float64)
-        self.step = np.nan * np.empty(shape=max_steps, dtype=np.float64)
-        self.ds = np.nan * np.empty(shape=max_steps, dtype=np.float64)
+        self.y = np.nan * np.empty(shape=(max_steps, dim))
+        self.s = np.nan * np.empty(shape=max_steps)
+        self.cond = np.nan * np.empty(shape=max_steps)
+        self.sign = np.nan * np.empty(shape=max_steps)
+        self.step = np.nan * np.empty(shape=max_steps)
+        self.ds = np.nan * np.empty(shape=max_steps)
 
         self.index = 0
         self.downsample_frequency = 10
@@ -825,17 +819,15 @@ class HomPath:
             ax3.plot(s_plot, cond_plot)
             ax3.grid()
         else:
-            # alternatively: sign on axis 4
-            sign_plot = self.sign[rows]
+            # alternatively: ds on axis 4
+            ds_plot = self.ds[rows]
             ax3 = fig.add_subplot(224)
-            ax3.set_title('Orientation')
+            ax3.set_title('step size')
             ax3.set_xlabel(r'path length $s$')
-            ax3.set_ylabel('sign of tangent')
-            ax3.set_ylim(-1.5, 1.5)
-            ax3.plot(s_plot, sign_plot)
+            ax3.set_ylabel('ds')
+            ax3.plot(s_plot, ds_plot)
             ax3.grid()
         # t -> y
-        # TODO: discuss what exactly does this plot?
         ax4 = fig.add_subplot(224)
         ax4.set_title(fr'Variables in y II')
         ax4.set_xlabel(r'homotopy parameter $t$')

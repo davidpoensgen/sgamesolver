@@ -16,7 +16,7 @@ class TestIPM:
     game = SGame(*create_random_game())
     y_rand = np.random.random(game.num_actions_total + game.num_states * game.num_players + 1)
     hom_ct = IPM_ct(game)
-    hom_ct.initialize()
+    hom_ct.solver_setup()
     hom_sp = IPM_sp(game)
 
     # def test_H_ct_equal_sp(cls):

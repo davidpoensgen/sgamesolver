@@ -4,6 +4,7 @@ __pycache__/
 **/__build__
 *.py[cod]
 *$py.class
+build
 
 # PyTest
 .pytest_cache/

@@ -1,8 +1,6 @@
 """Classes for stochastic game and corresponding homotopy."""
 
 # TODO: define scale of game for adjusting tracking parameters
-# TODO: finalize method check_equilibriumness
-# TODO: document ordering of variables in y and equations in H and J
 # TODO: symmetry
 
 
@@ -183,7 +181,7 @@ class SGame:
         return np.extract(self.action_mask, strategies)
 
     def unflatten_strategies(self, strategies_flat: ArrayLike, zeros: bool = False) -> np.ndarray:
-        """Convert a flat array containing a strategy profile or similar to an array
+        """Convert a flat array containing a strategy profile (or parameters of same shape) to an array
         with shape (num_states, num_players, num_actions_max), padded with NaNs (or zeros under the respective option.)
         """
         if zeros:
@@ -225,7 +223,7 @@ class SGame:
         return np.array(values_flat).reshape((self.num_states, self.num_players))
 
     def check_equilibrium(self, strategy_profile: ArrayLike) -> np.ndarray:
-        """Calculate "epsilon-equilibriumness" (max total utility any agent could gain by deviating)
+        """Calculate "epsilon-equilibriumness" (maximum total utility each agent could gain by a one-shot deviation)
         of a given strategy profile.
         """
         values = self.get_values(strategy_profile)
@@ -243,12 +241,21 @@ class SGame:
 
             losses[:, p] = action_values.max(axis=-1) - values[:, p]
 
-        # TODO: absolute losses mean different things when games are scaled differently.
-        # TODO: should we use percentages? or the min of some percentage and some absolute deviation?
-
-        # TODO: decide whether losses should be aggregated (player/agent/...?)
-        # TODO: Should this function report? Return? etc.
         return losses
+
+    def sigma_V_to_string(self, sigma, V=None) -> str:
+        """Renders a strategy profile and associated values as human-readable string."""
+        if V is None:
+            V = self.get_values(sigma)
+        string = ""
+        for state in range(self.num_states):
+            string += f'+++++++ state{state} +++++++\n'
+            for player in range(self.num_players):
+                V_si = V[state, player]
+                sigma_si = sigma[state, player, :self.nums_actions[state, player]]
+                string += f'player{player}: v={V_si:#5.2f}, ' \
+                          f's={np.array2string(sigma_si, formatter={"float_kind": lambda x: "%.3f" % x})}\n'
+        return string
 
 
 # %% blueprint for homotopy classes
@@ -268,7 +275,7 @@ class SGameHomotopy:
         self.solver = None
         self.equilibrium = None
 
-    def initialize(self) -> None:
+    def solver_setup(self) -> None:
         """Any steps in preparation to start solver:
         - set priors, weights etc. if needed
         - set starting point y0
@@ -284,7 +291,7 @@ class SGameHomotopy:
         if not self.solver:
             print('Please run .initialize() first to set up the solver.')
             return
-        solution = self.solver.loop()
+        solution = self.solver.start()
         if solution['success']:
             sigma, V, t = self.y_to_sigma_V_t(solution['y'])
             self.equilibrium = {'strategies': sigma,
@@ -338,18 +345,10 @@ class SGameHomotopy:
         if self.equilibrium is None:
             print('Please solve for an equilibrium first.')
             return
-
-        string = ""
-        for state in range(self.game.num_states):
-            string += f'+++++++ state{state} +++++++\n'
-            for player in range(self.game.num_players):
-                v = self.equilibrium['values'][state, player]
-                sigma = self.equilibrium['strategies'][state, player, :self.game.nums_actions[state, player]]
-                string += f'player{player}: v={v:#5.2f}, ' \
-                          f's={np.array2string(sigma, formatter={"float_kind": lambda x: "%.3f" % x})}\n'
-        return string
+        return self.game.sigma_V_to_string(self.equilibrium['strategies'], self.equilibrium['values'])
 
     def plot_path(self, x_axis="s", max_plotted=1000):
+        """Plots solver path; requires that path storing was enabled before computing the equilibrium."""
         if not self.solver or not self.solver.path:
             print('No solver or no stored path.')
             return
@@ -369,9 +368,12 @@ class SGameHomotopy:
 
         if x_axis == "s":
             x_plot = path.s[rows]
+            x_label = "path length s"
         elif x_axis == "t":
             x_plot = path.y[rows, -1]
+            x_label = "homotopy parameter t"
 
+        # get sigma from y
         num_rows = len(x_plot)
         sigma_plot = np.empty((num_rows, self.game.num_states, self.game.num_players, self.game.num_actions_max))
         for row in range(path.index)[rows]:
@@ -390,20 +392,25 @@ class SGameHomotopy:
                     ax.set_ylabel(f'state{state}', rotation=90, size='large')
                 if state == 0:
                     ax.set_title(f'player{player}')
-        figure.tight_layout()
-        figure.subplots_adjust(bottom=0.4 / self.game.num_states)
+                if state == self.game.num_states - 1:
+                    ax.set_xlabel(x_label)
 
+        figure.tight_layout()
+
+        # add some padding at bottom, and place action legend there:
+        figure.subplots_adjust(bottom=0.4 / self.game.num_states)
         colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
         legend_elements = [matplotlib.lines.Line2D([0], [0], color=colors[i], label=f'action{i}')
                            for i in range(self.game.num_actions_max)]
         figure.legend(handles=legend_elements, ncol=self.game.num_actions_max,
                       loc='lower center', bbox_to_anchor=(0.5, 0))
+
         return figure
 
 
 class LogStratHomotopy(SGameHomotopy):
     """Base class for homotopies using logarithmized strategies
-    (i.e. y contains beta := log(sigma), rather than sigma).
+    (where y contains beta := log(sigma), rather than sigma).
     """
 
     def sigma_V_t_to_y(self, sigma: np.ndarray, V: np.ndarray, t: Union[float, int]) -> np.ndarray:
@@ -423,8 +430,8 @@ class LogStratHomotopy(SGameHomotopy):
         t = y[-1]
         return sigma, V, t
 
-    def distance(self, y_new, y_old):
-        """Calculates the distance in strategies sigma between y_old and y_new,
+    def sigma_distance(self, y_new, y_old):
+        """Calculates the distance in strategies (sigma) between y_old and y_new,
         in the maximum norm, normalized by distance in homotopy parameter t."""
         sigma_difference = np.exp(y_new[:self.game.num_actions_total]) - np.exp(y_old[:self.game.num_actions_total])
         sigma_distance = np.max(np.abs(sigma_difference))

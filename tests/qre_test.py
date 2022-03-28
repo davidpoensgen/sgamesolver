@@ -16,7 +16,7 @@ class TestQRE:
     game = SGame(*create_random_game())
     y_rand = np.random.random(game.num_actions_total + game.num_states * game.num_players + 1)
     hom_np = QRE_np(game)
-    hom_np.initialize()
+    hom_np.solver_setup()
     hom_ct = QRE_ct(game)
 
     def test_H_np_equal_ct(cls):

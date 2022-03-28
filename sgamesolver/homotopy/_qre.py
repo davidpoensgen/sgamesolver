@@ -7,13 +7,6 @@
 
 # TODO: adjust tracking parameters with "scale" of game
 
-# TODO: think about Cython import
-# Cython compilation complains about depreciated Numpy API.
-# Could be suppressed in general setup.py with 'define_macros': [('NPY_NO_DEPRECATED_API', 'NPY_1_7_API_VERSION')].
-# Seemingly cannot be suppressed with pxyimport.
-# Stick to pxyimport?
-# Pre-compile anyway?
-
 # TODO: play with numba boost on numpy implementation
 
 
@@ -22,7 +15,9 @@ import numpy as np
 from sgamesolver.sgame import SGame, LogStratHomotopy
 from sgamesolver.homcont import HomCont
 
-ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+# TODO: make sure there's no clashed between ABC and the hard-coded parts of einsum eqs.
+# I.e. remove SP, all other letters used
+ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnortuvwxyz'
 
 
 # %% parent class for QRE homotopy
@@ -33,8 +28,6 @@ class QRE(LogStratHomotopy):
 
     def __init__(self, game: SGame) -> None:
         super().__init__(game)
-
-        # TODO: adjust parameters with scale of payoff matrix:
 
         self.tracking_parameters['normal'] = {
             'x_tol': 1e-7,
@@ -68,11 +61,11 @@ class QRE(LogStratHomotopy):
             'bifurc_angle_min': 175,
         }
 
-    def initialize(self, target_lambda: float = np.inf, store_path: bool = True) -> None:
+    def solver_setup(self, target_lambda: float = np.inf) -> None:
         self.y0 = self.find_y0()
         self.solver = HomCont(self.H, self.y0, self.J, t_target=target_lambda,
                               parameters=self.tracking_parameters['normal'],
-                              distance_function=self.distance)
+                              distance_function=self.sigma_distance)
 
     def find_y0(self) -> np.ndarray:
         sigma = self.game.centroid_strategy()
