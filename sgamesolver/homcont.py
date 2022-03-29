@@ -402,7 +402,7 @@ class HomCont:
         H_corr = self.H_pred
 
         # corrector loop
-        while self.corr_step == 0 or np.max(np.abs(H_corr)) > self.H_tol:
+        while np.max(np.abs(H_corr)) > self.H_tol:
             self.corr_step += 1
             correction = np.dot(self.Jpinv, H_corr)
             self.y_corr = self.y_corr - correction

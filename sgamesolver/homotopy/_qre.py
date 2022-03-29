@@ -21,7 +21,7 @@ try:
 except ImportError:
     ct = False
 
-# alphabet for einsum-equations (with letters which would potentially clash)
+# alphabet for einsum-equations (without letters which would potentially clash)
 ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZacdefghijklmnortuvwxyz'
 
 
@@ -208,8 +208,8 @@ class QRE_np(QRE_Base):
             'Eu_tilde_a_H': [f's{ABC[0:num_p]},s{",s".join(ABC[p_] for p_ in range(num_p) if p_ != p)}->s{ABC[p]}'
                              for p in range(num_p)],
             'Eu_tilde_a_J': [f's{ABC[0:num_p]},s{ABC[0:num_p]}->s{ABC[p]}' for p in range(num_p)],
-            'dEu_tilde_a_dbeta': [f's{ABC[0:num_p]},s{ABC[:p]}{ABC[p + 1:num_p]}tqb->s{ABC[p]}tqb' for p in
-                                  range(num_p)],
+            'dEu_tilde_a_dbeta': [f's{ABC[0:num_p]},s{ABC[:p]}{ABC[p + 1:num_p]}tqb->s{ABC[p]}tqb'
+                                  for p in range(num_p)],
             'dEu_tilde_a_dV': [f's{ABC[0:num_p]}tp,s{ABC[0:num_p]}->s{ABC[p]}tp' for p in range(num_p)],
             'dEu_tilde_dbeta': f'sp{ABC[0:num_p]},sp{ABC[0:num_p]}tqb->sptqb',
         }
