@@ -15,15 +15,31 @@ import numpy as np
 from sgamesolver.sgame import SGame, LogStratHomotopy
 from sgamesolver.homcont import HomCont
 
-# TODO: make sure there's no clashed between ABC and the hard-coded parts of einsum eqs.
-# I.e. remove SP, all other letters used
-ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnortuvwxyz'
+try:
+    import sgamesolver.homotopy._qre_ct as _qre_ct
+    ct = True
+except ImportError:
+    ct = False
+
+# alphabet for einsum-equations (with letters which would potentially clash)
+ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZacdefghijklmnortuvwxyz'
+
+
+def QRE(game: SGame, implementation='auto'):
+    """QRE homotopy for stochastic games."""
+    if implementation == 'cython' or (implementation == 'auto' and ct):
+        return QRE_ct(game)
+    else:
+        if implementation == 'auto' and not ct:
+            print('Defaulting to numpy implementation of QRE, because cython version is not installed. Numpy may '
+                  'be substantially slower. For help setting up the cython version, please consult the manual.')
+        return QRE_np(game)
 
 
 # %% parent class for QRE homotopy
 
 
-class QRE(LogStratHomotopy):
+class QRE_Base(LogStratHomotopy):
     """QRE homotopy: base class"""
 
     def __init__(self, game: SGame) -> None:
@@ -76,7 +92,7 @@ class QRE(LogStratHomotopy):
 # %% Numpy implementation of QRE
 
 
-class QRE_np(QRE):
+class QRE_np(QRE_Base):
     """QRE homotopy: Numpy implementation"""
 
     def __init__(self, game: SGame) -> None:  # sourcery no-metrics
@@ -185,17 +201,17 @@ class QRE_np(QRE):
                     5: T_J_5}
 
         # equations to be used by einsum
+        # TODO: isn't sigma_prod_with_p the same as sigma_prod, just repeated?
         self.einsum_eqs = {
-            'sigma_prod': 's' + ',s'.join(ABC[0:num_p]) + '->s' + ABC[0:num_p],
-            'sigma_prod_with_p': ['s' + ',s'.join(ABC[0:num_p]) + '->s' + ABC[0:num_p] for p in range(num_p)],
-            'Eu_tilde_a_H': ['s' + ABC[0:num_p] + ',s' + ',s'.join(ABC[p_] for p_ in range(num_p) if p_ != p)
-                             + '->s' + ABC[p] for p in range(num_p)],
-            'Eu_tilde_a_J': ['s' + ABC[0:num_p] + ',s' + ABC[0:num_p] + '->s' + ABC[p] for p in range(num_p)],
-            'dEu_tilde_a_dbeta': ['s' + ABC[0:num_p] + ',s' + ''.join(ABC[p_] for p_ in range(num_p) if p_ != p)
-                                  + 'tqb->s' + ABC[p] + 'tqb' for p in range(num_p)],
-            'dEu_tilde_a_dV': ['s' + ABC[0:num_p] + 'tp,s' + ABC[0:num_p] + '->s' + ABC[p] + 'tp'
-                               for p in range(num_p)],
-            'dEu_tilde_dbeta': 'sp' + ABC[0:num_p] + ',sp' + ABC[0:num_p] + 'tqb->sptqb',
+            'sigma_prod': f's{",s".join(ABC[0:num_p])}->s{ABC[0:num_p]}',
+            'sigma_prod_with_p': [f's{",s".join(ABC[0:num_p])}->s{ABC[0:num_p]}' for p in range(num_p)],
+            'Eu_tilde_a_H': [f's{ABC[0:num_p]},s{",s".join(ABC[p_] for p_ in range(num_p) if p_ != p)}->s{ABC[p]}'
+                             for p in range(num_p)],
+            'Eu_tilde_a_J': [f's{ABC[0:num_p]},s{ABC[0:num_p]}->s{ABC[p]}' for p in range(num_p)],
+            'dEu_tilde_a_dbeta': [f's{ABC[0:num_p]},s{ABC[:p]}{ABC[p + 1:num_p]}tqb->s{ABC[p]}tqb' for p in
+                                  range(num_p)],
+            'dEu_tilde_a_dV': [f's{ABC[0:num_p]}tp,s{ABC[0:num_p]}->s{ABC[p]}tp' for p in range(num_p)],
+            'dEu_tilde_dbeta': f'sp{ABC[0:num_p]},sp{ABC[0:num_p]}tqb->sptqb',
         }
 
         # optimal paths to be used by einsum
@@ -327,31 +343,14 @@ class QRE_np(QRE):
 # %% Cython implementation of QRE
 
 
-class QRE_ct(QRE):
+class QRE_ct(QRE_Base):
     """QRE homotopy: Cython implementation"""
 
-    def __init__(self, game: SGame) -> None:
-        super().__init__(game)
-
-        # only import Cython module on class instantiation
-        try:
-            import sgamesolver.homotopy._qre_ct as qre_ct
-
-        except ImportError:
-            raise ImportError("Cython implementation of QRE homotopy could not be imported. ",
-                              "Make sure your system has the relevant C compilers installed. ",
-                              "For Windows, check https://wiki.python.org/moin/WindowsCompilers ",
-                              "to find the right Microsoft Visual C++ compiler for your Python version. ",
-                              "Standalone compilers are sufficient, there is no need to install Visual Studio. ",
-                              "For Linux, make sure the Python package gxx_linux-64 is installed in your environment.")
-
-        self.qre_ct = qre_ct
-
     def H(self, y: np.ndarray) -> np.ndarray:
-        return self.qre_ct.H(y, self.game.payoffs, self.game.transitions, self.game.num_states, self.game.num_players,
-                             self.game.nums_actions, self.game.num_actions_max, self.game.num_actions_total)
+        return _qre_ct.H(y, self.game.payoffs, self.game.transitions, self.game.num_states, self.game.num_players,
+                         self.game.nums_actions, self.game.num_actions_max, self.game.num_actions_total)
 
     def J(self, y: np.ndarray) -> np.ndarray:
-        return self.qre_ct.J(y, self.game.payoffs, self.game.transitions, self.game.num_states, self.game.num_players,
-                             self.game.nums_actions, self.game.num_actions_max, self.game.num_actions_total)
+        return _qre_ct.J(y, self.game.payoffs, self.game.transitions, self.game.num_states, self.game.num_players,
+                         self.game.nums_actions, self.game.num_actions_max, self.game.num_actions_total)
 

@@ -258,6 +258,34 @@ class SGame:
         return string
 
 
+class StrategyProfile:
+    """Container for equilbria and other strategy profiles."""
+
+    def __init__(self, nums_actions, sigma, V, t=None):
+        self._nums_actions = nums_actions
+        self.num_states = self._nums_actions.shape[0]
+        self.num_players = self._nums_actions.shape[1]
+        self.strategies = sigma
+        self.values = V
+        if t is not None:
+            self.homotopy_parameter = t
+
+    def to_string(self):
+        """Renders the strategy profile and associated values as human-readable string."""
+        string = ""
+        for state in range(self.num_states):
+            string += f'+++++++ state{state} +++++++\n'
+            for player in range(self.num_players):
+                V_si = self.values[state, player]
+                sigma_si = self.strategies[state, player, :self._nums_actions[state, player]]
+                string += f'player{player}: v={V_si:#5.2f}, ' \
+                          f's={np.array2string(sigma_si, formatter={"float_kind": lambda x: "%.3f" % x})}\n'
+        return string
+
+    def __str__(self):
+        return self.to_string()
+
+
 # %% blueprint for homotopy classes
 
 
@@ -286,22 +314,18 @@ class SGameHomotopy:
         pass
 
     def solve(self) -> None:
-        """TODO: just playing with ideas to make things more easily usable
-        """
+        """Start the solver and stores the equilibrium if it is successful."""
         if not self.solver:
             print('Please run .initialize() first to set up the solver.')
             return
         solution = self.solver.start()
         if solution['success']:
             sigma, V, t = self.y_to_sigma_V_t(solution['y'])
-            self.equilibrium = {'strategies': sigma,
-                                'values': V,
-                                'homotopy_parameter': t,
-                                }
-            print(f'An equilibrium was found via homotopy continuation.')
+            self.equilibrium = StrategyProfile(self.game.nums_actions, sigma, V, t)
+            print('An equilibrium was found via homotopy continuation.')
         else:
-            print(f'The solver failed to find an equilibrium. Please refer to the manual'
-                  f' for suggestions how to proceed.')  # TODO: link manual perhaps?
+            print('The solver failed to find an equilibrium. Please refer to the manual'
+                  ' for suggestions how to proceed.')  # TODO: link manual perhaps?
 
     def find_y0(self) -> np.ndarray:
         """Calculate starting point y0."""
@@ -340,15 +364,9 @@ class SGameHomotopy:
         t = y[-1]
         return sigma, V, t
 
-    def equilibrium_string(self):
-        """Returns a (relatively) human-readable string of an equilibrium found by the solver."""
-        if self.equilibrium is None:
-            print('Please solve for an equilibrium first.')
-            return
-        return self.game.sigma_V_to_string(self.equilibrium['strategies'], self.equilibrium['values'])
-
     def plot_path(self, x_axis="s", max_plotted=1000):
-        """Plots solver path; requires that path storing was enabled before computing the equilibrium."""
+        """Plots the path the solver has followed. Requires that path storing was
+        enabled before starting the solver."""
         if not self.solver or not self.solver.path:
             print('No solver or no stored path.')
             return
@@ -436,3 +454,5 @@ class LogStratHomotopy(SGameHomotopy):
         sigma_difference = np.exp(y_new[:self.game.num_actions_total]) - np.exp(y_old[:self.game.num_actions_total])
         sigma_distance = np.max(np.abs(sigma_difference))
         return sigma_distance / np.abs(y_new[-1] - y_old[-1])
+
+

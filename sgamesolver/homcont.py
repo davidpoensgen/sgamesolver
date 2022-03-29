@@ -6,9 +6,6 @@ import os
 import json
 
 
-# TODO - x_transformer out of docstrings. Distance into docstrings.
-
-
 class HomCont:
     """Class to perform homotopy continuation to solve a nonlinear system of equations: F(x) = H(x, t_target) = 0.
 
@@ -35,12 +32,13 @@ class HomCont:
         The variables of interest x are stored in the other entries.
     J : callable, optional
         Jacobian matrix of H: R^(N+1) -> R^N x R^(N+1)
-        If not provided by user, a finite difference approximation is used (requires package numdifftools).
+        If not provided by user, a finite difference approximation is used (requires package numdifftools; likely
+        orders of magnitude slower).
 
     Convergence criteria
     -----------
     t_target : float, optional
-    t_tol: float, optional
+    convergence_tol: float, optional
     x_tol: float, optional
     distance_function: callable, optional
 
@@ -84,7 +82,8 @@ class HomCont:
 
         The parameters are:
         ----------
-        x_tol : float  # TODO: rename to distance_tol? merge parameters x_tol, t_tol, since it's only ever one that matters?
+        x_tol : float  # TODO: rename to distance_tol? merge parameters x_tol, t_tol to convergence_tol
+                       #TODO:  , since it's only ever one that matters?
             Continuation is considered to have converged successfully once max(|x_new-x_old|) / |t_new-t_old| < x_tol,
             i.e. x has stabilized. If a distance_function is provided, it is used to calculate the distance instead.
             Active only if t_target = np.inf. Defaults to 1e-7.
@@ -102,7 +101,7 @@ class HomCont:
         ds_max : float
             Maximum step size, defaults to 1000.
         H_tol : float
-            Convergence criterion used for corrector step: max(H(y_corr)) < H_tol.
+            Convergence criterion used for corrector step: max(|H(y_corr)|) < H_tol.
             Defaults to 1e-7.
         corr_steps_max : int
             Maximum number of corrector steps, defaults to 20.
@@ -160,11 +159,11 @@ class HomCont:
         self.H_tol = 1e-7
         self.ds0 = 0.01
         self.ds_infl = 1.2
+        self.ds_infl_max_corr_steps = 9
         self.ds_defl = 0.5
         self.ds_min = 1e-9
         self.ds_max = 1000
         self.corr_steps_max = 20
-        self.ds_infl_max_corr_steps = 9
         self.corr_dist_max = 0.3
         self.corr_ratio_max = 0.3
         self.detJ_change_max = 0.5
@@ -403,7 +402,7 @@ class HomCont:
         H_corr = self.H_pred
 
         # corrector loop
-        while np.max(np.abs(H_corr)) > self.H_tol:
+        while self.corr_step == 0 or np.max(np.abs(H_corr)) > self.H_tol:
             self.corr_step += 1
             correction = np.dot(self.Jpinv, H_corr)
             self.y_corr = self.y_corr - correction
@@ -614,7 +613,6 @@ class HomCont:
     def set_greedy_sign(self):
         """Set sign so that continuation starts towards t_target."""
         self.sign = 1
-        self._tangent_needs_update = True
         t_direction_current = np.sign(self.tangent[-1])
         t_direction_desired = np.sign(self.t_target - self.t)
         if t_direction_current != t_direction_desired:
@@ -819,9 +817,9 @@ class HomPath:
             ax3.plot(s_plot, cond_plot)
             ax3.grid()
         else:
-            # alternatively: ds on axis 4
+            # alternatively: ds on axis 3
             ds_plot = self.ds[rows]
-            ax3 = fig.add_subplot(224)
+            ax3 = fig.add_subplot(223)
             ax3.set_title('step size')
             ax3.set_xlabel(r'path length $s$')
             ax3.set_ylabel('ds')
