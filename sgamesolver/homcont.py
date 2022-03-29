@@ -209,6 +209,8 @@ class HomCont:
         self.store_path = False
         self.path = None
         self.store_cond = False
+        self.test_segment_jumping = False
+
 
     # Properties
     @property
@@ -422,8 +424,6 @@ class HomCont:
             # Correction failed, reduce stepsize and predict again.
             # Note: corr_dist_max has to be relaxed for large ds: thus, * max(ds, 1)
             # TODO: current implementation of corr_steps_max is not sensible: checks violation after performing step?
-            # in general, re-think the flow of this loop: it checks failure criteria after computing a new corrector
-            # point, but without checking whether that point may be valid.
             corr_dist_exceeded = corr_dist > self.corr_dist_max * max(self.ds, 1)
             corr_ratio_exceeded = corr_ratio > self.corr_ratio_max
             corr_steps_exceeded = self.corr_step > self.corr_steps_max
@@ -444,30 +444,22 @@ class HomCont:
                 return
 
         # Corrector loop has converged.
-        # Monitor change in determinant of augmented Jacobian. This is an indicator of potential segment jumping.
-        # If change is too large, discard new point. Reduce stepsize and repeat predictor step.
-        # Use log determinant to avoid over-/underflow issues with det of large matrices.
         self.J_corr = self.J_func(self.y_corr)
 
-        old_log_det = np.linalg.slogdet(np.vstack([self.J, self.tangent]))[1]
-        new_log_det = np.linalg.slogdet(np.vstack([self.J_corr, self.tangent]))[1]
-        log_det_diff = np.abs(new_log_det - old_log_det)
-        # det_ratio = np.exp(new_log_det - old_log_det)
-        # TODO: discuss if checking this even makes sense -
-        # TODO: tracing e.g. regularly has det ratios > 2 even for very small ds
-        # (more testing: even > 20 seems to happen along the path)
-
-        # TODO: remove old version
-        # det_ratio = np.abs(np.linalg.det(np.vstack([self.J_corr, self.tangent])) /
-        #                    np.linalg.det(np.vstack([self.J, self.tangent])))
-        # if det_ratio > self.detJ_change_max or det_ratio < 1/self.detJ_change_max:
-
-        if log_det_diff > np.abs(np.log(self.detJ_change_max)):
-            if self.verbose >= 3:
-                sys.stdout.write(f'\nStep {self.step:5d}: Possible segment jump, discarding step. Ratio of augmented'
-                                 f' determinants: |det(J_new) / det(J_old)| = {np.exp(log_det_diff):0.2f}\n')
-                sys.stdout.flush()
-            return
+        if self.test_segment_jumping:
+            # Optional test for large relative changes in augmented determinant - a potential indicator for segment
+            # jumping (see Choi et al. 1995). Uses slogdet to avoid overruns for large systems.
+            # If a potential jump is detected, the step is discarded and ds decreased.
+            old_log_det = np.linalg.slogdet(np.vstack([self.J, self.tangent]))[1]
+            new_log_det = np.linalg.slogdet(np.vstack([self.J_corr, self.tangent]))[1]
+            log_det_diff = np.abs(new_log_det - old_log_det)
+            if log_det_diff > np.abs(np.log(self.detJ_change_max)):
+                if self.verbose >= 3:
+                    sys.stdout.write(
+                        f'\nStep {self.step:5d}: Possible segment jump, discarding step. Ratio of augmented'
+                        f' determinants: |det(J_new) / det(J_old)| = {np.exp(log_det_diff):0.2f}\n')
+                    sys.stdout.flush()
+                return
 
         self.corrector_success = True
 
@@ -882,3 +874,16 @@ class ContinuationFailed(Exception):
 
     def __str__(self):
         return self.message
+
+
+class DebugLog:
+    # TODO: finish or delete
+    def __init__(self):
+        self.data = np.zeros((4, 1000)) * np.NaN
+        self.corrector_steps = self.data[0:]
+        self.corrector_fail_steps = self.data[1:]
+        self.corrector_fail_dist = self.data[2:]
+        self.corrector_fail_ratio = self.data[3:]
+
+
+

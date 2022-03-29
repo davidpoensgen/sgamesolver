@@ -3,6 +3,7 @@
 import cython
 import numpy as np
 cimport numpy as np
+np.import_array()
 
 
 # %% auxiliary functions
@@ -159,15 +160,26 @@ def H(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] rho,
     """Homotopy function.
     
     H(y) = [  H_val[s,i,a]  ]
-           [  H_strat[s,i]      ]
+           [  H_strat[s,i]  ]
     with
     y = [ beta[s,i,a],  V[s,i],  t ]
     """
 
     cdef:
-        np.ndarray[np.float64_t, ndim=1] out_ = np.zeros(num_a_tot + num_s*num_p)
+        np.ndarray[np.float64_t, ndim=1] out_ = np.zeros(num_a_tot + num_s * num_p)
         np.ndarray[np.float64_t, ndim=3] beta = np.ones((num_s, num_p, num_a_max))
+        np.ndarray[np.float64_t, ndim=3] sigma
+        np.ndarray[np.float64_t, ndim=3] sigma_inv
+        double t = y[num_a_tot + num_s * num_p]
+        np.ndarray[np.float64_t, ndim=2] V = y[num_a_tot: num_a_tot + num_s * num_p].reshape(num_s, num_p)
+
+        np.ndarray[np.float64_t, ndim=3] u_sigma
+        np.ndarray[np.float64_t, ndim=4] phi_sigma
+        np.ndarray[np.float64_t, ndim=3] u_bar
+        np.ndarray[np.float64_t, ndim=4] phi_bar
+        np.ndarray[np.float64_t, ndim=3] u_tilde_sia_ev
         int state, player, action
+        double nu_beta_sum
         int flat_index = 0
 
     for state in range(num_s):
@@ -176,17 +188,20 @@ def H(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] rho,
                 beta[state, player, action] = y[flat_index]
                 flat_index += 1
 
-    cdef:
-        np.ndarray[np.float64_t, ndim=3] sigma = np.exp(beta)
-        np.ndarray[np.float64_t, ndim=3] sigma_inv = np.exp(-beta)
-        double nu_beta_sum
-        np.ndarray[np.float64_t, ndim=2] V = y[num_a_tot : num_a_tot + num_s*num_p].reshape(num_s, num_p)
-        double t = y[num_a_tot + num_s*num_p]
-        np.ndarray[np.float64_t, ndim=3] u_sigma = u_tilde_sia(u.ravel(), sigma, num_s, num_p, nums_a, num_a_max)
-        np.ndarray[np.float64_t, ndim=4] phi_sigma = phi_tilde_siat(phi.ravel(), sigma, num_s, num_p, nums_a, num_a_max)
-        np.ndarray[np.float64_t, ndim=3] u_bar = t*u_sigma + (1-t)*u_rho
-        np.ndarray[np.float64_t, ndim=4] phi_bar = t*phi_sigma + (1-t)*phi_rho
-        np.ndarray[np.float64_t, ndim=3] u_tilde_sia_ev = u_tilde(u_bar, V, phi_bar)
+    sigma = np.exp(beta)
+    sigma_inv = np.exp(-beta)
+
+    # u_sigma: derivatives of u wrt sigma_sia: u_si if i plays a, others play sigma (without continuation values)
+    u_sigma = u_tilde_sia(u.ravel(), sigma, num_s, num_p, nums_a, num_a_max)
+    # phi_sigma : derivatives of phi wrt sigma (phi_si if i plays a, rest plays sigma)
+    phi_sigma = phi_tilde_siat(phi.ravel(), sigma, num_s, num_p, nums_a, num_a_max)
+    # u_bar : pure strat utilities if others play sigma/rho mixture
+    u_bar = t * u_sigma + (1 - t) * u_rho
+    # phi_bar : pure strat transition probs if others play sigma/rho mixture
+    phi_bar = t * phi_sigma + (1 - t) * phi_rho
+    # u_tilde_sia_ev : total disc. utilities if others play sigma/rho mixture.
+    # note: uses u_tilde, but not same shape as in qre. here, derivatives are taken first.
+    u_tilde_sia_ev = u_tilde(u_bar, V, phi_bar)
 
     flat_index = 0
     for state in range(num_s):
@@ -230,7 +245,27 @@ def J(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] rho,
     cdef:
         np.ndarray[np.float64_t, ndim=2] out_ = np.zeros((num_a_tot + num_s*num_p, num_a_tot + num_s*num_p + 1))
         np.ndarray[np.float64_t, ndim=3] beta = np.ones((num_s, num_p, num_a_max))
+        np.ndarray[np.float64_t, ndim=3] sigma
+        np.ndarray[np.float64_t, ndim=3] sigma_inv
+        np.ndarray[np.float64_t, ndim=2] V = y[num_a_tot : num_a_tot + num_s*num_p].reshape(num_s, num_p)
+        double t = y[num_a_tot + num_s*num_p]
+        np.ndarray[np.float64_t, ndim=3] u_sigma
+        np.ndarray[np.float64_t, ndim=4] phi_sigma
+        np.ndarray[np.float64_t, ndim=3] u_bar
+        np.ndarray[np.float64_t, ndim=4] phi_bar
+        np.ndarray[np.float64_t, ndim=3] u_hat
+        np.ndarray[np.float64_t, ndim=4] phi_hat
+        np.ndarray[np.float64_t, ndim=3] u_tilde_sia_ev
+        np.ndarray[np.float64_t, ndim=3] u_hat_sia_ev
+        np.ndarray[np.float64_t, ndim=1] u_tilde_ev_ravel
+        np.ndarray[np.float64_t, ndim=5] u_tilde_sijab_ev
+
+        double nu_beta_sum
         int state, player, action
+        int row_state, row_player, row_action
+        int col_state, col_player, col_action
+        int row_index, col_index, col_index_init
+
         int flat_index = 0
     
     for state in range(num_s):
@@ -238,27 +273,27 @@ def J(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] rho,
             for action in range(nums_a[state, player]):
                 beta[state, player, action] = y[flat_index]
                 flat_index += 1
-    
-    cdef:
-        np.ndarray[np.float64_t, ndim=3] sigma = np.exp(beta)
-        np.ndarray[np.float64_t, ndim=3] sigma_inv = np.exp(-beta)
-        double nu_beta_sum
-        np.ndarray[np.float64_t, ndim=2] V = y[num_a_tot : num_a_tot + num_s*num_p].reshape(num_s, num_p)
-        double t = y[num_a_tot + num_s*num_p]
-        np.ndarray[np.float64_t, ndim=3] u_sigma = u_tilde_sia(u.ravel(), sigma, num_s, num_p, nums_a, num_a_max)
-        np.ndarray[np.float64_t, ndim=4] phi_sigma = phi_tilde_siat(phi.ravel(), sigma, num_s, num_p, nums_a, num_a_max)
-        np.ndarray[np.float64_t, ndim=3] u_bar = t*u_sigma + (1-t)*u_rho
-        np.ndarray[np.float64_t, ndim=4] phi_bar = t*phi_sigma + (1-t)*phi_rho
-        np.ndarray[np.float64_t, ndim=3] u_hat = u_sigma - u_rho
-        np.ndarray[np.float64_t, ndim=4] phi_hat = phi_sigma - phi_rho
-        np.ndarray[np.float64_t, ndim=3] u_tilde_sia_ev = u_tilde(u_bar, V, phi_bar)
-        np.ndarray[np.float64_t, ndim=3] u_hat_sia_ev = u_tilde(u_hat, V, phi_hat)
-        np.ndarray[np.float64_t, ndim=1] u_tilde_ev_ravel = u_tilde(u, V, phi).ravel()
-        np.ndarray[np.float64_t, ndim=5] u_tilde_sijab_ev = u_tilde_sijab(u_tilde_ev_ravel, sigma,
-                                                                          num_s, num_p, nums_a, num_a_max)
-        int row_state, row_player, row_action
-        int col_state, col_player, col_action
-        int row_index, col_index, col_index_init
+
+    sigma = np.exp(beta)
+    sigma_inv = np.exp(-beta)
+    # u_sigma: derivative of u_si wrt sigma_sia -> u of pure a if others play sigma
+    u_sigma = u_tilde_sia(u.ravel(), sigma, num_s, num_p, nums_a, num_a_max)
+    # phi_sigma: derivative of phi_si wrt sigma_sia -> u of pure a if others play sigma
+    phi_sigma = phi_tilde_siat(phi.ravel(), sigma, num_s, num_p, nums_a, num_a_max)
+    # u_bar, phi_bar: u/phi of si playing a if rest plays mixture sigma / rho
+    u_bar = t * u_sigma + (1 - t) * u_rho
+    phi_bar = t * phi_sigma + (1 - t) * phi_rho
+    # u_hat, phi_hat: derivatives of u_bar,phi_bar wrt to t?
+    u_hat = u_sigma - u_rho
+    phi_hat = phi_sigma - phi_rho
+    # now: use previous to compute total discounted versions by ein-summing in continuation values.
+    u_tilde_sia_ev = u_tilde(u_bar, V, phi_bar)
+    u_hat_sia_ev = u_tilde(u_hat, V, phi_hat)
+    # this is the full array of total discounted utilities for all pure strat profiles
+    u_tilde_ev_ravel = u_tilde(u, V, phi).ravel()
+    # cross derivatives d^2 u / d sigma_sia d sigma_sjb
+    u_tilde_sijab_ev = u_tilde_sijab(u_tilde_ev_ravel, sigma, num_s, num_p, nums_a, num_a_max)
+
 
     # first block: rows with d_H_val[s,i,a]
     row_index = 0
