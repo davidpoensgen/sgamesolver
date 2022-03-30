@@ -1,4 +1,5 @@
 import sgamesolver
+import numpy as np
 
 game = sgamesolver.SGame.random_game(4, 4, 4, seed=123)
 

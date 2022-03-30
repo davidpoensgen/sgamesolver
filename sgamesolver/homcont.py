@@ -353,7 +353,7 @@ class HomCont:
                             'steps': self.step,
                             'sign': self.sign,
                             'time': time_sec,
-                            'failure reason': 'none',
+                            'failure reason': None,
                             }
 
                 self.adapt_stepsize()
