@@ -459,7 +459,7 @@ class LogStratHomotopy(SGameHomotopy):
 
     def sigma_distance(self, y_new, y_old):
         """Calculates the distance in strategies (sigma) between y_old and y_new,
-        in the maximum norm, normalized by distance in homotopy parameter t."""
+        in the maximum norm, normalized by distance in homotopy parameter t. Used as convergence criterion."""
         sigma_difference = np.exp(y_new[:self.game.num_actions_total]) - np.exp(y_old[:self.game.num_actions_total])
         sigma_distance = np.max(np.abs(sigma_difference))
         return sigma_distance / np.abs(y_new[-1] - y_old[-1])

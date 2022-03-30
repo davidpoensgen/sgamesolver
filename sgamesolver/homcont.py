@@ -373,12 +373,11 @@ class HomCont:
         predictor point, not anew at each Newton iteration.
         """
         self.corrector_success = False
-
-        corr_dist_old = np.inf
-        self.corr_step = 0
         self.corr_fail_dist = False
         self.corr_fail_ratio = False
         self.corr_fail_steps = False
+        corr_dist_old = np.inf
+        self.corr_step = 0
 
         self.y_corr = self.y_pred
         H_corr = self.H_pred
@@ -428,7 +427,7 @@ class HomCont:
 
         if self.test_segment_jumping:
             # Optional test for large relative changes in augmented determinant - a potential indicator for segment
-            # jumping (see Choi et al. 1995). Uses slogdet to avoid overruns for large systems.
+            # jumping (see Choi et al. 1995). Uses slogdet to avoid overflows for large systems.
             # If a potential jump is detected, the step is discarded and ds decreased.
             old_log_det = np.linalg.slogdet(np.vstack([self.J, self.tangent]))[1]
             new_log_det = np.linalg.slogdet(np.vstack([self.J_corr, self.tangent]))[1]
@@ -601,24 +600,24 @@ class HomCont:
         return np.max(abs_difference[:-1]) / abs_difference[-1]
 
     def report_result(self, exception=None) -> dict:
+        """Return a dictionary with continuation result; print message if verbose."""
         time_sec = time.perf_counter() - self.start_time
+
         if exception is None:
             failure_reason = None
             success = True
-            if self.verbose >= 1:
-                sys.stdout.write(f'\nStep {self.step:5d}: Continuation successful. '
-                                 f'Total time elapsed:{timedelta(seconds=int(time_sec))} \n')
-                sys.stdout.flush()
         else:
             failure_reason = exception.reason
             success = False
-            if self.verbose >= 1:
-                sys.stdout.write(f'\nStep {self.step:5d}: Failure reason: {exception.message} \n')
-                sys.stdout.write(f'Step {self.step:5d}: Continuation failed. '
-                                 f'Total time elapsed:{timedelta(seconds=int(time_sec))} \n')
-                sys.stdout.flush()
 
         if self.verbose >= 1:
+            if success:
+                print(f'\nStep {self.step:5d}: Continuation successful. '
+                      f'Total time elapsed:{timedelta(seconds=int(time_sec))}')
+            else:
+                print(f'\nStep {self.step:5d}: Failure reason: {exception.message}')
+                print(f'Step {self.step:5d}: Continuation failed. '
+                      f'Total time elapsed:{timedelta(seconds=int(time_sec))}')
             print('End homotopy continuation')
             print('=' * 50)
 
