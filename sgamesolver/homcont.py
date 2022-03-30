@@ -607,12 +607,13 @@ class HomCont:
             raise ValueError(f'"J(y0)" should have shape {(len(self.y) - 1, len(self.y))}, but has shape {J0.shape}.')
 
         # Check transversality at starting point
-        t_axis = np.zeros_like(self.tangent)
-        t_axis[-1] = 1
-        tangent_angle = angle(self.tangent, t_axis)
-        if abs(90 - tangent_angle) < 2.5:
-            print(f'Warning: Tangent has angle {tangent_angle:.1f}° '
-                  'relative to t-axis. Starting point may violate transversality.')
+        if self.verbose >= 2:
+            t_axis = np.zeros_like(self.tangent)
+            t_axis[-1] = 1
+            tangent_angle = angle(self.tangent, t_axis)
+            if abs(90 - tangent_angle) < 2.5:
+                print(f'Warning: Tangent has angle {tangent_angle:.1f}° '
+                      'relative to t-axis. Starting point may violate transversality.')
 
     def set_greedy_sign(self):
         """Set sign so that continuation starts towards t_target."""

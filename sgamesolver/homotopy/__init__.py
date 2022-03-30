@@ -1,4 +1,4 @@
 from ._ipm import IPM_sp, IPM_ct
-from ._qre import QRE, QRE_np, QRE_ct
-from ._loggame import LogGame_np, LogGame_ct
-from ._tracing import Tracing_np, Tracing_ct
+from ._qre import QRE
+from ._loggame import LogGame
+from ._tracing import Tracing, TracingFixedEta

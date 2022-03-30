@@ -563,5 +563,3 @@ class TracingFixedEta_ct(Tracing_ct):
                                        self.game.num_states, self.game.num_players, self.game.nums_actions,
                                        self.game.num_actions_max, self.game.num_actions_total)
 
-for a in range(9):
-    print(a)
