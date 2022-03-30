@@ -178,6 +178,7 @@ class HomCont:
         self.ds = self.ds0
 
         # attributes to be used later
+        self.start_time = None
         self.step = 0
         self.s = 0.0
         self.corrector_success = False
@@ -301,7 +302,7 @@ class HomCont:
         if self.verbose >= 1:
             print('=' * 50)
             print('Start homotopy continuation')
-        start_time = time.perf_counter()
+        self.start_time = time.perf_counter()
 
         self.converged = False
 
@@ -338,23 +339,7 @@ class HomCont:
                         sys.stdout.flush()
 
                 if self.converged:
-                    time_sec = time.perf_counter() - start_time
-                    if self.verbose >= 1:
-                        sys.stdout.write(f'\nStep {self.step:5d}: Continuation successful. '
-                                         f'Total time elapsed:{timedelta(seconds=int(time_sec))} \n')
-                        sys.stdout.flush()
-
-                    print('End homotopy continuation')
-                    print('=' * 50)
-
-                    return {'success': True,
-                            'y': self.y,
-                            's': self.s,
-                            'steps': self.step,
-                            'sign': self.sign,
-                            'time': time_sec,
-                            'failure reason': None,
-                            }
+                    return self.report_result()
 
                 self.adapt_stepsize()
 
@@ -364,24 +349,8 @@ class HomCont:
                 if self.step >= self.max_steps:
                     raise ContinuationFailed('max_steps')
 
-            except ContinuationFailed as failure:
-                time_sec = time.perf_counter() - start_time
-                if self.verbose >= 1:
-                    sys.stdout.write(f'\nStep {self.step:5d}: Failure reason: {failure.message} \n')
-                    sys.stdout.write(f'Step {self.step:5d}: Continuation failed. '
-                                     f'Total time elapsed:{timedelta(seconds=int(time_sec))} \n')
-                    sys.stdout.flush()
-                    print('End homotopy continuation')
-                    print('=' * 50)
-
-                return {'success': False,
-                        'y': self.y,
-                        's': self.s,
-                        'steps': self.step,
-                        'sign': self.sign,
-                        'time': time_sec,
-                        'failure reason': failure.reason,
-                        }
+            except ContinuationFailed as exception:
+                return self.report_result(exception=exception)
 
     def predict(self):
         """Compute predictor point y_pred, starting at y."""
@@ -630,6 +599,37 @@ class HomCont:
         """
         abs_difference = np.abs(y_new - y_old)
         return np.max(abs_difference[:-1]) / abs_difference[-1]
+
+    def report_result(self, exception=None) -> dict:
+        time_sec = time.perf_counter() - self.start_time
+        if exception is None:
+            failure_reason = None
+            success = True
+            if self.verbose >= 1:
+                sys.stdout.write(f'\nStep {self.step:5d}: Continuation successful. '
+                                 f'Total time elapsed:{timedelta(seconds=int(time_sec))} \n')
+                sys.stdout.flush()
+        else:
+            failure_reason = exception.reason
+            success = False
+            if self.verbose >= 1:
+                sys.stdout.write(f'\nStep {self.step:5d}: Failure reason: {exception.message} \n')
+                sys.stdout.write(f'Step {self.step:5d}: Continuation failed. '
+                                 f'Total time elapsed:{timedelta(seconds=int(time_sec))} \n')
+                sys.stdout.flush()
+
+        if self.verbose >= 1:
+            print('End homotopy continuation')
+            print('=' * 50)
+
+        return {'success': success,
+                'y': self.y,
+                's': self.s,
+                'steps': self.step,
+                'sign': self.sign,
+                'time': time_sec,
+                'failure reason': failure_reason,
+                }
 
     def _load_state(self, y: np.ndarray, sign: int = None, s: float = None, step: int = 0, ds: float = None, **kwargs):
         """Load y and other state variables. Prepare to start continuation at this point."""

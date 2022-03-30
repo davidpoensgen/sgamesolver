@@ -270,7 +270,7 @@ class StrategyProfile:
         if t is not None:
             self.homotopy_parameter = t
 
-    def to_string(self):
+    def to_string(self, roundoff=3) -> str:
         """Renders the strategy profile and associated values as human-readable string."""
         string = ""
         for state in range(self.num_states):
@@ -279,8 +279,17 @@ class StrategyProfile:
                 V_si = self.values[state, player]
                 sigma_si = self.strategies[state, player, :self._nums_actions[state, player]]
                 string += f'player{player}: v={V_si:#5.2f}, ' \
-                          f's={np.array2string(sigma_si, formatter={"float_kind": lambda x: "%.3f" % x})}\n'
+                          f's={np.array2string(sigma_si, formatter={"float_kind": lambda x: f"%.{roundoff}f" % x})}\n'
         return string
+
+    def to_list(self, roundoff: int = None) -> list:
+        if roundoff is None:
+            sigma = self.strategies
+        else:
+            sigma = np.round(self.strategies, roundoff)
+        list_ = [[sigma[s, p, :self._nums_actions[s, p]].tolist() for p in range(self.num_players)]
+                 for s in range(self.num_states)]
+        return list_
 
     def __str__(self):
         return self.to_string()
