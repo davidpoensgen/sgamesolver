@@ -780,7 +780,7 @@ class HomPath:
     def plot(self, max_plotted: int = 1000, y_indices: list = None):
         """Plot path.
         If a list or array of y_indices is given, only these are plotted.
-        To plot a range of indices, one can use np.arange, e.g. y_indices = np.arange(10, 20).
+        To plot a range of indices, you can use np.arange, e.g. y_indices = np.arange(10, 20).
         """
         try:
             import matplotlib.pyplot as plt
@@ -879,7 +879,7 @@ class HomPath:
 
 
 class DebugLog:
-    """Log to collect data on corrector steps for debugging and parameter tuning."""
+    """Log to collect data on corrector steps for parameter tuning and debugging."""
     def __init__(self, solver: HomCont):
         self.solver = solver
         self.index = 0
