@@ -5,7 +5,6 @@
 
 # TODO: play with einsum_path
 # TODO: adjust tracking parameters with "scale" of game
-# TODO: think about Cython import
 
 
 import warnings
@@ -18,13 +17,14 @@ from scipy.optimize import brentq
 from sgamesolver.sgame import SGame, LogStratHomotopy
 from sgamesolver.homcont import HomCont
 
-ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-
 try:
     import sgamesolver.homotopy._tracing_ct as _tracing_ct
     ct = True
 except ImportError:
     ct = False
+
+
+ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
 
 def Tracing(game: SGame, priors: Union[str, ArrayLike] = "centroid",
@@ -138,7 +138,6 @@ class Tracing_Base(LogStratHomotopy):
 
     def solver_setup(self) -> None:
         self.y0 = self.find_y0()
-        # TODO: silence warning of transversality at starting point?
         self.solver = HomCont(self.H, self.y0, self.J, t_target=1.0,
                               parameters=self.tracking_parameters['normal'],
                               distance_function=self.sigma_distance)
@@ -183,9 +182,8 @@ class Tracing_Base(LogStratHomotopy):
             else:
                 V_old = V.copy()
                 sigma_old = sigma.copy()
-
-        if k >= max_iter - 1:
-            warnings.warn('Value function iteration has not converged.')
+        else:  # loop ended without break
+            warnings.warn('Value function iteration has not converged during computation of the starting point.')
 
         return self.sigma_V_t_to_y(sigma, V, 0.0)
 
@@ -405,10 +403,6 @@ class Tracing_np(Tracing_Base):
 class Tracing_ct(Tracing_Base):
     """Tracing homotopy: Cython implementation"""
 
-    def __init__(self, game: SGame, priors: Union[str, ArrayLike] = "centroid",
-                 weights: Optional[ArrayLike] = None) -> None:
-        super().__init__(game, priors, weights)
-
     def H(self, y: np.ndarray) -> np.ndarray:
         return _tracing_ct.H(y, self.game.payoffs, self.game.transitions,
                              self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
@@ -568,3 +562,6 @@ class TracingFixedEta_ct(Tracing_ct):
                                        self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
                                        self.game.num_states, self.game.num_players, self.game.nums_actions,
                                        self.game.num_actions_max, self.game.num_actions_total)
+
+for a in range(9):
+    print(a)

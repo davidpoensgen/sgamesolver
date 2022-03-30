@@ -10,13 +10,28 @@ from numpy.typing import ArrayLike
 from sgamesolver.sgame import SGame, LogStratHomotopy
 from sgamesolver.homcont import HomCont
 
+try:
+    import sgamesolver.homotopy._loggame_ct as _loggame_ct
+    ct = True
+except ImportError:
+    ct = False
+
+
 ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
 
-# %% parent class for logarithmic game homotopy
+def LogGame(game: SGame, weights: Optional[ArrayLike] = None, implementation='auto'):
+    """LogGame homotopy for stochastic games."""
+    if implementation == 'cython' or (implementation == 'auto' and ct):
+        return LogGame_ct(game, weights)
+    else:
+        if implementation == 'auto' and not ct:
+            print('Defaulting to numpy implementation of LogGame, because cython version is not installed. Numpy '
+                  'may be substantially slower. For help setting up the cython version, please consult the manual.')
+        return LogGame_np(game, weights)
 
 
-class LogGame(LogStratHomotopy):
+class LogGame_Base(LogStratHomotopy):
     """Logarithmic game homotopy: base class"""
 
     def __init__(self, game: SGame, weights: Optional[ArrayLike] = None) -> None:
@@ -82,10 +97,7 @@ class LogGame(LogStratHomotopy):
         return self.sigma_V_t_to_y(sigma, V, 0.0)
 
 
-# %% Numpy implementation of LogGame
-
-
-class LogGame_np(LogGame):
+class LogGame_np(LogGame_Base):
     """Logarithmic game homotopy: Numpy implementation"""
 
     def __init__(self, game: SGame, weights: Optional[ArrayLike] = None) -> None:
@@ -286,36 +298,15 @@ class LogGame_np(LogGame):
         return J[self.J_mask]
 
 
-# %% Cython implementation of LogGame
-
-
-class LogGame_ct(LogGame):
+class LogGame_ct(LogGame_Base):
     """Logarithmic game homotopy: Cython implementation"""
 
-    def __init__(self, game: SGame, weights: Optional[ArrayLike] = None) -> None:
-        super().__init__(game, weights)
-
-        # only import Cython module on class instantiation
-        try:
-            import sgamesolver.homotopy._loggame_ct as loggame_ct
-
-        except ImportError:
-            raise ImportError("Cython implementation of LogGame homotopy could not be imported. ",
-                              "Make sure your system has the relevant C compilers installed. ",
-                              "For Windows, check https://wiki.python.org/moin/WindowsCompilers ",
-                              "to find the right Microsoft Visual C++ compiler for your Python version. ",
-                              "Standalone compilers are sufficient, there is no need to install Visual Studio. ",
-                              "For Linux, make sure the Python package gxx_linux-64 is installed in your environment.")
-
-        self.loggame_ct = loggame_ct
-
     def H(self, y: np.ndarray) -> np.ndarray:
-        return self.loggame_ct.H(y, self.game.payoffs, self.game.transitions, self.nu,
-                                 self.game.num_states, self.game.num_players, self.game.nums_actions,
-                                 self.game.num_actions_max, self.game.num_actions_total)
+        return _loggame_ct.H(y, self.game.payoffs, self.game.transitions, self.nu,
+                             self.game.num_states, self.game.num_players, self.game.nums_actions,
+                             self.game.num_actions_max, self.game.num_actions_total)
 
     def J(self, y: np.ndarray) -> np.ndarray:
-        return self.loggame_ct.J(y, self.game.payoffs, self.game.transitions, self.nu,
-                                 self.game.num_states, self.game.num_players, self.game.nums_actions,
-                                 self.game.num_actions_max, self.game.num_actions_total)
-
+        return _loggame_ct.J(y, self.game.payoffs, self.game.transitions, self.nu,
+                             self.game.num_states, self.game.num_players, self.game.nums_actions,
+                             self.game.num_actions_max, self.game.num_actions_total)
