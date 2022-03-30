@@ -1,10 +1,5 @@
 """(Markov logit) quantal response equilibrium (QRE) homotopy."""
 
-# TODO: play with einsum_path
-# seems to slow things down considerably, which is strange (there is an open github issue on it)
-# can be tested with option dev=True in H and J
-# remove dev option once development is finished
-
 # TODO: adjust tracking parameters with "scale" of game
 
 # TODO: play with numba boost on numpy implementation
@@ -87,9 +82,6 @@ class QRE_Base(LogStratHomotopy):
         sigma = self.game.centroid_strategy()
         V = self.game.get_values(sigma)
         return self.sigma_V_t_to_y(sigma, V, 0.0)
-
-
-# %% Numpy implementation of QRE
 
 
 class QRE_np(QRE_Base):
@@ -214,20 +206,8 @@ class QRE_np(QRE_Base):
             'dEu_tilde_dbeta': f'sp{ABC[0:num_p]},sp{ABC[0:num_p]}tqb->sptqb',
         }
 
-        # optimal paths to be used by einsum
-        # TODO: seems to slow computation down considerably, remove once development is completed
-        sigma = self.game.centroid_strategy()
-        V = self.game.get_values(sigma)
-        sigma_p_list = [sigma[:, p, :] for p in range(num_p)]
-        u_tilde = self.game.payoffs + np.einsum('sp...S,Sp->sp...', self.game.transitions, V)
-        self.einsum_paths = {
-            'u_tilde': np.einsum_path('sp...S,Sp->sp...', self.game.transitions, V, optimize=('optimal'))[0],
-            'Eu_tilde_a': [np.einsum_path(self.einsum_eqs['Eu_tilde_a_H'][p], u_tilde[:, p],
-                                          *(sigma_p_list[:p] + sigma_p_list[(p + 1):]), optimize=('optimal'))[0]
-                           for p in range(num_p)],
-        }
 
-    def H(self, y: np.ndarray, dev: bool = False) -> np.ndarray:
+    def H(self, y: np.ndarray) -> np.ndarray:
         """Homotopy function."""
 
         num_s, num_p = self.game.num_states, self.game.num_players
@@ -239,22 +219,14 @@ class QRE_np(QRE_Base):
         # building blocks of H
 
         sigma_p_list = [sigma[:, p, :] for p in range(num_p)]
-        if dev:
-            u_tilde = self.game.payoffs + np.einsum('sp...S,Sp->sp...', self.game.transitions, V,
-                                                    optimize=False)
-        else:
-            u_tilde = self.game.payoffs + np.einsum('sp...S,Sp->sp...', self.game.transitions, V)
+
+        u_tilde = self.game.payoffs + np.einsum('sp...S,Sp->sp...', self.game.transitions, V)
 
         if num_p > 1:
             Eu_tilde_a = np.empty((num_s, num_p, num_a_max))
             for p in range(num_p):
-                if dev:
-                    Eu_tilde_a[:, p] = np.einsum(self.einsum_eqs['Eu_tilde_a_H'][p], u_tilde[:, p],
-                                                 *(sigma_p_list[:p] + sigma_p_list[(p + 1):]),
-                                                 optimize=self.einsum_paths['Eu_tilde_a'][p])
-                else:
-                    Eu_tilde_a[:, p] = np.einsum(self.einsum_eqs['Eu_tilde_a_H'][p], u_tilde[:, p],
-                                                 *(sigma_p_list[:p] + sigma_p_list[(p + 1):]))
+                Eu_tilde_a[:, p] = np.einsum(self.einsum_eqs['Eu_tilde_a_H'][p], u_tilde[:, p],
+                                             *(sigma_p_list[:p] + sigma_p_list[(p + 1):]))
         else:
             Eu_tilde_a = u_tilde
 
@@ -275,7 +247,7 @@ class QRE_np(QRE_Base):
 
         return H[self.H_mask]
 
-    def J(self, y: np.ndarray, dev: bool = False) -> np.ndarray:
+    def J(self, y: np.ndarray) -> np.ndarray:
         """Jacobian matrix of homotopy function."""
 
         num_s, num_p, num_a_max = self.game.num_states, self.game.num_players, self.game.num_actions_max
@@ -338,9 +310,6 @@ class QRE_np(QRE_Base):
         # dH_val_dlambda = 0
 
         return J[self.J_mask]
-
-
-# %% Cython implementation of QRE
 
 
 class QRE_ct(QRE_Base):

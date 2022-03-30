@@ -185,7 +185,7 @@ class HomCont:
         self.corr_fail_ratio = False
         self.corr_fail_steps = False
         self.converged = False
-        self.det_ratio = 0.0
+        self.det_ratio = None
 
         self.H_pred = None
         self.y_corr = None
@@ -217,7 +217,7 @@ class HomCont:
 
         self.debug = False
 
-    # Properties
+    # Properties: These mainly serve to cache the results of potentially expensive function calls
     @property
     def y(self):
         """Current point. (Updated only when corrector step is accepted.)"""
@@ -484,7 +484,7 @@ class HomCont:
               [This function also checks if corrector accidentally crossed t_target.
                This should be rare, due to stepsize control. In that case, the current
                step is discarded, the algorithm reduces ds is and returns to the prediction step.]
-           b) t_target is inf.
+           b) t_target is inf or -inf.
               Then convergence is achieved once all variables (besides t) have stabilized, and step size is maximal.
               By default, convergence is measured using the method distance_function; it is possible to pass an
               alternative function to be used instead.
@@ -517,7 +517,7 @@ class HomCont:
            - corrector step was successful, but t_target was crossed
         If ds is to be decreased below ds_min, continuation is failed.
 
-        If t_target is finite, stepsize is capped so that the predictor will not cross t_target
+        If t_target is finite, stepsize is capped so that the predictor will not cross t_target.
         """
 
         if self.corrector_success and self.corr_step <= self.ds_infl_max_corr_steps:
@@ -708,6 +708,26 @@ class HomCont:
         self.debug = DebugLog(self)
 
 
+class ContinuationFailed(Exception):
+    """Exception raised by subfunctions to exit main predictor-corrector-loop."""
+    def __init__(self, reason):
+        self.reason = reason
+        if reason == 'predictor':
+            self.message = 'Could not find valid predictor: Likely hit a boundary of H\'s domain.'
+        elif reason == 'max_steps':
+            self.message = 'Maximum number of steps reached without convergence. ' \
+                           '(To continue, increase max_steps, then start again.)'
+        elif reason == 'corrector':
+            self.message = 'Corrector step failed, and ds is already minimal.'
+        else:
+            self.message = "Something unexpected happened."
+
+        super().__init__(self, self.message)
+
+    def __str__(self):
+        return self.message
+
+
 def qr_inv(array):
     """Calculate Moore-Penrose pseudo-inverse of a 2D-array using QR decomposition.
 
@@ -726,15 +746,7 @@ def angle(vector1, vector2):
 
 
 class HomPath:
-    """Container to store path data.
-
-    Parameters
-    ----------
-    dim : int
-        Number of variables to be tracked (i.e. len(y))
-    max_steps : int, optional
-        Maximum number of steps to be tracked, by default 10000.
-    """
+    """Container to store path data for the specified solver instance."""
 
     def __init__(self, solver: HomCont, max_steps: int = 1000):
         self.max_steps = max_steps
@@ -751,7 +763,7 @@ class HomPath:
         self.downsample_frequency = 10
 
     def update(self):
-        """Save current state of solver."""
+        """Store current state of solver."""
         self.y[self.index] = self.solver.y
         self.s[self.index] = self.solver.s
         if self.solver.store_cond:
@@ -772,7 +784,7 @@ class HomPath:
         try:
             import matplotlib.pyplot as plt
         except ModuleNotFoundError:
-            print('Path cannot be plotted: Package matplotlib is required.')
+            print('Missing the the python package matplotlib. Please install to plot.')
             return
 
         if self.index > max_plotted:
@@ -838,11 +850,11 @@ class HomPath:
         plt.show()
         return fig
 
-    def downsample(self, freq):
-
-        cutoff = len(self.s[::freq])
+    def downsample(self, frequency):
+        """Free up space by keeping only a subset of existing data with specified sampling frequency."""
+        cutoff = len(self.s[::frequency])
         for variable in [self.y, self.s, self.cond, self.sign, self.step, self.ds]:
-            variable[:cutoff] = variable[::freq]
+            variable[:cutoff] = variable[::frequency]
             variable[cutoff:] = np.NaN
         self.index = cutoff
 
@@ -863,26 +875,6 @@ class HomPath:
 
         except ValueError:
             print(f'Could not find data for any step preceding {step_no}.')
-
-
-class ContinuationFailed(Exception):
-    """Exception raised by subfunctions to exit main predictor-corrector-loop."""
-    def __init__(self, reason):
-        self.reason = reason
-        if reason == 'predictor':
-            self.message = 'Could not find valid predictor: Likely hit a boundary of H\'s domain.'
-        elif reason == 'max_steps':
-            self.message = 'Maximum number of steps reached without convergence. ' \
-                           '(To continue, increase max_steps, then start again.)'
-        elif reason == 'corrector':
-            self.message = 'Corrector step failed, and ds is already minimal.'
-        else:
-            self.message = "Something unexpected happened."
-
-        super().__init__(self, self.message)
-
-    def __str__(self):
-        return self.message
 
 
 class DebugLog:
@@ -937,13 +929,16 @@ class DebugLog:
             width = 1 + max(2, len(str(count)))
             header += str(i).rjust(width) + "|"
             counts += str(count).rjust(width) + "|"
-        print('~~~~~~~~~~ debug summary ~~~~~~~~~~')
-        print(f'Total steps: {self.index}')
-        print(f'Number of corrector steps (average: {np.average(self.corrector_steps):.2f})')
-        print(header)
-        print(counts)
-        failure_count = (self.corrector_fail_steps + self.corrector_fail_ratio + self.corrector_fail_dist).sum()
-        print(f'Total failed corrector loops: {failure_count:.0f}. Failure reasons: \n'
-              f'- Max steps: {self.corrector_fail_steps.sum():.0f}\n'
-              f'- Ratio: {self.corrector_fail_ratio.sum():.0f}\n'
-              f'- Distance: {self.corrector_fail_dist.sum():.0f}')
+        failure_count = (self.corrector_fail_steps + self.corrector_fail_ratio + self.corrector_fail_dist > 0).sum()
+        summary = (
+            f'~~~~~~~~~~ debug summary ~~~~~~~~~~\n'
+            f'Total steps: {self.index}\n'
+            f'Number of corrector steps (average: {np.average(self.corrector_steps):.2f})\n'
+            f'{header}\n'
+            f'{counts}\n'
+            f'Total failed corrector loops: {failure_count:.0f}. Failure reasons: \n'
+            f'- Max steps: {self.corrector_fail_steps.sum():.0f}\n'
+            f'- Ratio: {self.corrector_fail_ratio.sum():.0f}\n'
+            f'- Distance: {self.corrector_fail_dist.sum():.0f}'
+        )
+        print(summary)
