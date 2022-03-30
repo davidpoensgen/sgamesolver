@@ -179,9 +179,13 @@ class HomCont:
 
         # attributes to be used later
         self.step = 0
-        self.s = 0
+        self.s = 0.0
         self.corrector_success = False
+        self.corr_fail_dist = False
+        self.corr_fail_ratio = False
+        self.corr_fail_steps = False
         self.converged = False
+        self.det_ratio = 0.0
 
         self.H_pred = None
         self.y_corr = None
@@ -211,6 +215,7 @@ class HomCont:
         self.store_cond = False
         self.test_segment_jumping = False
 
+        self.debug = False
 
     # Properties
     @property
@@ -307,6 +312,9 @@ class HomCont:
 
                 self.predict()
                 self.correct()
+                if self.debug:
+                    self.debug.update()
+
                 if self.corrector_success:
                     self.check_convergence()
 
@@ -351,7 +359,7 @@ class HomCont:
                 self.adapt_stepsize()
 
                 if self.store_path and self.corrector_success:
-                    self.update_path()
+                    self.path.update()
 
                 if self.step >= self.max_steps:
                     raise ContinuationFailed('max_steps')
@@ -399,6 +407,9 @@ class HomCont:
 
         corr_dist_old = np.inf
         self.corr_step = 0
+        self.corr_fail_dist = False
+        self.corr_fail_ratio = False
+        self.corr_fail_steps = False
 
         self.y_corr = self.y_pred
         H_corr = self.H_pred
@@ -424,17 +435,17 @@ class HomCont:
             # Correction failed, reduce stepsize and predict again.
             # Note: corr_dist_max has to be relaxed for large ds: thus, * max(ds, 1)
             # TODO: current implementation of corr_steps_max is not sensible: checks violation after performing step?
-            corr_dist_exceeded = corr_dist > self.corr_dist_max * max(self.ds, 1)
-            corr_ratio_exceeded = corr_ratio > self.corr_ratio_max
-            corr_steps_exceeded = self.corr_step > self.corr_steps_max
-            if corr_dist_exceeded or corr_ratio_exceeded or corr_steps_exceeded:
+            self.corr_fail_dist = corr_dist > self.corr_dist_max * max(self.ds, 1)
+            self.corr_fail_ratio = corr_ratio > self.corr_ratio_max
+            self.corr_fail_steps = self.corr_step > self.corr_steps_max
+            if self.corr_fail_dist or self.corr_fail_ratio or self.corr_fail_steps:
                 if self.verbose >= 3:
                     err_msg = 'Corrector loop failed.'
-                    if corr_dist_exceeded:
+                    if self.corr_fail_dist:
                         err_msg += f' corr_dist = {corr_dist/max(self.ds, 1):0.4f} (max: {self.corr_dist_max:0.4f});'
-                    if corr_ratio_exceeded:
+                    if self.corr_fail_ratio:
                         err_msg += f' corr_ratio = {corr_ratio:0.4f} (max: {self.corr_ratio_max:0.4f});'
-                    if corr_steps_exceeded:
+                    if self.corr_fail_steps:
                         err_msg += f' corr_step = {self.corr_step} (max: {self.corr_steps_max});'
                     cond = np.linalg.cond(self.J_pred)
                     err_msg += f' cond(J_pred) = {cond:#.4g}'
@@ -453,11 +464,12 @@ class HomCont:
             old_log_det = np.linalg.slogdet(np.vstack([self.J, self.tangent]))[1]
             new_log_det = np.linalg.slogdet(np.vstack([self.J_corr, self.tangent]))[1]
             log_det_diff = np.abs(new_log_det - old_log_det)
+            self.det_ratio = np.exp(log_det_diff)
             if log_det_diff > np.abs(np.log(self.detJ_change_max)):
                 if self.verbose >= 3:
                     sys.stdout.write(
                         f'\nStep {self.step:5d}: Possible segment jump, discarding step. Ratio of augmented'
-                        f' determinants: |det(J_new) / det(J_old)| = {np.exp(log_det_diff):0.2f}\n')
+                        f' determinants: |det(J_new) / det(J_old)| = {self.det_ratio:0.2f}\n')
                     sys.stdout.flush()
                 return
 
@@ -688,16 +700,12 @@ class HomCont:
         or plot the progression of variables along the path."""
         self.store_path = True
         if not self.path:
-            self.path = HomPath(dim=len(self.y), max_steps=max_steps)
-            self.update_path()
+            self.path = HomPath(solver=self, max_steps=max_steps)
+            self.path.update()
 
-    def update_path(self):
-        """Saves current state to path."""
-        if self.store_cond:
-            cond = self.cond
-        else:
-            cond = np.NaN
-        self.path.update(y=self.y, s=self.s, cond=cond, sign=self.sign, step=self.step, ds=self.ds)
+    def start_debug_log(self):
+        """Initializes a debug log to store information on corrector steps."""
+        self.debug = DebugLog(self)
 
 
 def qr_inv(array):
@@ -728,11 +736,11 @@ class HomPath:
         Maximum number of steps to be tracked, by default 10000.
     """
 
-    def __init__(self, dim: int, max_steps: int = 1000):
+    def __init__(self, solver: HomCont, max_steps: int = 1000):
         self.max_steps = max_steps
-        self.dim = dim
+        self.solver = solver
 
-        self.y = np.nan * np.empty(shape=(max_steps, dim))
+        self.y = np.nan * np.empty(shape=(max_steps, solver.y.shape[0]))
         self.s = np.nan * np.empty(shape=max_steps)
         self.cond = np.nan * np.empty(shape=max_steps)
         self.sign = np.nan * np.empty(shape=max_steps)
@@ -742,14 +750,15 @@ class HomPath:
         self.index = 0
         self.downsample_frequency = 10
 
-    def update(self, y: np.ndarray, s: float, cond: float, sign: int, step: int, ds: float):
-
-        self.y[self.index] = y
-        self.s[self.index] = s
-        self.cond[self.index] = cond
-        self.sign[self.index] = sign
-        self.step[self.index] = step
-        self.ds[self.index] = ds
+    def update(self):
+        """Save current state of solver."""
+        self.y[self.index] = self.solver.y
+        self.s[self.index] = self.solver.s
+        if self.solver.store_cond:
+            self.cond[self.index] = self.solver.cond
+        self.sign[self.index] = self.solver.sign
+        self.step[self.index] = self.solver.step
+        self.ds[self.index] = self.solver.ds
 
         self.index += 1
         if self.index >= self.max_steps:
@@ -877,13 +886,64 @@ class ContinuationFailed(Exception):
 
 
 class DebugLog:
-    # TODO: finish or delete
-    def __init__(self):
-        self.data = np.zeros((4, 1000)) * np.NaN
-        self.corrector_steps = self.data[0:]
-        self.corrector_fail_steps = self.data[1:]
-        self.corrector_fail_dist = self.data[2:]
-        self.corrector_fail_ratio = self.data[3:]
+    """Log to collect data on corrector steps for debugging and parameter tuning."""
+    def __init__(self, solver: HomCont):
+        self.solver = solver
+        self.index = 0
+        self.data = np.zeros((6, 1000))
 
+    @property
+    def step(self):
+        return self.data[0, :self.index]
 
+    @property
+    def corrector_steps(self):
+        return self.data[1, :self.index]
 
+    @property
+    def corrector_fail_steps(self):
+        return self.data[2, :self.index]
+
+    @property
+    def corrector_fail_dist(self):
+        return self.data[3, :self.index]
+
+    @property
+    def corrector_fail_ratio(self):
+        return self.data[4, :self.index]
+
+    @property
+    def det_ratio(self):
+        return self.data[5, :self.index]
+
+    def update(self):
+        self.data[0, self.index] = self.solver.step
+        self.data[1, self.index] = self.solver.corr_step
+        self.data[2, self.index] = self.solver.corr_fail_steps
+        self.data[3, self.index] = self.solver.corr_fail_dist
+        self.data[4, self.index] = self.solver.corr_fail_ratio
+        if self.solver.test_segment_jumping:
+            self.data[5, self.index] = self.solver.det_ratio
+
+        self.index += 1
+        if self.index >= self.data.shape[1]:
+            self.data.resize((self.data.shape[0], self.data.shape[1] + 1000), refcheck=False)
+
+    def summarize(self):
+        header = "|"
+        counts = "|"
+        for i in range(self.solver.corr_steps_max + 1):
+            count = (self.corrector_steps == i).sum()
+            width = 1 + max(2, len(str(count)))
+            header += str(i).rjust(width) + "|"
+            counts += str(count).rjust(width) + "|"
+        print('~~~~~~~~~~ debug summary ~~~~~~~~~~')
+        print(f'Total steps: {self.index}')
+        print(f'Number of corrector steps (average: {np.average(self.corrector_steps):.2f})')
+        print(header)
+        print(counts)
+        failure_count = (self.corrector_fail_steps + self.corrector_fail_ratio + self.corrector_fail_dist).sum()
+        print(f'Total failed corrector loops: {failure_count:.0f}. Failure reasons: \n'
+              f'- Max steps: {self.corrector_fail_steps.sum():.0f}\n'
+              f'- Ratio: {self.corrector_fail_ratio.sum():.0f}\n'
+              f'- Distance: {self.corrector_fail_dist.sum():.0f}')
