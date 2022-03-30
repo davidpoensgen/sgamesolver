@@ -339,7 +339,7 @@ class HomCont:
                         sys.stdout.flush()
 
                 if self.converged:
-                    return self.report_result()
+                    return self._report_result()
 
                 self.adapt_stepsize()
 
@@ -350,7 +350,7 @@ class HomCont:
                     raise ContinuationFailed('max_steps')
 
             except ContinuationFailed as exception:
-                return self.report_result(exception=exception)
+                return self._report_result(exception=exception)
 
     def predict(self):
         """Compute predictor point y_pred, starting at y."""
@@ -453,9 +453,9 @@ class HomCont:
                This should be rare, due to stepsize control. In that case, the current
                step is discarded, the algorithm reduces ds is and returns to the prediction step.]
            b) t_target is inf or -inf.
-              Then convergence is achieved once all variables (besides t) have stabilized, and step size is maximal.
-              By default, convergence is measured using the method distance_function; it is possible to pass an
-              alternative function to be used instead.
+              Then convergence is achieved once all variables (besides t) have stabilized, and step size is maximal,
+              i.e. distance(y_new-y_old) < x_tol. By default, distance is measured using the method
+              distance_function; it is possible to pass an alternative function to be used instead.
         """
         # Case a): t_target is finite
         if not np.isinf(self.t_target):
@@ -599,7 +599,7 @@ class HomCont:
         abs_difference = np.abs(y_new - y_old)
         return np.max(abs_difference[:-1]) / abs_difference[-1]
 
-    def report_result(self, exception=None) -> dict:
+    def _report_result(self, exception=None) -> dict:
         """Return a dictionary with continuation result; print message if verbose."""
         time_sec = time.perf_counter() - self.start_time
 

@@ -197,7 +197,7 @@ def H(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] rho,
     phi_sigma = phi_tilde_siat(phi.ravel(), sigma, num_s, num_p, nums_a, num_a_max)
     # u_bar : pure strat utilities if others play sigma/rho mixture
     u_bar = t * u_sigma + (1 - t) * u_rho
-    # phi_bar : pure strat transition probs if others play sigma/rho mixture
+    # phi_bar : pure strat transition probabilities if others play sigma/rho mixture
     phi_bar = t * phi_sigma + (1 - t) * phi_rho
     # u_tilde_sia_ev : total disc. utilities if others play sigma/rho mixture.
     # note: uses u_tilde, but not same shape as in qre. here, derivatives are taken first.
