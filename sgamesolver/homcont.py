@@ -332,11 +332,7 @@ class HomCont:
                     self.check_bifurcation()
 
                     if self.verbose >= 1:
-                        output = f'\rStep {self.step:5d}: t = {self.t:#6.4g}, s = {self.s:#6.4g}, ds = {self.ds:#6.4g}'
-                        if self.store_cond:
-                            output += f', Cond(J) = {self.cond:#6.4g}'
-                        sys.stdout.write(output)
-                        sys.stdout.flush()
+                        self._report_step()
 
                 if self.converged:
                     return self._report_result()
@@ -392,14 +388,7 @@ class HomCont:
             corr_ratio = corr_dist / corr_dist_old
             corr_dist_old = corr_dist
 
-            H_corr = self.H_func(self.y_corr)
-
-            # If H(y) contains any NaN (corrector step has left domain of H):
-            # Correction failed, reduce stepsize and repeat predictor step.
-            if np.isnan(H_corr).any():
-                return
-
-            # If corrector step violates restrictions given by parameters:
+            # If corrector step violates any restriction given by parameters:
             # Correction failed, reduce stepsize and predict again.
             # Note: corr_dist_max has to be relaxed for large ds: thus, * max(ds, 1)
             # TODO: current implementation of corr_steps_max is not sensible: checks violation after performing step?
@@ -410,16 +399,24 @@ class HomCont:
                 if self.verbose >= 3:
                     err_msg = 'Corrector loop failed.'
                     if self.corr_fail_dist:
-                        err_msg += f' corr_dist = {corr_dist/max(self.ds, 1):0.4f} (max: {self.corr_dist_max:0.4f});'
+                        err_msg += f' corr_dist = {corr_dist/max(self.ds, 1):0.2f} (max: {self.corr_dist_max:0.2f});'
                     if self.corr_fail_ratio:
-                        err_msg += f' corr_ratio = {corr_ratio:0.4f} (max: {self.corr_ratio_max:0.4f});'
+                        err_msg += f' corr_ratio = {corr_ratio:0.2f} (max: {self.corr_ratio_max:0.2f});'
                     if self.corr_fail_steps:
                         err_msg += f' corr_step = {self.corr_step} (max: {self.corr_steps_max});'
                     cond = np.linalg.cond(self.J_pred)
                     err_msg += f' cond(J_pred) = {cond:#.4g}'
-                    sys.stdout.write(f'\nStep {self.step:5d}: {err_msg} \n')
-                    sys.stdout.flush()
+                    self._report_step()
+                    print(f'\nStep {self.step:5d}: {err_msg}')
 
+                return
+
+            # If corrector has not failed: get new H
+            H_corr = self.H_func(self.y_corr)
+
+            # If H(y) contains any NaN (corrector step has left domain of H):
+            # Correction failed, reduce stepsize and repeat predictor step.
+            if np.isnan(H_corr).any():
                 return
 
         # Corrector loop has converged.
@@ -435,10 +432,9 @@ class HomCont:
             self.det_ratio = np.exp(log_det_diff)
             if log_det_diff > np.abs(np.log(self.detJ_change_max)):
                 if self.verbose >= 3:
-                    sys.stdout.write(
-                        f'\nStep {self.step:5d}: Possible segment jump, discarding step. Ratio of augmented'
-                        f' determinants: |det(J_new) / det(J_old)| = {self.det_ratio:0.2f}\n')
-                    sys.stdout.flush()
+                    self._report_step()
+                    print(f'\nStep {self.step:5d}: Possible segment jump, discarding step. Ratio of augmented'
+                          f' determinants: |det(J_new) / det(J_old)| = {self.det_ratio:0.2f}')
                 return
 
         self.corrector_success = True
@@ -499,7 +495,7 @@ class HomCont:
 
         if not np.isinf(self.t_target):
             try:
-                cap = (self.t_target - self.y[-1]) / self.tangent[-1]
+                cap = (self.t_target - self.y[-1]) / (self.tangent[-1] * self.sign)
                 # step length has to be capped only if current movement is towards t_target:
                 if cap > 0:
                     self.ds = min(self.ds, cap)
@@ -523,9 +519,9 @@ class HomCont:
         """
         if angle(self.tangent_old, self.tangent) > self.bifurc_angle_min:
             if self.verbose >= 2:
-                sys.stdout.write(f'\nStep {self.step:5d}: Bifurcation point encountered '
-                                 f'at angle {angle(self.tangent_old, self.tangent):0.2f}°. Orientation swapped.\n')
-                sys.stdout.flush()
+                self._report_step()
+                print(f'\nStep {self.step:5d}: Bifurcation point encountered at '
+                      f'angle {angle(self.tangent_old, self.tangent):0.2f}°. Orientation swapped.')
             self.sign = -self.sign
 
     def set_parameters(self, params: dict = None, **kwargs):
@@ -631,6 +627,12 @@ class HomCont:
                 'time': time_sec,
                 'failure reason': failure_reason,
                 }
+
+    def _report_step(self):
+        output = f'\rStep {self.step:5d}: t = {self.t:#6.4g}, s = {self.s:#6.4g}, ds = {self.ds:#6.4g}'
+        if self.store_cond:
+            output += f', Cond(J) = {self.cond:#6.4g}'
+        print(output, end='', flush=True)
 
     def _load_state(self, y: np.ndarray, sign: int = None, s: float = None, step: int = 0, ds: float = None, **kwargs):
         """Load y and other state variables. Prepare to start continuation at this point."""
