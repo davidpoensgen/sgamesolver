@@ -5,7 +5,6 @@
 
 # TODO: play with einsum_path
 # TODO: adjust tracking parameters with "scale" of game
-# TODO: think about Cython import
 
 
 import warnings
@@ -15,16 +14,44 @@ import numpy as np
 from numpy.typing import ArrayLike
 from scipy.optimize import brentq
 
-from dsgamesolver.sgame import SGame, LogStratHomotopy
-from dsgamesolver.homcont import HomCont
+from sgamesolver.sgame import SGame, LogStratHomotopy
+from sgamesolver.homcont import HomCont
+
+try:
+    import sgamesolver.homotopy._tracing_ct as _tracing_ct
+    ct = True
+except ImportError:
+    ct = False
+
 
 ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
 
-# %% parent class for Tracing homotopy
+def Tracing(game: SGame, priors: Union[str, ArrayLike] = "centroid",
+            weights: Optional[ArrayLike] = None, implementation='auto'):
+    """Tracing homotopy for stochastic games."""
+    if implementation == 'cython' or (implementation == 'auto' and ct):
+        return Tracing_ct(game, priors, weights)
+    else:
+        if implementation == 'auto' and not ct:
+            print('Defaulting to numpy implementation of LogTracing, because cython version is not installed. Numpy '
+                  'may be substantially slower. For help setting up the cython version, please consult the manual.')
+        return Tracing_np(game, priors, weights)
 
 
-class Tracing(LogStratHomotopy):
+def TracingFixedEta(game: SGame, priors: Union[str, ArrayLike] = "centroid",
+                    weights: Optional[ArrayLike] = None, scale: Union[float, int] = 1.0, implementation='auto'):
+    """Tracing homotopy with fixed eta for stochastic games."""
+    if implementation == 'cython' or (implementation == 'auto' and ct):
+        return TracingFixedEta_ct(game, priors, weights, scale)
+    else:
+        if implementation == 'auto' and not ct:
+            print('Defaulting to numpy implementation of LogTracing, because cython version is not installed. Numpy '
+                  'may be substantially slower. For help setting up the cython version, please consult the manual.')
+        return TracingFixedEta_np(game, priors, weights, scale)
+
+
+class Tracing_Base(LogStratHomotopy):
     """Tracing homotopy: base class"""
 
     def __init__(self, game: SGame, priors: Union[str, ArrayLike] = "centroid",
@@ -102,19 +129,18 @@ class Tracing(LogStratHomotopy):
             self.phi_rho = np.empty((num_s, num_p, num_a_max, num_s))
             for p in range(num_p):
                 self.u_rho[:, p] = np.einsum(self.einsum_eqs['u_a'][p],
-                                             self.game.payoffs[:, p], *(rho_p_list[:p]+rho_p_list[(p+1):]))
+                                             self.game.payoffs[:, p], *(rho_p_list[:p] + rho_p_list[(p + 1):]))
                 self.phi_rho[:, p] = np.einsum(self.einsum_eqs['phi_a'][p],
-                                               self.game.transitions[:, p], *(rho_p_list[:p]+rho_p_list[(p+1):]))
+                                               self.game.transitions[:, p], *(rho_p_list[:p] + rho_p_list[(p + 1):]))
         else:
             self.u_rho = self.game.payoffs
             self.phi_rho = self.game.transitions
 
-    def initialize(self) -> None:
+    def solver_setup(self) -> None:
         self.y0 = self.find_y0()
-        # TODO: silence warning of transversality at starting point?
         self.solver = HomCont(self.H, self.y0, self.J, t_target=1.0,
                               parameters=self.tracking_parameters['normal'],
-                              x_transformer=self.x_transformer)
+                              distance_function=self.sigma_distance)
 
     def find_y0(self, tol: Union[float, int] = 1e-12, max_iter: int = 10000) -> np.ndarray:
         """Value function iteration."""
@@ -132,7 +158,6 @@ class Tracing(LogStratHomotopy):
             # computation for all agents separately
             for s in range(num_s):
                 for p in range(num_p):
-
                     # solve system of multi-linear equations
                     # - by first combining all equations to one big equation in sigma1
                     # - and then solving the equation by Brent's method
@@ -141,13 +166,13 @@ class Tracing(LogStratHomotopy):
                     def f(sigma1):
                         return - 1 + ((self.nu[s, p, 0:nums_a[s, p]] / self.nu[s, p, c_max_idx])
                                       / ((c[s, p, c_max_idx] - c[s, p, 0:nums_a[s, p]])
-                                         / (self.eta * self.nu[s, p, c_max_idx]) + 1/sigma1)).sum()
+                                         / (self.eta * self.nu[s, p, c_max_idx]) + 1 / sigma1)).sum()
 
                     sigma1 = brentq(f, 1e-24, 1)
 
                     sigma[s, p, 0:nums_a[s, p]] = ((self.nu[s, p, 0:nums_a[s, p]] / self.nu[s, p, c_max_idx])
                                                    / ((c[s, p, c_max_idx] - c[s, p, 0:nums_a[s, p]])
-                                                      / (self.eta * self.nu[s, p, c_max_idx]) + 1/sigma1))
+                                                      / (self.eta * self.nu[s, p, c_max_idx]) + 1 / sigma1))
                     V[s, p] = (c[s, p, c_max_idx] + ((self.eta * self.nu[s, p, c_max_idx]) / sigma1)
                                + self.eta * ((self.nu[s, p, 0:nums_a[s, p]]
                                               * (np.log(sigma[s, p, 0:nums_a[s, p]]) - 1)).sum()))
@@ -157,17 +182,13 @@ class Tracing(LogStratHomotopy):
             else:
                 V_old = V.copy()
                 sigma_old = sigma.copy()
-
-        if k >= max_iter-1:
-            warnings.warn('Value function iteration has not converged.')
+        else:  # loop ended without break
+            warnings.warn('Value function iteration has not converged during computation of the starting point.')
 
         return self.sigma_V_t_to_y(sigma, V, 0.0)
 
 
-# %% Numpy implementation of Tracing
-
-
-class Tracing_np(Tracing):
+class Tracing_np(Tracing_Base):
     """Tracing homotopy: Numpy implementation"""
 
     def __init__(self, game: SGame, priors: Union[str, ArrayLike] = "centroid",
@@ -251,7 +272,7 @@ class Tracing_np(Tracing):
 
         # equations to be used by einsum
         self.einsum_eqs['u_ab'] = [
-            ['s' + ABC[0:num_p] + ',s'.join(['']+[ABC[p_] for p_ in range(num_p) if p_ not in [p, q]])
+            ['s' + ABC[0:num_p] + ',s'.join([''] + [ABC[p_] for p_ in range(num_p) if p_ not in [p, q]])
              + '->s' + ABC[p] + (ABC[q] if q != p else '') for q in range(num_p)] for p in range(num_p)
         ]
 
@@ -287,8 +308,8 @@ class Tracing_np(Tracing):
             u_sigma = self.game.payoffs
             phi_sigma = self.game.transitions
 
-        u_bar = t*u_sigma + (1-t)*self.u_rho
-        phi_bar = t*phi_sigma + (1-t)*self.phi_rho
+        u_bar = t * u_sigma + (1 - t) * self.u_rho
+        phi_bar = t * phi_sigma + (1 - t) * self.phi_rho
 
         Eu_tilde_a = u_bar + np.einsum('spat,tp->spa', phi_bar, V)
 
@@ -296,15 +317,15 @@ class Tracing_np(Tracing):
 
         spa = num_s * num_p * num_a_max
         sp = num_s * num_p
-        H = np.empty(spa+sp)
+        H = np.empty(spa + sp)
 
         # H_val
-        H[0:spa] = (Eu_tilde_a - np.repeat(V[:, :, np.newaxis], num_a_max, axis=2) + (1-t)**2 * self.eta
+        H[0:spa] = (Eu_tilde_a - np.repeat(V[:, :, np.newaxis], num_a_max, axis=2) + (1 - t) ** 2 * self.eta
                     * (self.nu * sigma_inv
-                       + np.repeat((self.nu*(beta-1)).sum(axis=2)[:, :, np.newaxis], num_a_max, axis=2))
+                       + np.repeat((self.nu * (beta - 1)).sum(axis=2)[:, :, np.newaxis], num_a_max, axis=2))
                     ).reshape(spa)
         # H_strat
-        H[spa : spa+sp] = (np.sum(sigma, axis=2) - np.ones((num_s, num_p))).reshape(sp)
+        H[spa: spa + sp] = (np.sum(sigma, axis=2) - np.ones((num_s, num_p))).reshape(sp)
 
         return H[self.H_mask]
 
@@ -349,75 +370,50 @@ class Tracing_np(Tracing):
         u_hat = u_sigma - self.u_rho
         phi_hat = phi_sigma - self.phi_rho
 
-        phi_bar = t*phi_sigma + (1-t)*self.phi_rho
+        phi_bar = t * phi_sigma + (1 - t) * self.phi_rho
 
         # assemble J
 
         spa = num_s * num_p * num_a_max
         sp = num_s * num_p
-        J = np.zeros((spa+sp, spa+sp+1))
+        J = np.zeros((spa + sp, spa + sp + 1))
 
         # dH_val_dbeta
-        J[0:spa, 0:spa] = ((1-t)**2 * self.eta * np.einsum('spaSPA,SPA->spaSPA', self.T_J[0], self.nu*(1-sigma_inv))
-                           + (1-t)**2 * self.eta * np.einsum('spaSPA,spA->spaSPA', self.T_J[1], self.nu)
-                           + t * np.einsum('spaSPA,sPA,spPaA->spaSPA', self.T_J[2], sigma, Eu_tilde_ab)
-                           ).reshape((spa, spa))
+        J[0:spa, 0:spa] = (
+                (1 - t) ** 2 * self.eta * np.einsum('spaSPA,SPA->spaSPA', self.T_J[0], self.nu * (1 - sigma_inv))
+                + (1 - t) ** 2 * self.eta * np.einsum('spaSPA,spA->spaSPA', self.T_J[1], self.nu)
+                + t * np.einsum('spaSPA,sPA,spPaA->spaSPA', self.T_J[2], sigma, Eu_tilde_ab)
+        ).reshape((spa, spa))
         # dH_val_dV
-        J[0:spa, spa : spa+sp] = (np.einsum('spaSP,spaS->spaSP', self.T_J[3], phi_bar) - self.T_J[4]).reshape((spa, sp))
+        J[0:spa, spa: spa + sp] = (np.einsum('spaSP,spaS->spaSP', self.T_J[3], phi_bar) - self.T_J[4]).reshape(
+            (spa, sp))
         # dH_val_dt
-        J[0:spa, spa+sp] = (u_hat + np.einsum('spaS,Sp->spa', phi_hat, V) - 2*(1-t) * self.eta
-                            * (self.nu*sigma_inv + np.repeat((self.nu*(beta-1)).sum(axis=2)[:, :, np.newaxis],
-                                                             num_a_max, axis=2))
-                            ).reshape(spa)
+        J[0:spa, spa + sp] = (u_hat + np.einsum('spaS,Sp->spa', phi_hat, V) - 2 * (1 - t) * self.eta
+                              * (self.nu * sigma_inv + np.repeat((self.nu * (beta - 1)).sum(axis=2)[:, :, np.newaxis],
+                                                                 num_a_max, axis=2))
+                              ).reshape(spa)
         # dH_strat_dbeta
-        J[spa : spa+sp, 0:spa] = np.einsum('spSPA,SPA->spSPA', self.T_J[5], sigma).reshape((sp, spa))
+        J[spa: spa + sp, 0:spa] = np.einsum('spSPA,SPA->spSPA', self.T_J[5], sigma).reshape((sp, spa))
         # dH_strat_dV = 0
         # dH_strat_dt = 0
 
         return J[self.J_mask]
 
 
-# %% Cython implementation of Tracing
-
-
-class Tracing_ct(Tracing):
+class Tracing_ct(Tracing_Base):
     """Tracing homotopy: Cython implementation"""
 
-    def __init__(self, game: SGame, priors: Union[str, ArrayLike] = "centroid",
-                 weights: Optional[ArrayLike] = None) -> None:
-        super().__init__(game, priors, weights)
-
-        # only import Cython module on class instantiation
-        try:
-            # import pyximport
-            # pyximport.install(build_dir='./dsgamesolver/__build__/', build_in_temp=False, language_level=3,
-            #                   setup_args={'include_dirs': [np.get_include()]})
-            import dsgamesolver.homotopy._tracing_ct as tracing_ct
-
-        except ImportError:
-            raise ImportError("Cython implementation of Tracing homotopy could not be imported. ",
-                              "Make sure your system has the relevant C compilers installed. ",
-                              "For Windows, check https://wiki.python.org/moin/WindowsCompilers ",
-                              "to find the right Microsoft Visual C++ compiler for your Python version. ",
-                              "Standalone compilers are sufficient, there is no need to install Visual Studio. ",
-                              "For Linux, make sure the Python package gxx_linux-64 is installed in your environment.")
-
-        self.tracing_ct = tracing_ct
-
     def H(self, y: np.ndarray) -> np.ndarray:
-        return self.tracing_ct.H(y, self.game.payoffs, self.game.transitions,
-                                 self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
-                                 self.game.num_states, self.game.num_players, self.game.nums_actions,
-                                 self.game.num_actions_max, self.game.num_actions_total)
+        return _tracing_ct.H(y, self.game.payoffs, self.game.transitions,
+                             self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
+                             self.game.num_states, self.game.num_players, self.game.nums_actions,
+                             self.game.num_actions_max, self.game.num_actions_total)
 
     def J(self, y: np.ndarray) -> np.ndarray:
-        return self.tracing_ct.J(y, self.game.payoffs, self.game.transitions,
-                                 self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
-                                 self.game.num_states, self.game.num_players, self.game.nums_actions,
-                                 self.game.num_actions_max, self.game.num_actions_total)
-
-
-# %% Tracing variation with fixed eta: Numpy implementation
+        return _tracing_ct.J(y, self.game.payoffs, self.game.transitions,
+                             self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
+                             self.game.num_states, self.game.num_players, self.game.nums_actions,
+                             self.game.num_actions_max, self.game.num_actions_total)
 
 
 class TracingFixedEta_np(Tracing_np):
@@ -456,8 +452,8 @@ class TracingFixedEta_np(Tracing_np):
             u_sigma = self.game.payoffs
             phi_sigma = self.game.transitions
 
-        u_bar = t*u_sigma + (1-t)*self.u_rho
-        phi_bar = t*phi_sigma + (1-t)*self.phi_rho
+        u_bar = t * u_sigma + (1 - t) * self.u_rho
+        phi_bar = t * phi_sigma + (1 - t) * self.phi_rho
 
         Eu_tilde_a = u_bar + np.einsum('spat,tp->spa', phi_bar, V)
 
@@ -465,15 +461,15 @@ class TracingFixedEta_np(Tracing_np):
 
         spa = num_s * num_p * num_a_max
         sp = num_s * num_p
-        H = np.zeros(spa+sp)
+        H = np.zeros(spa + sp)
 
         # H_val
-        H[0:spa] = (Eu_tilde_a - np.repeat(V[:, :, np.newaxis], num_a_max, axis=2) + (1-t) * self.eta
+        H[0:spa] = (Eu_tilde_a - np.repeat(V[:, :, np.newaxis], num_a_max, axis=2) + (1 - t) * self.eta
                     * (self.nu * sigma_inv
-                       + np.repeat((self.nu*(beta-1)).sum(axis=2)[:, :, np.newaxis], num_a_max, axis=2))
+                       + np.repeat((self.nu * (beta - 1)).sum(axis=2)[:, :, np.newaxis], num_a_max, axis=2))
                     ).reshape(spa)
         # H_strat
-        H[spa : spa+sp] = (np.sum(sigma, axis=2) - np.ones((num_s, num_p))).reshape(sp)
+        H[spa: spa + sp] = (np.sum(sigma, axis=2) - np.ones((num_s, num_p))).reshape(sp)
 
         return H[self.H_mask]
 
@@ -518,35 +514,33 @@ class TracingFixedEta_np(Tracing_np):
         u_hat = u_sigma - self.u_rho
         phi_hat = phi_sigma - self.phi_rho
 
-        phi_bar = t*phi_sigma + (1-t)*self.phi_rho
+        phi_bar = t * phi_sigma + (1 - t) * self.phi_rho
 
         # assemble J
 
         spa = num_s * num_p * num_a_max
         sp = num_s * num_p
-        J = np.zeros((spa+sp, spa+sp+1))
+        J = np.zeros((spa + sp, spa + sp + 1))
 
         # dH_val_dbeta
-        J[0:spa, 0:spa] = ((1-t) * self.eta * np.einsum('spaSPA,SPA->spaSPA', self.T_J[0], self.nu*(1-sigma_inv))
-                           + (1-t) * self.eta * np.einsum('spaSPA,spA->spaSPA', self.T_J[1], self.nu)
+        J[0:spa, 0:spa] = ((1 - t) * self.eta * np.einsum('spaSPA,SPA->spaSPA', self.T_J[0], self.nu * (1 - sigma_inv))
+                           + (1 - t) * self.eta * np.einsum('spaSPA,spA->spaSPA', self.T_J[1], self.nu)
                            + t * np.einsum('spaSPA,sPA,spPaA->spaSPA', self.T_J[2], sigma, Eu_tilde_ab)
                            ).reshape((spa, spa))
         # dH_val_dV
-        J[0:spa, spa : spa+sp] = (np.einsum('spaSP,spaS->spaSP', self.T_J[3], phi_bar) - self.T_J[4]).reshape((spa, sp))
+        J[0:spa, spa: spa + sp] = (np.einsum('spaSP,spaS->spaSP', self.T_J[3], phi_bar) - self.T_J[4]).reshape(
+            (spa, sp))
         # dH_val_dt
-        J[0:spa, spa+sp] = (u_hat + np.einsum('spaS,Sp->spa', phi_hat, V) - self.eta
-                            * (self.nu*sigma_inv + np.repeat((self.nu*(beta-1)).sum(axis=2)[:, :, np.newaxis],
-                                                             num_a_max, axis=2))
-                            ).reshape(spa)
+        J[0:spa, spa + sp] = (u_hat + np.einsum('spaS,Sp->spa', phi_hat, V) - self.eta
+                              * (self.nu * sigma_inv + np.repeat((self.nu * (beta - 1)).sum(axis=2)[:, :, np.newaxis],
+                                                                 num_a_max, axis=2))
+                              ).reshape(spa)
         # dH_strat_dbeta
-        J[spa : spa+sp, 0:spa] = np.einsum('spSPA,SPA->spSPA', self.T_J[5], sigma).reshape((sp, spa))
+        J[spa: spa + sp, 0:spa] = np.einsum('spSPA,SPA->spSPA', self.T_J[5], sigma).reshape((sp, spa))
         # dH_strat_dV = 0
         # dH_strat_dt = 0
 
         return J[self.J_mask]
-
-
-# %% Tracing variation with fixed eta: Cython implementation
 
 
 class TracingFixedEta_ct(Tracing_ct):
@@ -558,13 +552,21 @@ class TracingFixedEta_ct(Tracing_ct):
         self.eta = scale
 
     def H(self, y: np.ndarray) -> np.ndarray:
-        return self.tracing_ct.H_fixed_eta(y, self.game.payoffs, self.game.transitions,
-                                           self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
-                                           self.game.num_states, self.game.num_players, self.game.nums_actions,
-                                           self.game.num_actions_max, self.game.num_actions_total)
+        return _tracing_ct.H_fixed_eta(y, self.game.payoffs, self.game.transitions,
+                                       self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
+                                       self.game.num_states, self.game.num_players, self.game.nums_actions,
+                                       self.game.num_actions_max, self.game.num_actions_total)
 
     def J(self, y: np.ndarray) -> np.ndarray:
+<<<<<<< HEAD:dsgamesolver/homotopy/tracing.py
         return self.tracing_ct.J_fixed_eta(y, self.game.payoffs, self.game.transitions,
                                            self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
                                            self.game.num_states, self.game.num_players, self.game.nums_actions,
                                            self.game.num_actions_max, self.game.num_actions_total)
+=======
+        return _tracing_ct.J_fixed_eta(y, self.game.payoffs, self.game.transitions,
+                                       self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
+                                       self.game.num_states, self.game.num_players, self.game.nums_actions,
+                                       self.game.num_actions_max, self.game.num_actions_total)
+
+>>>>>>> 5ce1c688ab5edb12ed41356255a33eb19cbfc3fa:sgamesolver/homotopy/_tracing.py

@@ -1,5 +1,7 @@
 """Interior point method homotopy."""
 
+# TODO: @Steffen, please re-write to remove x-transformer; write a distance function instead if desired
+
 # TODO: check user-provided initial_strategies and weights?
 # TODO: adjust tracking parameters with "scale" of game
 # TODO: think about Cython import
@@ -11,8 +13,8 @@ from typing import Union, Optional
 import numpy as np
 from numpy.typing import ArrayLike
 
-from dsgamesolver.sgame import SGame, SGameHomotopy
-from dsgamesolver.homcont import HomCont
+from sgamesolver.sgame import SGame, SGameHomotopy
+from sgamesolver.homcont import HomCont
 
 
 ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -61,7 +63,7 @@ class IPM(SGameHomotopy):
             'detJ_change_max': 1.3,
             'bifurc_angle_min': 175,
         }
-
+        # TODO: use SGame methods
         if initial_strategies == "centroid":
             self.sigma_0 = np.zeros((self.game.num_states, self.game.num_players, self.game.num_actions_max))
             for s in range(self.game.num_states):
@@ -85,7 +87,7 @@ class IPM(SGameHomotopy):
             # TODO: document how weights should be specified / should they be checked?
             self.nu = weights
 
-    def initialize(self) -> None:
+    def solver_setup(self) -> None:
         self.y0 = self.find_y0()
         # Note: homotopy parameter t goes from 1 to 0
         self.solver = HomCont(self.H, self.y0, self.J, t_target=0.0,
@@ -128,10 +130,7 @@ class IPM_ct(IPM):
 
         # only import Cython module on class instantiation
         try:
-            # import pyximport
-            # pyximport.install(build_dir='./dsgamesolver/__build__/', build_in_temp=False, language_level=3,
-            #                   setup_args={'include_dirs': [np.get_include()]})
-            import dsgamesolver.homotopy._ipm_ct as ipm_ct
+            import sgamesolver.homotopy._ipm_ct as ipm_ct
 
         except ImportError:
             raise ImportError("Cython implementation of IPM homotopy could not be imported. ",

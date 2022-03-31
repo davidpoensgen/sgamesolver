@@ -35,7 +35,7 @@ game = SGame(u, phi, delta)
 
 
 qre = QRE_ct(game)
-qre.initialize()
+qre.solver_setup()
 qre.solver.verbose = 2
 sol_qre = qre.solver.solve()
 
@@ -44,7 +44,7 @@ sol_qre = qre.solver.solve()
 
 
 tracing = Tracing_ct(game)
-tracing.initialize()
+tracing.solver_setup()
 tracing.solver.verbose = 2
 tracing.solver.max_steps = 9000
 sol_tracing = tracing.solver.solve()

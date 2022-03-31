@@ -40,11 +40,19 @@ game = SGame(u, phi, delta)
 y_rand = np.random.random(game.num_actions_total + game.num_states*game.num_players + 1)
 
 
+<<<<<<< HEAD
 # tracing_ct = Tracing_ct(game)
 # tracing_ct.initialize()
 # tracing_ct.solver.verbose = 2
 # tracing_ct.solver.max_steps = 9000
 # sol_tracing_ct = tracing_ct.solver.solve()
+=======
+tracing_ct = Tracing_ct(game)
+tracing_ct.solver_setup()
+tracing_ct.solver.verbose = 2
+tracing_ct.solver.max_steps = 9000
+sol_tracing_ct = tracing_ct.solver.solve()
+>>>>>>> 5ce1c688ab5edb12ed41356255a33eb19cbfc3fa
 
 
 # %% run all
@@ -52,11 +60,16 @@ y_rand = np.random.random(game.num_actions_total + game.num_states*game.num_play
 # QRE:
 
 qre_np = QRE_np(game)
+<<<<<<< HEAD
 qre_np.initialize()
 # sol_qre_np = qre_np.solver.solve()
+=======
+qre_np.solver_setup()
+sol_qre_np = qre_np.solver.solve()
+>>>>>>> 5ce1c688ab5edb12ed41356255a33eb19cbfc3fa
 
 qre_ct = QRE_ct(game)
-qre_ct.initialize()
+qre_ct.solver_setup()
 qre_ct.solver.verbose = 2
 # sol_qre_ct = qre_ct.solver.solve()
 
@@ -66,11 +79,16 @@ qre_ct.solver.verbose = 2
 # Tracing:
 
 tracing_np = Tracing_np(game)
+<<<<<<< HEAD
 tracing_np.initialize()
 # sol_tracing_np = tracing_np.solver.solve()
+=======
+tracing_np.solver_setup()
+sol_tracing_np = tracing_np.solver.solve()
+>>>>>>> 5ce1c688ab5edb12ed41356255a33eb19cbfc3fa
 
 tracing_ct = Tracing_ct(game)
-tracing_ct.initialize()
+tracing_ct.solver_setup()
 tracing_ct.solver.verbose = 2
 # sol_tracing_ct = tracing_ct.solver.solve()
 
@@ -80,11 +98,19 @@ tracing_ct.solver.verbose = 2
 # Tracing with fixed eta:
 
 tracing_fixed_eta_np = TracingFixedEta_np(game)
+<<<<<<< HEAD
 tracing_fixed_eta_np.initialize()
 # sol_tracing_fixed_eta_np = tracing_fixed_eta_np.solver.solve()
 
 tracing_fixed_eta_ct = TracingFixedEta_ct(game, scale=0.1)
 tracing_fixed_eta_ct.initialize()
+=======
+tracing_fixed_eta_np.solver_setup()
+sol_tracing_fixed_eta_np = tracing_fixed_eta_np.solver.solve()
+
+tracing_fixed_eta_ct = TracingFixedEta_ct(game)
+tracing_fixed_eta_ct.solver_setup()
+>>>>>>> 5ce1c688ab5edb12ed41356255a33eb19cbfc3fa
 tracing_fixed_eta_ct.solver.verbose = 2
 sol_tracing_fixed_eta_ct = tracing_fixed_eta_ct.solver.solve()
 
@@ -93,6 +119,7 @@ sol_tracing_fixed_eta_ct = tracing_fixed_eta_ct.solver.solve()
 
 # LogGame:
 
+<<<<<<< HEAD
 # log_game_np = LogGame_np(game)
 # log_game_np.initialize()
 # sol_log_game_np = log_game_np.solver.solve()
@@ -102,16 +129,34 @@ sol_tracing_fixed_eta_ct = tracing_fixed_eta_ct.solver.solve()
 # sol_log_game_ct = log_game_ct.solver.solve()
 
 # assert np.allclose(sol_log_game_np["y"], sol_log_game_ct["y"])
+=======
+log_game_np = LogGame_np(game)
+log_game_np.solver_setup()
+sol_log_game_np = log_game_np.solver.solve()
+
+log_game_ct = LogGame_ct(game)
+log_game_ct.solver_setup()
+sol_log_game_ct = log_game_ct.solver.solve()
+>>>>>>> 5ce1c688ab5edb12ed41356255a33eb19cbfc3fa
 
 
 # IPM:
 
+<<<<<<< HEAD
 # ipm_ct = IPM_ct(game)
 # ipm_ct.initialize()
 # sol_ipm_ct = ipm_ct.solver.solve()
 
 # ipm_sp = IPM_sp(game)
 # ipm_sp.initialize()
+=======
+ipm_ct = IPM_ct(game)
+ipm_ct.solver_setup()
+sol_ipm_ct = ipm_ct.solver.solve()
+
+ipm_sp = IPM_sp(game)
+ipm_sp.solver_setup()
+>>>>>>> 5ce1c688ab5edb12ed41356255a33eb19cbfc3fa
 # sol_ipm_sp = ipm_sp.solver.solve()
 
 # assert np.allclose(sol_ipm_ct["y"], sol_ipm_sp["y"])

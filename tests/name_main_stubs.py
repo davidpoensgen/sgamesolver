@@ -39,7 +39,7 @@ if __name__ == '__main__':
 
     # cython
     ipm_ct = IPM_ct(game)
-    ipm_ct.initialize()
+    ipm_ct.solver_setup()
     ipm_ct.solver.solve()
 
     y0 = ipm_ct.y0
@@ -50,7 +50,7 @@ if __name__ == '__main__':
 
     # sympy
     ipm_sp = IPM_sp(game)
-    ipm_sp.initialize()
+    ipm_sp.solver_setup()
     ipm_sp.solver.verbose = 2
     ipm_sp.solver.solve()
 
@@ -69,7 +69,7 @@ if __name__ == '__main__':
 
     # numpy
     loggame_np = LogGame_np(game)
-    loggame_np.initialize()
+    loggame_np.solver_setup()
     loggame_np.solver.solve()
 
     y0 = loggame_np.find_y0()
@@ -80,7 +80,7 @@ if __name__ == '__main__':
 
     # cython
     loggame_ct = LogGame_ct(game)
-    loggame_ct.initialize()
+    loggame_ct.solver_setup()
     loggame_ct.solver.solve()
     """
     %timeit loggame_ct.H(y0)
@@ -97,7 +97,7 @@ if __name__ == '__main__':
 
     # numpy
     qre_np = QRE_np(game)
-    qre_np.initialize()
+    qre_np.solver_setup()
     qre_np.solver.solve()
 
     y0 = qre_np.find_y0()
@@ -108,7 +108,7 @@ if __name__ == '__main__':
 
     # cython
     qre_ct = QRE_ct(game)
-    qre_ct.initialize()
+    qre_ct.solver_setup()
     qre_ct.solver.solve()
 
     """
@@ -134,7 +134,7 @@ if __name__ == '__main__':
 
     # numpy
     tracing_np = Tracing_np(game)
-    tracing_np.initialize()
+    tracing_np.solver_setup()
     tracing_np.solver.solve()
 
     y0 = tracing_np.find_y0()
@@ -145,7 +145,7 @@ if __name__ == '__main__':
 
     # cython
     tracing_ct = Tracing_ct(game)
-    tracing_ct.initialize()
+    tracing_ct.solver_setup()
     tracing_ct.solver.solve()
     """
     %timeit tracing_ct.H(y0)
@@ -155,10 +155,10 @@ if __name__ == '__main__':
     # Tracing with fixed eta
 
     tracing_fixed_eta_np = TracingFixedEta_np(game)
-    tracing_fixed_eta_np.initialize()
+    tracing_fixed_eta_np.solver_setup()
     tracing_fixed_eta_np.solver.solve()
 
     tracing_fixed_eta_ct = TracingFixedEta_ct(game)
-    tracing_fixed_eta_ct.initialize()
+    tracing_fixed_eta_ct.solver_setup()
     tracing_fixed_eta_ct.solver.solve()
 
