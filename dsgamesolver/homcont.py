@@ -676,7 +676,7 @@ class HomCont:
                      's': self.s,
                      'sign': self.sign,
                      'ds': self.ds,
-                     'y': self.y.tolist(),}
+                     'y': self.y.tolist()}
             json.dump(state, file, indent=4)
             print(f'Current state saved as {filename}.')
 

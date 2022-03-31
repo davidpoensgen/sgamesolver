@@ -47,3 +47,6 @@ venv.bak/
 # custom stuff
 # .tex
 .xlsx
+
+build
+*.egg-info
