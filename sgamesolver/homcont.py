@@ -922,13 +922,19 @@ class DebugLog:
             self.data.resize((self.data.shape[0], self.data.shape[1] + 1000), refcheck=False)
 
     def summarize(self):
-        header = "|"
-        counts = "|"
+        header = "steps |"
+        counts = "total |"
+        ratio = "ratio |"
+        dist = "dist  |"
         for i in range(self.solver.corr_steps_max + 1):
             count = (self.corrector_steps == i).sum()
+            ratio_count = ((self.corrector_fail_ratio > 0) * (self.corrector_steps == i)).sum()
+            dist_count = ((self.corrector_fail_dist > 0) * (self.corrector_steps == i)).sum()
             width = 1 + max(2, len(str(count)))
             header += str(i).rjust(width) + "|"
             counts += str(count).rjust(width) + "|"
+            ratio += str(ratio_count).rjust(width) + "|"
+            dist += str(dist_count).rjust(width) + "|"
         failure_count = (self.corrector_fail_steps + self.corrector_fail_ratio + self.corrector_fail_dist > 0).sum()
         summary = (
             f'~~~~~~~~~~ debug summary ~~~~~~~~~~\n'
