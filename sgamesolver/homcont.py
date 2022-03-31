@@ -474,14 +474,14 @@ class HomCont:
     def adapt_stepsize(self):
         """Adapt stepsize at the end of a predictor-corrector cycle:
         Increase ds if:
-           - corrector step successful & took less than 10 iterates
+           - corrector step successful & took less than ds_infl_max_corr_steps iterates (= 10 by default)
         Maintain ds if:
             - corrector step successful, but required 10+ iterates
         Decrease ds if:
-           - H could not be evaluated during corrections
-             (indicates leaving H's domain)
            - corrector loop fails (too many iterates, corrector distance
              too large, or corrector distance increasing during loop)
+           - H could not be evaluated during corrections
+             (indicates leaving H's domain)
            - corrector step was successful, but t_target was crossed
         If ds is to be decreased below ds_min, continuation is failed.
 
@@ -499,8 +499,10 @@ class HomCont:
 
         if not np.isinf(self.t_target):
             try:
-                cap = np.abs((self.t_target - self.y[-1]) / self.tangent[-1])
-                self.ds = min(self.ds, cap)
+                cap = (self.t_target - self.y[-1]) / self.tangent[-1]
+                # step length has to be capped only if current movement is towards t_target:
+                if cap > 0:
+                    self.ds = min(self.ds, cap)
             except ZeroDivisionError:
                 pass
 
@@ -942,6 +944,8 @@ class DebugLog:
             f'Number of corrector steps (average: {np.average(self.corrector_steps):.2f})\n'
             f'{header}\n'
             f'{counts}\n'
+            f'{ratio}\n'
+            f'{dist}\n'
             f'Total failed corrector loops: {failure_count:.0f}. Failure reasons: \n'
             f'- Max steps: {self.corrector_fail_steps.sum():.0f}\n'
             f'- Ratio: {self.corrector_fail_ratio.sum():.0f}\n'
