@@ -423,18 +423,18 @@ class Tracing_Cache(Tracing_Base):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.cache = TracingCache()
+        self.ct_cache = _tracing_cache.TracingCacheCt()
 
     def H(self, y: np.ndarray) -> np.ndarray:
         return _tracing_cache.H(y, self.game.payoffs, self.game.transitions,
                              self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
-                             self.game.num_states, self.game.num_players, self.game.nums_actions,
-                             self.game.num_actions_max, self.game.num_actions_total, self.cache)
+                             self.game.nums_actions, self.ct_cache)
 
     def J(self, y: np.ndarray) -> np.ndarray:
         return _tracing_cache.J(y, self.game.payoffs, self.game.transitions,
                              self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
                              self.game.num_states, self.game.num_players, self.game.nums_actions,
-                             self.game.num_actions_max, self.game.num_actions_total, self.cache)
+                             self.game.num_actions_max, self.game.num_actions_total, self.ct_cache)
 
 class TracingCache:
 

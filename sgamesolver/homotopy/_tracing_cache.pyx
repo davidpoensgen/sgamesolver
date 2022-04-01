@@ -6,18 +6,30 @@ np.import_array()
 
 # %% auxiliary functions
 
-# cdef class TracingCache:
-#     cdef:
-#         np.ndarray y
-#         np.ndarray u_sigma
-#         np.ndarray phi_sigma
-#         # np.ndarray[np.float64_t, ndim=3] u_bar
-#         # np.ndarray[np.float64_t, ndim=4] phi_bar
-#         np.ndarray u_tilde_sia_ev
-#
-#     def __init__(self):
-#         print("tracing cache")
-#         self.y = np.zeros(1)
+cdef class TracingCacheCt:
+    cdef double [::1] y
+    cdef double [:,:,::1] u_sigma
+    cdef double [:,:,:,::1] phi_sigma
+    cdef double [:,:,::1] u_tilde_sia_ev
+
+    def __cinit__(self):
+        print("tracing cache cinit")
+        self.y = np.zeros(1)
+        print(self.y)
+
+    def __init__(self):
+        print("tracing cache init")
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+cdef bint all_equal(double [::1] y0, double [::1] y1):
+    cdef int i
+    if len(y0) != len(y1):
+        return False
+    for i in range(len(y0)):
+        if y0[i] != y1[i]:
+            return False
+    return True
 
 
 def u_tilde(u, V, phi):
@@ -33,7 +45,7 @@ def u_tilde_sia(np.ndarray[np.float64_t, ndim=1] u_tilde_ravel, np.ndarray[np.fl
     given other players play according to mixed strategy profile sigma[s,p,a].
     """
 
-    cdef: 
+    cdef:
         np.ndarray[np.float64_t, ndim=3] out_ = np.zeros((num_s, num_p, num_a_max))
 
         np.ndarray[np.int32_t, ndim=1] loop_profile = np.zeros(num_p + 1, dtype=np.int32)
@@ -44,7 +56,7 @@ def u_tilde_sia(np.ndarray[np.float64_t, ndim=1] u_tilde_ravel, np.ndarray[np.fl
         # Once that is done, increase second last element by one and set last element to zero again, and so on.
         # Continue until very first element of loop_profile is increased from zero to one.
 
-        double temp_prob 
+        double temp_prob
         int state, player, other, n
         int flat_index = 0
 
@@ -67,7 +79,7 @@ def u_tilde_sia(np.ndarray[np.float64_t, ndim=1] u_tilde_ravel, np.ndarray[np.fl
                     if loop_profile[num_p-n] == nums_a[state, num_p-n-1]:
                         loop_profile[num_p-n-1] += 1
                         loop_profile[num_p-n] = 0
-                        flat_index += (num_a_max - nums_a[state, num_p-n-1]) * num_a_max**n        
+                        flat_index += (num_a_max - nums_a[state, num_p-n-1]) * num_a_max**n
 
     return out_
 
@@ -82,10 +94,10 @@ def u_tilde_sijab(np.ndarray[np.float64_t, ndim=1] u_tilde_ravel, np.ndarray[np.
     (The case i'=i is explicitly included.)
     """
 
-    cdef: 
+    cdef:
         np.ndarray[np.float64_t, ndim=5] out_ = np.zeros((num_s, num_p, num_p, num_a_max, num_a_max))
         np.ndarray[np.int32_t, ndim=1] loop_profile = np.zeros(num_p+1, dtype=np.int32)
-        double temp_prob 
+        double temp_prob
         int state, player1, player2, other, n
         int flat_index = 0
 
@@ -104,7 +116,7 @@ def u_tilde_sijab(np.ndarray[np.float64_t, ndim=1] u_tilde_ravel, np.ndarray[np.
                     out_[state, player1, player2, loop_profile[player1+1], loop_profile[player2+1]] += (
                         temp_prob * u_tilde_ravel[flat_index]
                         )
-                    flat_index +=1  
+                    flat_index +=1
 
                     loop_profile[num_p] +=1
                     for n in range(num_p):
@@ -127,10 +139,10 @@ def phi_tilde_siat(np.ndarray[np.float64_t, ndim=1] phi_ravel, np.ndarray[np.flo
     given other players use mixed strategy profile sigma[s,i,a]
     """
 
-    cdef: 
+    cdef:
         np.ndarray[np.float64_t, ndim=4] out_ = np.zeros((num_s, num_p, num_a_max, num_s))
         np.ndarray[np.int32_t, ndim=1] loop_profile = np.zeros(num_p+1, dtype=np.int32)
-        double temp_prob 
+        double temp_prob
         int state, player, other, to_state, n
         int flat_index = 0
 
@@ -149,14 +161,14 @@ def phi_tilde_siat(np.ndarray[np.float64_t, ndim=1] phi_ravel, np.ndarray[np.flo
                     out_[state, player, loop_profile[player+1], to_state] += temp_prob * phi_ravel[flat_index]
                     flat_index += 1
 
-                loop_profile[num_p] +=1
+                loop_profile[num_p] += 1
                 for n in range(num_p):
                     if loop_profile[num_p-n] == nums_a[state, num_p-n-1]:
                         loop_profile[num_p-n-1] += 1
                         loop_profile[num_p-n] = 0
                         flat_index += num_s * (num_a_max - nums_a[state, num_p-n-1]) * num_a_max**n
 
-    return out_     
+    return out_
 
 
 # %% homotopy function
@@ -167,7 +179,7 @@ def phi_tilde_siat(np.ndarray[np.float64_t, ndim=1] phi_ravel, np.ndarray[np.flo
 def H(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] rho,
       np.ndarray[np.float64_t, ndim=3] nu, double eta_0,
       np.ndarray[np.float64_t, ndim=3] u_rho, np.ndarray[np.float64_t, ndim=4] phi_rho,
-      int num_s, int num_p, np.ndarray[np.int32_t, ndim=2] nums_a, int num_a_max, int num_a_tot, cache):
+      np.ndarray[np.int32_t, ndim=2] nums_a, TracingCacheCt cache):
     """Homotopy function.
     
     H(y) = [  H_val[s,i,a]  ]
@@ -177,6 +189,10 @@ def H(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] rho,
     """
 
     cdef:
+        int num_s = nums_a.shape[0]
+        int num_p = nums_a.shape[1]
+        int num_a_max = np.max(nums_a)
+        int num_a_tot = nums_a.sum()
         np.ndarray[np.float64_t, ndim=1] out_ = np.zeros(num_a_tot + num_s * num_p)
         np.ndarray[np.float64_t, ndim=3] beta = np.ones((num_s, num_p, num_a_max))
         np.ndarray[np.float64_t, ndim=3] sigma
@@ -202,7 +218,7 @@ def H(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] rho,
     sigma = np.exp(beta)
     sigma_inv = np.exp(-beta)
 
-    if np.array_equal(y, cache.y):
+    if all_equal(y, cache.y):
         # I think these below are just intermediate steps in H:
         # u_sigma = cache.u_sigma
         # phi_sigma = cache.phi_sigma
@@ -262,7 +278,7 @@ def H(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] rho,
 def J(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] rho,
       np.ndarray[np.float64_t, ndim=3] nu, double eta_0,
       np.ndarray[np.float64_t, ndim=3] u_rho, np.ndarray[np.float64_t, ndim=4] phi_rho,
-      int num_s, int num_p, np.ndarray[np.int32_t, ndim=2] nums_a, int num_a_max, int num_a_tot, cache):  #TODO:typing?
+      int num_s, int num_p, np.ndarray[np.int32_t, ndim=2] nums_a, int num_a_max, int num_a_tot, TracingCacheCt cache):  #TODO:typing?
     """Jacobian matrix.
 
     J(y) = [  d_H_val[s,i]     / d_beta[s',i',a'],  d_H_val[s,i]     / d_V[s',i'],  d_H_val[s,i]     / d_t  ]
@@ -296,7 +312,7 @@ def J(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] rho,
         int row_index, col_index, col_index_init
 
         int flat_index = 0
-    
+
     for state in range(num_s):
         for player in range(num_p):
             for action in range(nums_a[state, player]):
@@ -306,7 +322,7 @@ def J(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] rho,
     sigma = np.exp(beta)
     sigma_inv = np.exp(-beta)
 
-    if np.array_equal(y, cache.y):
+    if all_equal(y, cache.y):
         u_sigma = cache.u_sigma
         phi_sigma = cache.phi_sigma
         # u_bar = cache.u_bar
@@ -513,13 +529,13 @@ def J_fixed_eta(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndi
         np.ndarray[np.float64_t, ndim=3] beta = np.ones((num_s, num_p, num_a_max))
         int state, player, action
         int flat_index = 0
-    
+
     for state in range(num_s):
         for player in range(num_p):
             for action in range(nums_a[state, player]):
                 beta[state, player, action] = y[flat_index]
                 flat_index += 1
-    
+
     cdef:
         np.ndarray[np.float64_t, ndim=3] sigma = np.exp(beta)
         np.ndarray[np.float64_t, ndim=3] sigma_inv = np.exp(-beta)
