@@ -10,12 +10,16 @@ cdef class TracingCacheCt:
     cdef double [::1] y
     cdef double [:,:,::1] u_sigma
     cdef double [:,:,:,::1] phi_sigma
+    cdef double [:,:,:,::1] phi_bar
     cdef double [:,:,::1] u_tilde_sia_ev
 
     def __cinit__(self):
         print("tracing cache cinit")
         self.y = np.zeros(1)
-        print(self.y)
+        self.u_sigma = np.zeros((1,1,1))
+        self.phi_sigma = np.zeros((1,1,1,1))
+        self.phi_bar = np.zeros((1,1,1,1))
+        self.u_tilde_sia_ev = np.zeros((1,1,1))
 
     def __init__(self):
         print("tracing cache init")
@@ -224,17 +228,16 @@ def H(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] rho,
         # phi_sigma = cache.phi_sigma
         # u_bar = cache.u_bar
         # phi_bar = cache.phi_bar
-        u_tilde_sia_ev = cache.u_tilde_sia_ev
+        u_tilde_sia_ev = np.asarray(cache.u_tilde_sia_ev)
     else:
         cache.y = y
         cache.u_sigma = u_tilde_sia(u.ravel(), sigma, num_s, num_p, nums_a, num_a_max)
         cache.phi_sigma = phi_tilde_siat(phi.ravel(), sigma, num_s, num_p, nums_a, num_a_max)
         # u_bar never loaded from cache
-        u_bar = t * cache.u_sigma + (1 - t) * u_rho
-        cache.phi_bar = t * cache.phi_sigma + (1 - t) * phi_rho
-        cache.u_tilde_sia_ev = u_tilde(u_bar, V, cache.phi_bar)
-
-        u_tilde_sia_ev = cache.u_tilde_sia_ev
+        u_bar = t * np.asarray(cache.u_sigma) + (1 - t) * u_rho
+        cache.phi_bar = t * np.asarray(cache.phi_sigma) + (1 - t) * phi_rho
+        u_tilde_sia_ev = u_tilde(u_bar, V, cache.phi_bar)
+        cache.u_tilde_sia_ev = u_tilde_sia_ev
 
     # # u_sigma: derivatives of u wrt sigma_sia: u_si if i plays a, others play sigma (without continuation values)
     # u_sigma = u_tilde_sia(u.ravel(), sigma, num_s, num_p, nums_a, num_a_max)
@@ -323,22 +326,24 @@ def J(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] rho,
     sigma_inv = np.exp(-beta)
 
     if all_equal(y, cache.y):
-        u_sigma = cache.u_sigma
-        phi_sigma = cache.phi_sigma
+        u_sigma = np.asarray(cache.u_sigma)
+        phi_sigma = np.asarray(cache.phi_sigma)
         # u_bar = cache.u_bar
-        phi_bar = cache.phi_bar
-        u_tilde_sia_ev = cache.u_tilde_sia_ev
+        phi_bar = np.asarray(cache.phi_bar)
+        u_tilde_sia_ev = np.asarray(cache.u_tilde_sia_ev)
     else:
         cache.y = y
         cache.u_sigma = u_tilde_sia(u.ravel(), sigma, num_s, num_p, nums_a, num_a_max)
-        u_sigma = cache.u_sigma
+        u_sigma = np.asarray(cache.u_sigma)
         cache.phi_sigma = phi_tilde_siat(phi.ravel(), sigma, num_s, num_p, nums_a, num_a_max)
-        phi_sigma = cache.phi_sigma
+        phi_sigma = np.asarray(cache.phi_sigma)
         u_bar = t * u_sigma + (1 - t) * u_rho
         cache.phi_bar = t * phi_sigma + (1 - t) * phi_rho
-        phi_bar = cache.phi_bar
-        cache.u_tilde_sia_ev = u_tilde(u_bar, V, phi_bar)
-        u_tilde_sia_ev = cache.u_tilde_sia_ev
+        phi_bar = np.asarray(cache.phi_bar)
+
+        u_tilde_sia_ev = u_tilde(u_bar, V, phi_bar)
+        cache.u_tilde_sia_ev = u_tilde_sia_ev
+        # TODO: is asarray stays, exchange orders
 
     # u_sigma: derivative of u_si wrt sigma_sia -> u of pure a if others play sigma
     # u_sigma = u_tilde_sia(u.ravel(), sigma, num_s, num_p, nums_a, num_a_max)

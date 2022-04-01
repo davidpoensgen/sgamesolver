@@ -3,8 +3,8 @@ from sgamesolver.homotopy._tracing import Tracing_Cache
 import numpy as np
 import matplotlib.pyplot as plt
 
-# game = sgamesolver.SGame.random_game(6, 6, 6, seed=123)
-game = sgamesolver.SGame.random_game(2, 2, 2, seed=123)
+game = sgamesolver.SGame.random_game(6, 6, 6, seed=123)
+# game = sgamesolver.SGame.random_game(2, 2, 2, seed=123)
 
 tracing_cache = Tracing_Cache(game)
 tracing_cache.solver_setup()

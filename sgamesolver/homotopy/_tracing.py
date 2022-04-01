@@ -443,6 +443,7 @@ class TracingCache:
         self.u_sigma = None
         self.phi_sigma = None
         self.u_tilde_sia_ev = None
+        self.phi_bar = None
 
 
 class TracingFixedEta_np(Tracing_np):
