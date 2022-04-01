@@ -69,7 +69,7 @@ class HomotopyTimer:
 
         return timings
 
-    def timing(self, num_s: int = 3, num_p: int = 3, num_a: int = 3, delta: float = 0.95, reps: int = 10,
+    def timing(self, num_s: int = 5, num_p: int = 5, num_a: int = 5, delta: float = 0.95, reps: int = 5,
                printout: bool = True, plot: bool = True) -> np.ndarray:
 
         result = self.batch_solve_random_games(num_s, num_p, num_a, delta, reps)
@@ -129,7 +129,7 @@ class HomotopyTimer:
                 'rng': np.random.get_state(self.rng), 'success': sol['success'], 'seconds': sol['time'],
                 'steps': sol['steps'], 'path_length': sol['s'], 'hom_parameter': sol['y'][-1]
             }), ignore_index=True)
-            self.logger.to_excel(self.log_filename)
+            self.logger.to_excel(self.log_filename, index=False)
 
         return {'success': sol['success'],
                 'seconds': sol['time'],
@@ -255,8 +255,10 @@ if __name__ == '__main__':
 
     # timings for default specification
 
-    # rng = np.random.RandomState(42)
-    # timer = HomotopyTimer(rng=rng)
+    # seed
+    rng = np.random.RandomState(42)
+
+    # timer = HomotopyTimer(homotopy='TracingFixedEta_ct', rng=rng)
     # timer.timing()
 
     # check unsolved games
@@ -272,32 +274,40 @@ if __name__ == '__main__':
 
     # from datetime import date
 
-    # homotopy_name = 'Tracing_ct'
+    homotopy_name = 'TracingFixedEta_ct'
 
     # small
-    # timer = HomotopyTimer(homotopy_name, rng=np.random.RandomState(42), log_filename=f"S_{date.today()}.xlsx")
-    # timer.batch_timings(nums_s=[2, 5, 10, 20], nums_p=[2, 3], nums_a=[2, 5, 10], reps=100)
+    # timer = HomotopyTimer(homotopy_name, rng=rng, log_filename=f"S_{date.today()}.xlsx")
+    # timer.batch_timings(nums_s=[1, 2, 5, 10, 20], nums_p=[1, 2, 3], nums_a=[2, 5, 10], reps=100)
 
     # medium
-    # timer = HomotopyTimer(homotopy_name, rng=np.random.RandomState(42), log_filename=f"M_{date.today()}.xlsx")
-    # timer.batch_timings(nums_s=[2, 5, 10, 20], nums_p=[4], nums_a=[2, 5, 10], reps=100)
+    # timer = HomotopyTimer(homotopy_name, rng=rng, log_filename=f"M_{date.today()}.xlsx")
+    # timer.batch_timings(nums_s=[1, 2, 5, 10, 20], nums_p=[4], nums_a=[2, 5, 10], reps=100)
 
     # large
-    # timer = HomotopyTimer(homotopy_name, rng=np.random.RandomState(42), log_filename=f"L_{date.today()}.xlsx")
-    # timer.batch_timings(nums_s=[2, 5, 10], nums_p=[5], nums_a=[2, 5, 10], reps=10)
+    # timer = HomotopyTimer(homotopy_name, rng=rng, log_filename=f"L_{date.today()}.xlsx")
+    # timer.batch_timings(nums_s=[1, 2, 5, 10], nums_p=[5], nums_a=[2, 5, 10], reps=10)
 
     # extra large
     # timer = HomotopyTimer(
-    #     homotopy_name, max_steps=1e6, rng=np.random.RandomState(42), log_filename=f"XL_{date.today()}.xlsx"
+    #     homotopy_name, max_steps=1e6, rng=rng, log_filename=f"XL_{date.today()}.xlsx"
     # )
     # timer.batch_timings(nums_s=[20], nums_p=[5], nums_a=[2, 5, 10], reps=5)
+
+    # P = 1
+    # timer = HomotopyTimer(homotopy_name, rng=rng, log_filename=f"P1_{date.today()}.xlsx")
+    # timer.batch_timings(nums_s=[1, 2, 5, 10, 20], nums_p=[1], nums_a=[2, 5, 10], reps=100)
+
+    # S = 1
+    # timer = HomotopyTimer(homotopy_name, rng=rng, log_filename=f"S1_{date.today()}.xlsx")
+    # timer.batch_timings(nums_s=[1], nums_p=[1, 2, 3, 4, 5], nums_a=[2, 5, 10], reps=100)
 
     # print timings
 
     import pandas as pd
 
     filename = 'timings_2021-11-02.xlsx'
-    timings_df = pd.read_excel(filename, index_col=0)
+    timings_df = pd.read_excel(filename)  # , index_col=0)
 
     timings_dict = {}
     for s in np.unique(timings_df['num_s']):

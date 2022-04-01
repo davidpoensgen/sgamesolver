@@ -69,10 +69,10 @@ class Tracing_base(LogStratHomotopy):
             'ds_defl': 0.5,
             'ds_min': 1e-9,
             'ds_max': 100,
-            'corr_steps_max': 20,
-            'corr_dist_max': 0.5,
-            'corr_ratio_max': 0.5,
-            'detJ_change_max': 1.5,
+            'corr_steps_max': 20,  # 20
+            'corr_dist_max': 10,  # 0.5
+            'corr_ratio_max': 0.9,  # 0.5
+            'detJ_change_max': 2,  # 1.5
             'bifurc_angle_min': 175,
         }
 
@@ -558,8 +558,15 @@ class TracingFixedEta_ct(Tracing_ct):
                                        self.game.num_actions_max, self.game.num_actions_total)
 
     def J(self, y: np.ndarray) -> np.ndarray:
+<<<<<<< HEAD:dsgamesolver/homotopy/tracing.py
+        return self.tracing_ct.J_fixed_eta(y, self.game.payoffs, self.game.transitions,
+                                           self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
+                                           self.game.num_states, self.game.num_players, self.game.nums_actions,
+                                           self.game.num_actions_max, self.game.num_actions_total)
+=======
         return _tracing_ct.J_fixed_eta(y, self.game.payoffs, self.game.transitions,
                                        self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
                                        self.game.num_states, self.game.num_players, self.game.nums_actions,
                                        self.game.num_actions_max, self.game.num_actions_total)
 
+>>>>>>> 5ce1c688ab5edb12ed41356255a33eb19cbfc3fa:sgamesolver/homotopy/_tracing.py

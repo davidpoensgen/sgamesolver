@@ -33,7 +33,7 @@ setup(name='sgamesolver',
           'Please cite this paper': 'TO-BE-PUT-HERE-3'
       },
       author='Steffen Eibelshäuser, David Poensgen',
-      author_email='eibelshaeuser@econ.uni-frankfurt.de, davidpoensgenecon@gmail.com',
+      author_email='steffen.eibelshaeuser@gmail.com, davidpoensgenecon@gmail.com',
       classifiers=[
           'Programming Language :: Python :: 3',
           'License :: OSI Approved :: MIT License',
