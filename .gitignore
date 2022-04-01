@@ -6,6 +6,10 @@ __pycache__/
 *$py.class
 build
 dist
+*.c
+*.so
+*.pyd
+
 
 # PyTest
 .pytest_cache/
