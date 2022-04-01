@@ -31,7 +31,7 @@ def LogGame(game: SGame, weights: Optional[ArrayLike] = None, implementation='au
         return LogGame_np(game, weights)
 
 
-class LogGame_Base(LogStratHomotopy):
+class LogGame_base(LogStratHomotopy):
     """Logarithmic game homotopy: base class"""
 
     def __init__(self, game: SGame, weights: Optional[ArrayLike] = None) -> None:
@@ -97,7 +97,7 @@ class LogGame_Base(LogStratHomotopy):
         return self.sigma_V_t_to_y(sigma, V, 0.0)
 
 
-class LogGame_np(LogGame_Base):
+class LogGame_np(LogGame_base):
     """Logarithmic game homotopy: Numpy implementation"""
 
     def __init__(self, game: SGame, weights: Optional[ArrayLike] = None) -> None:
@@ -298,7 +298,7 @@ class LogGame_np(LogGame_Base):
         return J[self.J_mask]
 
 
-class LogGame_ct(LogGame_Base):
+class LogGame_ct(LogGame_base):
     """Logarithmic game homotopy: Cython implementation"""
 
     def H(self, y: np.ndarray) -> np.ndarray:

@@ -34,7 +34,7 @@ def QRE(game: SGame, implementation='auto'):
 # %% parent class for QRE homotopy
 
 
-class QRE_Base(LogStratHomotopy):
+class QRE_base(LogStratHomotopy):
     """QRE homotopy: base class"""
 
     def __init__(self, game: SGame) -> None:
@@ -84,7 +84,7 @@ class QRE_Base(LogStratHomotopy):
         return self.sigma_V_t_to_y(sigma, V, 0.0)
 
 
-class QRE_np(QRE_Base):
+class QRE_np(QRE_base):
     """QRE homotopy: Numpy implementation"""
 
     def __init__(self, game: SGame) -> None:  # sourcery no-metrics
@@ -312,7 +312,7 @@ class QRE_np(QRE_Base):
         return J[self.J_mask]
 
 
-class QRE_ct(QRE_Base):
+class QRE_ct(QRE_base):
     """QRE homotopy: Cython implementation"""
 
     def H(self, y: np.ndarray) -> np.ndarray:

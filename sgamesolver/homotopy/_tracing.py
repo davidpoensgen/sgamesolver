@@ -51,7 +51,7 @@ def TracingFixedEta(game: SGame, priors: Union[str, ArrayLike] = "centroid",
         return TracingFixedEta_np(game, priors, weights, scale)
 
 
-class Tracing_Base(LogStratHomotopy):
+class Tracing_base(LogStratHomotopy):
     """Tracing homotopy: base class"""
 
     def __init__(self, game: SGame, priors: Union[str, ArrayLike] = "centroid",
@@ -188,7 +188,7 @@ class Tracing_Base(LogStratHomotopy):
         return self.sigma_V_t_to_y(sigma, V, 0.0)
 
 
-class Tracing_np(Tracing_Base):
+class Tracing_np(Tracing_base):
     """Tracing homotopy: Numpy implementation"""
 
     def __init__(self, game: SGame, priors: Union[str, ArrayLike] = "centroid",
@@ -400,7 +400,7 @@ class Tracing_np(Tracing_Base):
         return J[self.J_mask]
 
 
-class Tracing_ct(Tracing_Base):
+class Tracing_ct(Tracing_base):
     """Tracing homotopy: Cython implementation"""
 
     def H(self, y: np.ndarray) -> np.ndarray:
