@@ -297,6 +297,10 @@ class HomCont:
     def t(self):
         return self._y[-1]
 
+    @property
+    def t_direction(self):
+        return np.sign(self.sign * self.tangent[-1])
+
     def start(self):
         """Main loop of predictor-corrector steps, with step size adaptation between iterations."""
         if self.verbose >= 1:
@@ -313,8 +317,6 @@ class HomCont:
 
                 self.predict()
                 self.correct()
-                if self.debug:
-                    self.debug.update()
 
                 if self.corrector_success:
                     self.check_convergence()
@@ -326,7 +328,7 @@ class HomCont:
                     self.s += np.linalg.norm(self.y - self.y_corr)
                     self.y = self.y_corr
 
-                    # J at y_corr has already been computed and can be reused:
+                    # J at y_corr has already been computed at the end of correct() and can be reused:
                     self.J = self.J_corr
 
                     self.check_bifurcation()
@@ -337,8 +339,13 @@ class HomCont:
                 if self.converged:
                     return self._report_result()
 
+                if self.debug:
+                    self.debug.update()
+
                 self.adapt_stepsize()
 
+                # important to store path after adapt_stepsize:
+                # this way, return_to_step and re-starting the solver will produce consistent results
                 if self.store_path and self.corrector_success:
                     self.path.update()
 
@@ -397,7 +404,7 @@ class HomCont:
             self.corr_fail_steps = self.corr_step > self.corr_steps_max
             if self.corr_fail_dist or self.corr_fail_ratio or self.corr_fail_steps:
                 if self.verbose >= 3:
-                    err_msg = 'Corrector loop failed.'
+                    err_msg = f'Corrector loop failed. Step {self.corr_step}:'
                     if self.corr_fail_dist:
                         err_msg += f' corr_dist = {corr_dist/max(self.ds, 1):0.2f} (max: {self.corr_dist_max:0.2f});'
                     if self.corr_fail_ratio:
@@ -584,9 +591,8 @@ class HomCont:
     def set_greedy_sign(self):
         """Set sign so that continuation starts towards t_target."""
         self.sign = 1
-        t_direction_current = np.sign(self.tangent[-1])
         t_direction_desired = np.sign(self.t_target - self.t)
-        if t_direction_current != t_direction_desired:
+        if self.t_direction != t_direction_desired:
             self.sign = -1
 
     @staticmethod
@@ -610,12 +616,11 @@ class HomCont:
 
         if self.verbose >= 1:
             if success:
-                print(f'\nStep {self.step:5d}: Continuation successful. '
-                      f'Total time elapsed:{timedelta(seconds=int(time_sec))}')
+                print(f'\nStep {self.step:5d}: Continuation successful. ', end='')
             else:
                 print(f'\nStep {self.step:5d}: Failure reason: {exception.message}')
-                print(f'Step {self.step:5d}: Continuation failed. '
-                      f'Total time elapsed:{timedelta(seconds=int(time_sec))}')
+                print(f'Step {self.step:5d}: Continuation failed. ', end='')
+            print(f'Total time elapsed:{timedelta(seconds=int(time_sec))}')
             print('End homotopy continuation')
             print('=' * 50)
 
@@ -629,7 +634,8 @@ class HomCont:
                 }
 
     def _report_step(self):
-        output = f'\rStep {self.step:5d}: t = {self.t:#6.4g}, s = {self.s:#6.4g}, ds = {self.ds:#6.4g}'
+        arrow = '\u2193' if self.t_direction == -1 else '\u2191'
+        output = f'\rStep {self.step:5d}: t = {self.t:#6.4g} {arrow}, s = {self.s:#6.4g}, ds = {self.ds:#6.4g}'
         if self.store_cond:
             output += f', Cond(J) = {self.cond:#6.4g}'
         print(output, end='', flush=True)
@@ -783,7 +789,7 @@ class HomPath:
     def plot(self, max_plotted: int = 1000, y_indices: list = None):
         """Plot path.
         If a list or array of y_indices is given, only these are plotted.
-        To plot a range of indices, you can use np.arange, e.g. y_indices = np.arange(10, 20).
+        To plot a range of indices, you can pass a range, e.g. y_indices = range(10, 20).
         """
         try:
             import matplotlib.pyplot as plt
@@ -882,11 +888,11 @@ class HomPath:
 
 
 class DebugLog:
-    """Log to collect data on corrector steps for parameter tuning and debugging."""
+    """Log collecting data on corrector steps for parameter tuning and debugging."""
     def __init__(self, solver: HomCont):
         self.solver = solver
         self.index = 0
-        self.data = np.zeros((6, 1000))
+        self.data = np.zeros((8, 1000))
 
     @property
     def step(self):
@@ -912,6 +918,14 @@ class DebugLog:
     def det_ratio(self):
         return self.data[5, :self.index]
 
+    @property
+    def ds(self):
+        return self.data[6, :self.index]
+
+    @property
+    def t_direction(self):
+        return self.data[7, :self.index]
+
     def update(self):
         self.data[0, self.index] = self.solver.step
         self.data[1, self.index] = self.solver.corr_step
@@ -920,6 +934,8 @@ class DebugLog:
         self.data[4, self.index] = self.solver.corr_fail_ratio
         if self.solver.test_segment_jumping:
             self.data[5, self.index] = self.solver.det_ratio
+        self.data[6, self.index] = self.solver.ds
+        self.data[7, self.index] = self.solver.t_direction
 
         self.index += 1
         if self.index >= self.data.shape[1]:
@@ -940,9 +956,11 @@ class DebugLog:
             ratio += str(ratio_count).rjust(width) + "|"
             dist += str(dist_count).rjust(width) + "|"
         failure_count = (self.corrector_fail_steps + self.corrector_fail_ratio + self.corrector_fail_dist > 0).sum()
+        ds_max_count = (self.ds == self.solver.ds_max).sum()
+        ds_max_distance = ds_max_count * self.solver.ds_max
         summary = (
             f'~~~~~~~~~~ debug summary ~~~~~~~~~~\n'
-            f'Total steps: {self.index}\n'
+            f'Total steps: {self.index+1}\n'
             f'Number of corrector steps (average: {np.average(self.corrector_steps):.2f})\n'
             f'{header}\n'
             f'{counts}\n'
@@ -951,6 +969,8 @@ class DebugLog:
             f'Total failed corrector loops: {failure_count:.0f}. Failure reasons: \n'
             f'- Max steps: {self.corrector_fail_steps.sum():.0f}\n'
             f'- Ratio: {self.corrector_fail_ratio.sum():.0f}\n'
-            f'- Distance: {self.corrector_fail_dist.sum():.0f}'
+            f'- Distance: {self.corrector_fail_dist.sum():.0f}\n'
+            f'ds: maxed during {ds_max_count} of {self.index+1} steps, corresponding to {ds_max_distance:.1f} '
+            f'of {self.solver.s:.1f} ({ds_max_distance/self.solver.s:.1f}%) total distance travelled.'
         )
         print(summary)
