@@ -23,8 +23,6 @@ try:
 except ImportError:
     ct = False
 
-import sgamesolver.homotopy._tracing_cache as _tracing_cache
-
 ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
 
@@ -187,6 +185,35 @@ class Tracing_Base(LogStratHomotopy):
             warnings.warn('Value function iteration has not converged during computation of the starting point.')
 
         return self.sigma_V_t_to_y(sigma, V, 0.0)
+
+
+class Tracing_ct(Tracing_Base):
+    """Tracing homotopy: Cython implementation"""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.cache = _tracing_ct.TracingCache()
+        self.eta_fix = False
+
+    def H(self, y: np.ndarray) -> np.ndarray:
+        return _tracing_ct.H(y, self.game.payoffs, self.game.transitions,
+                             self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
+                             self.game.nums_actions, self.eta_fix, self.cache)
+
+    def J(self, y: np.ndarray) -> np.ndarray:
+        return _tracing_ct.J(y, self.game.payoffs, self.game.transitions,
+                             self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
+                             self.game.nums_actions, self.eta_fix, self.cache)
+
+
+class TracingFixedEta_ct(Tracing_ct):
+    """Tracing homotopy with fixed eta: Cython implementation"""
+
+    def __init__(self, game: SGame, priors: Union[str, ArrayLike] = "centroid",
+                 weights: Optional[ArrayLike] = None, scale: Union[float, int] = 1.0) -> None:
+        super().__init__(game, priors, weights)
+        self.eta = scale
+        self.eta_fix = True
 
 
 class Tracing_np(Tracing_Base):
@@ -401,41 +428,6 @@ class Tracing_np(Tracing_Base):
         return J[self.J_mask]
 
 
-class Tracing_ct(Tracing_Base):
-    """Tracing homotopy: Cython implementation"""
-
-    def H(self, y: np.ndarray) -> np.ndarray:
-        return _tracing_ct.H(y, self.game.payoffs, self.game.transitions,
-                             self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
-                             self.game.num_states, self.game.num_players, self.game.nums_actions,
-                             self.game.num_actions_max, self.game.num_actions_total)
-
-    def J(self, y: np.ndarray) -> np.ndarray:
-        return _tracing_ct.J(y, self.game.payoffs, self.game.transitions,
-                             self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
-                             self.game.num_states, self.game.num_players, self.game.nums_actions,
-                             self.game.num_actions_max, self.game.num_actions_total)
-
-
-class Tracing_Cache(Tracing_Base):
-    """Tracing homotopy: Cython implementation"""
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.cache = _tracing_cache.TracingCache()
-        self.eta_fix = False
-
-    def H(self, y: np.ndarray) -> np.ndarray:
-        return _tracing_cache.H(y, self.game.payoffs, self.game.transitions,
-                             self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
-                             self.game.nums_actions, self.eta_fix, self.cache)
-
-    def J(self, y: np.ndarray) -> np.ndarray:
-        return _tracing_cache.J(y, self.game.payoffs, self.game.transitions,
-                             self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
-                             self.game.nums_actions, self.eta_fix, self.cache)
-
-
 class TracingFixedEta_np(Tracing_np):
     """Tracing homotopy with fixed eta: Numpy implementation"""
 
@@ -561,25 +553,4 @@ class TracingFixedEta_np(Tracing_np):
         # dH_strat_dt = 0
 
         return J[self.J_mask]
-
-
-class TracingFixedEta_ct(Tracing_ct):
-    """Tracing homotopy with fixed eta: Cython implementation"""
-
-    def __init__(self, game: SGame, priors: Union[str, ArrayLike] = "centroid",
-                 weights: Optional[ArrayLike] = None, scale: Union[float, int] = 1.0) -> None:
-        super().__init__(game, priors, weights)
-        self.eta = scale
-
-    def H(self, y: np.ndarray) -> np.ndarray:
-        return _tracing_ct.H_fixed_eta(y, self.game.payoffs, self.game.transitions,
-                                       self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
-                                       self.game.num_states, self.game.num_players, self.game.nums_actions,
-                                       self.game.num_actions_max, self.game.num_actions_total)
-
-    def J(self, y: np.ndarray) -> np.ndarray:
-        return _tracing_ct.J_fixed_eta(y, self.game.payoffs, self.game.transitions,
-                                       self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
-                                       self.game.num_states, self.game.num_players, self.game.nums_actions,
-                                       self.game.num_actions_max, self.game.num_actions_total)
 
