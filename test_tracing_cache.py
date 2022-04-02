@@ -13,9 +13,9 @@ tracing_cache.eta_fix = True
 tracing_cache.solver.max_steps = 1000
 tracing_cache.solve()
 
-tracing = sgamesolver.homotopy.Tracing(game)
+tracing = sgamesolver.homotopy.TracingFixedEta(game)
 tracing.solver_setup()
-tracing.solver.max_steps = 100
+tracing.solver.max_steps = 1000
 tracing.solve()
 
 # 666, 123, 100 steps: 1:28 -> 1:09

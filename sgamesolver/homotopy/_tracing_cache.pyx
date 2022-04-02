@@ -23,6 +23,7 @@ def H(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] rho,
         int num_p = nums_a.shape[1]
         int num_a_max = np.max(nums_a)
         int num_a_tot = nums_a.sum()
+
         np.ndarray[np.float64_t, ndim=1] out_ = np.zeros(num_a_tot + num_s * num_p)
         np.ndarray[np.float64_t, ndim=3] beta = np.ones((num_s, num_p, num_a_max))
         np.ndarray[np.float64_t, ndim=3] sigma
@@ -127,6 +128,7 @@ def J(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] rho,
         np.ndarray[np.float64_t, ndim=3] sigma_inv
         np.ndarray[np.float64_t, ndim=2] V = y[num_a_tot : num_a_tot + num_s*num_p].reshape(num_s, num_p)
         double t = y[num_a_tot + num_s*num_p]
+
         np.ndarray[np.float64_t, ndim=3] u_sigma
         np.ndarray[np.float64_t, ndim=4] phi_sigma
         np.ndarray[np.float64_t, ndim=3] u_bar
@@ -295,8 +297,10 @@ def u_tilde(u, V, phi):
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def u_tilde_sia(np.ndarray[np.float64_t, ndim=1] u_tilde_ravel, np.ndarray[np.float64_t, ndim=3] sigma,
-                int num_s, int num_p, np.ndarray[np.int32_t, ndim=2] nums_a, int num_a_max):
+cdef np.ndarray[np.float64_t, ndim=3] u_tilde_sia(np.ndarray[np.float64_t, ndim=1] u_tilde_ravel,
+                                                  np.ndarray[np.float64_t, ndim=3] sigma,
+                                                  int num_s, int num_p, np.ndarray[np.int32_t, ndim=2] nums_a,
+                                                  int num_a_max):
     """Payoffs (including continuation values) of player i using pure action a in state s,
     given other players play according to mixed strategy profile sigma[s,p,a].
     """
@@ -342,8 +346,10 @@ def u_tilde_sia(np.ndarray[np.float64_t, ndim=1] u_tilde_ravel, np.ndarray[np.fl
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def u_tilde_sijab(np.ndarray[np.float64_t, ndim=1] u_tilde_ravel, np.ndarray[np.float64_t, ndim=3] sigma,
-                  int num_s, int num_p, np.ndarray[np.int32_t, ndim=2] nums_a, int num_a_max):
+cdef np.ndarray[np.float64_t, ndim=5] u_tilde_sijab(np.ndarray[np.float64_t, ndim=1] u_tilde_ravel,
+                                                    np.ndarray[np.float64_t, ndim=3] sigma,
+                                                    int num_s, int num_p, np.ndarray[np.int32_t, ndim=2] nums_a,
+                                                    int num_a_max):
     """Payoffs u_tilde_[s,i,i',a,a'] (including continuation values) of player i using pure action a in state s,
     given player i' uses pure action a' and other players use mixed strategy profile sigma[s,i,a].
 
@@ -389,8 +395,10 @@ def u_tilde_sijab(np.ndarray[np.float64_t, ndim=1] u_tilde_ravel, np.ndarray[np.
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def phi_tilde_siat(np.ndarray[np.float64_t, ndim=1] phi_ravel, np.ndarray[np.float64_t, ndim=3] sigma,
-                   int num_s, int num_p, np.ndarray[np.int32_t, ndim=2] nums_a, int num_a_max):
+cdef np.ndarray[np.float64_t, ndim=4] phi_tilde_siat(np.ndarray[np.float64_t, ndim=1] phi_ravel,
+                                                     np.ndarray[np.float64_t, ndim=3] sigma,
+                                                     int num_s, int num_p, np.ndarray[np.int32_t, ndim=2] nums_a,
+                                                     int num_a_max):
     """Transition probabilities phi_[s,i,a,s'] of player i using pure action a in state s,
     given other players use mixed strategy profile sigma[s,i,a]
     """
