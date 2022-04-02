@@ -314,12 +314,13 @@ class QRE_np(QRE_base):
 
 class QRE_ct(QRE_base):
     """QRE homotopy: Cython implementation"""
+    def __init__(self, game):
+        super().__init__(game)
+        self.cache = _qre_ct.QreCache()
 
     def H(self, y: np.ndarray) -> np.ndarray:
-        return _qre_ct.H(y, self.game.payoffs, self.game.transitions, self.game.num_states, self.game.num_players,
-                         self.game.nums_actions, self.game.num_actions_max, self.game.num_actions_total)
+        return _qre_ct.H(y, self.game.payoffs, self.game.transitions, self.game.nums_actions, self.cache)
 
     def J(self, y: np.ndarray) -> np.ndarray:
-        return _qre_ct.J(y, self.game.payoffs, self.game.transitions, self.game.num_states, self.game.num_players,
-                         self.game.nums_actions, self.game.num_actions_max, self.game.num_actions_total)
+        return _qre_ct.J(y, self.game.payoffs, self.game.transitions, self.game.nums_actions, self.cache)
 
