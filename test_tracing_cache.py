@@ -8,6 +8,7 @@ game = sgamesolver.SGame.random_game(4, 4, 4, seed=123)
 
 tracing_cache = Tracing_Cache(game)
 tracing_cache.solver_setup()
+tracing_cache.eta_fix = True
 # tracing_cache.ct_cache = None
 tracing_cache.solver.max_steps = 1000
 tracing_cache.solve()

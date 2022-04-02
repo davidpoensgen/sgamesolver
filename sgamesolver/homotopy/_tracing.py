@@ -423,16 +423,17 @@ class Tracing_Cache(Tracing_Base):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.cache = _tracing_cache.TracingCache()
+        self.eta_fix = False
 
     def H(self, y: np.ndarray) -> np.ndarray:
         return _tracing_cache.H(y, self.game.payoffs, self.game.transitions,
                              self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
-                             self.game.nums_actions, self.cache)
+                             self.game.nums_actions, self.eta_fix, self.cache)
 
     def J(self, y: np.ndarray) -> np.ndarray:
         return _tracing_cache.J(y, self.game.payoffs, self.game.transitions,
                              self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
-                             self.game.nums_actions, self.cache)
+                             self.game.nums_actions, self.eta_fix, self.cache)
 
 
 class TracingFixedEta_np(Tracing_np):
