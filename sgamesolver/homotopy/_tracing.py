@@ -422,28 +422,17 @@ class Tracing_Cache(Tracing_Base):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.cache = TracingCache()
-        self.ct_cache = _tracing_cache.TracingCacheCt()
+        self.cache = _tracing_cache.TracingCache()
 
     def H(self, y: np.ndarray) -> np.ndarray:
         return _tracing_cache.H(y, self.game.payoffs, self.game.transitions,
                              self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
-                             self.game.nums_actions, self.ct_cache)
+                             self.game.nums_actions, self.cache)
 
     def J(self, y: np.ndarray) -> np.ndarray:
         return _tracing_cache.J(y, self.game.payoffs, self.game.transitions,
                              self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
-                             self.game.num_states, self.game.num_players, self.game.nums_actions,
-                             self.game.num_actions_max, self.game.num_actions_total, self.ct_cache)
-
-class TracingCache:
-
-    def __init__(self):
-        self.y = np.zeros(1)
-        self.u_sigma = None
-        self.phi_sigma = None
-        self.u_tilde_sia_ev = None
-        self.phi_bar = None
+                             self.game.nums_actions, self.cache)
 
 
 class TracingFixedEta_np(Tracing_np):

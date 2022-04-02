@@ -4,33 +4,29 @@ cimport numpy as np
 np.import_array()
 
 
-# %% auxiliary functions
-
-cdef class TracingCacheCt:
-    cdef double [::1] y
-    cdef double [:,:,::1] u_sigma
-    cdef double [:,:,:,::1] phi_sigma
-    cdef double [:,:,:,::1] phi_bar
-    cdef double [:,:,::1] u_tilde_sia_ev
+cdef class TracingCache:
+    cdef:
+        double [::1] y
+        double [:,:,::1] u_sigma
+        double [:,:,:,::1] phi_sigma
+        double [:,:,:,::1] phi_bar
+        double [:,:,::1] u_tilde_sia_ev
 
     def __cinit__(self):
-        print("tracing cache cinit")
         self.y = np.zeros(1)
         self.u_sigma = np.zeros((1,1,1))
         self.phi_sigma = np.zeros((1,1,1,1))
         self.phi_bar = np.zeros((1,1,1,1))
         self.u_tilde_sia_ev = np.zeros((1,1,1))
 
-    def __init__(self):
-        print("tracing cache init")
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
 cdef bint all_equal(double [::1] y0, double [::1] y1):
     cdef int i
-    if len(y0) != len(y1):
+    if y0.shape[0] != y1.shape[0]:
         return False
-    for i in range(len(y0)):
+    for i in range(y0.shape[0]):
         if y0[i] != y1[i]:
             return False
     return True
@@ -175,15 +171,12 @@ def phi_tilde_siat(np.ndarray[np.float64_t, ndim=1] phi_ravel, np.ndarray[np.flo
     return out_
 
 
-# %% homotopy function
-
-
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def H(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] rho,
-      np.ndarray[np.float64_t, ndim=3] nu, double eta_0,
+      np.ndarray[np.float64_t, ndim=3] nu, double eta,
       np.ndarray[np.float64_t, ndim=3] u_rho, np.ndarray[np.float64_t, ndim=4] phi_rho,
-      np.ndarray[np.int32_t, ndim=2] nums_a, TracingCacheCt cache):
+      np.ndarray[np.int32_t, ndim=2] nums_a, bint eta_fix, TracingCache cache):
     """Homotopy function.
     
     H(y) = [  H_val[s,i,a]  ]
@@ -222,34 +215,36 @@ def H(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] rho,
     sigma = np.exp(beta)
     sigma_inv = np.exp(-beta)
 
-    if all_equal(y, cache.y):
-        # I think these below are just intermediate steps in H:
-        # u_sigma = cache.u_sigma
-        # phi_sigma = cache.phi_sigma
-        # u_bar = cache.u_bar
-        # phi_bar = cache.phi_bar
+    # eta_fix = False is a version of the logarithmic tracing procedure that sets η(t) = (1-t)*η_0
+    if not eta_fix:
+        eta = (1-t)*eta
+
+    if cache is None:
+        # cache is disabled: all calculations are performed and nothing is saved.
+        # u_sigma: derivatives of u wrt sigma_sia: u_si if i plays a, others play sigma (without continuation values)
+        u_sigma = u_tilde_sia(u.ravel(), sigma, num_s, num_p, nums_a, num_a_max)
+        # phi_sigma : derivatives of phi wrt sigma (phi_si if i plays a, rest plays sigma)
+        phi_sigma = phi_tilde_siat(phi.ravel(), sigma, num_s, num_p, nums_a, num_a_max)
+        # u_bar : pure strat utilities if others play sigma/rho mixture
+        u_bar = t * u_sigma + (1 - t) * u_rho
+        # phi_bar : pure strat transition probabilities if others play sigma/rho mixture
+        phi_bar = t * phi_sigma + (1 - t) * phi_rho
+        # u_tilde_sia_ev : total disc. utilities if others play sigma/rho mixture.
+        # note: uses u_tilde, but not same shape as in qre. here, derivatives are taken first.
+        u_tilde_sia_ev = u_tilde(u_bar, V, phi_bar)
+    elif all_equal(y, cache.y):
+        # All other variables potentially in the cache are just intermediate steps in H:
+        # u_sigma, phi_sigma, u_bar, phi_bar
         u_tilde_sia_ev = np.asarray(cache.u_tilde_sia_ev)
     else:
         cache.y = y
         cache.u_sigma = u_tilde_sia(u.ravel(), sigma, num_s, num_p, nums_a, num_a_max)
         cache.phi_sigma = phi_tilde_siat(phi.ravel(), sigma, num_s, num_p, nums_a, num_a_max)
-        # u_bar never loaded from cache
+        # u_bar not needed in cache
         u_bar = t * np.asarray(cache.u_sigma) + (1 - t) * u_rho
         cache.phi_bar = t * np.asarray(cache.phi_sigma) + (1 - t) * phi_rho
-        u_tilde_sia_ev = u_tilde(u_bar, V, cache.phi_bar)
-        cache.u_tilde_sia_ev = u_tilde_sia_ev
-
-    # # u_sigma: derivatives of u wrt sigma_sia: u_si if i plays a, others play sigma (without continuation values)
-    # u_sigma = u_tilde_sia(u.ravel(), sigma, num_s, num_p, nums_a, num_a_max)
-    # # phi_sigma : derivatives of phi wrt sigma (phi_si if i plays a, rest plays sigma)
-    # phi_sigma = phi_tilde_siat(phi.ravel(), sigma, num_s, num_p, nums_a, num_a_max)
-    # # u_bar : pure strat utilities if others play sigma/rho mixture
-    # u_bar = t * u_sigma + (1 - t) * u_rho
-    # # phi_bar : pure strat transition probabilities if others play sigma/rho mixture
-    # phi_bar = t * phi_sigma + (1 - t) * phi_rho
-    # # u_tilde_sia_ev : total disc. utilities if others play sigma/rho mixture.
-    # # note: uses u_tilde, but not same shape as in qre. here, derivatives are taken first.
-    # u_tilde_sia_ev = u_tilde(u_bar, V, phi_bar)
+        cache.u_tilde_sia_ev = u_tilde(u_bar, V, cache.phi_bar)
+        u_tilde_sia_ev = np.asarray(cache.u_tilde_sia_ev)
 
     flat_index = 0
     for state in range(num_s):
@@ -259,7 +254,7 @@ def H(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] rho,
                 nu_beta_sum += nu[state, player, action] * (beta[state, player, action] - 1)
 
             for action in range(nums_a[state, player]):
-                out_[flat_index] = (u_tilde_sia_ev[state, player, action] - V[state, player] + (1-t)**2 * eta_0
+                out_[flat_index] = (u_tilde_sia_ev[state, player, action] - V[state, player] + (1-t) * eta
                                     * (nu[state, player, action] * sigma_inv[state, player, action] + nu_beta_sum))
                 flat_index += 1
 
@@ -273,15 +268,12 @@ def H(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] rho,
     return out_
 
 
-# %% Jacobian matrix
-
-
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def J(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] rho,
-      np.ndarray[np.float64_t, ndim=3] nu, double eta_0,
+      np.ndarray[np.float64_t, ndim=3] nu, double eta,
       np.ndarray[np.float64_t, ndim=3] u_rho, np.ndarray[np.float64_t, ndim=4] phi_rho,
-      int num_s, int num_p, np.ndarray[np.int32_t, ndim=2] nums_a, int num_a_max, int num_a_tot, TracingCacheCt cache):  #TODO:typing?
+      np.ndarray[np.int32_t, ndim=2] nums_a, TracingCache cache):
     """Jacobian matrix.
 
     J(y) = [  d_H_val[s,i]     / d_beta[s',i',a'],  d_H_val[s,i]     / d_V[s',i'],  d_H_val[s,i]     / d_t  ]
@@ -291,6 +283,11 @@ def J(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] rho,
     """
 
     cdef:
+        int num_s = nums_a.shape[0]
+        int num_p = nums_a.shape[1]
+        int num_a_max = np.max(nums_a)
+        int num_a_tot = nums_a.sum()
+
         np.ndarray[np.float64_t, ndim=2] out_ = np.zeros((num_a_tot + num_s*num_p, num_a_tot + num_s*num_p + 1))
         np.ndarray[np.float64_t, ndim=3] beta = np.ones((num_s, num_p, num_a_max))
         np.ndarray[np.float64_t, ndim=3] sigma
@@ -325,7 +322,26 @@ def J(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] rho,
     sigma = np.exp(beta)
     sigma_inv = np.exp(-beta)
 
-    if all_equal(y, cache.y):
+    # eta_fix = False is a version of the logarithmic tracing procedure that sets η(t) = (1-t)*η_0
+    # for J this requires not only adjusting eta itself, but also adding a factor because for the variable version
+    # d/dt (1-t)η = d/dt (1-t)^2 η_0 = -2(1-t)η_0 = -2η
+    cdef double eta_col_factor = 1.0
+    if not eta_fix:
+        eta = (1-t)*eta
+        eta_col_factor = 2.0
+
+
+    if cache is None:
+        # cache is none -> disabled.
+        # u_sigma: derivative of u_si wrt sigma_sia -> u of pure a if others play sigma
+        u_sigma = u_tilde_sia(u.ravel(), sigma, num_s, num_p, nums_a, num_a_max)
+        # phi_sigma: derivative of phi_si wrt sigma_sia -> u of pure a if others play sigma
+        phi_sigma = phi_tilde_siat(phi.ravel(), sigma, num_s, num_p, nums_a, num_a_max)
+        # u_bar, phi_bar: u/phi of si playing a if rest plays mixture sigma / rho
+        u_bar = t * u_sigma + (1 - t) * u_rho
+        phi_bar = t * phi_sigma + (1 - t) * phi_rho
+
+    elif all_equal(y, cache.y):
         u_sigma = np.asarray(cache.u_sigma)
         phi_sigma = np.asarray(cache.phi_sigma)
         # u_bar = cache.u_bar
@@ -340,19 +356,11 @@ def J(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] rho,
         u_bar = t * u_sigma + (1 - t) * u_rho
         cache.phi_bar = t * phi_sigma + (1 - t) * phi_rho
         phi_bar = np.asarray(cache.phi_bar)
+        cache.u_tilde_sia_ev = u_tilde(u_bar, V, phi_bar)
+        u_tilde_sia_ev = np.asarray(cache.u_tilde_sia_ev)
 
-        u_tilde_sia_ev = u_tilde(u_bar, V, phi_bar)
-        cache.u_tilde_sia_ev = u_tilde_sia_ev
-        # TODO: is asarray stays, exchange orders
-
-    # u_sigma: derivative of u_si wrt sigma_sia -> u of pure a if others play sigma
-    # u_sigma = u_tilde_sia(u.ravel(), sigma, num_s, num_p, nums_a, num_a_max)
-    # phi_sigma: derivative of phi_si wrt sigma_sia -> u of pure a if others play sigma
-    # phi_sigma = phi_tilde_siat(phi.ravel(), sigma, num_s, num_p, nums_a, num_a_max)
-    # u_bar, phi_bar: u/phi of si playing a if rest plays mixture sigma / rho
-    # u_bar = t * u_sigma + (1 - t) * u_rho
-    # phi_bar = t * phi_sigma + (1 - t) * phi_rho
-    # u_hat, phi_hat: derivatives of u_bar,phi_bar wrt to t?
+    # the following used only for J, not for H -> never in cache.
+    # u_hat, phi_hat: derivatives of u_bar, phi_bar wrt to t
     u_hat = u_sigma - u_rho
     phi_hat = phi_sigma - phi_rho
     # now: use previous to compute total discounted versions by ein-summing in continuation values.
@@ -385,18 +393,16 @@ def J(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] rho,
                         # (own actions in same state)
                         if row_player == col_player:
                             if row_action == col_action:
-                                out_[row_index, col_index] = ((1-t)**2 * eta_0 * nu[row_state, row_player, row_action]
+                                out_[row_index, col_index] = ((1-t) * eta * nu[row_state, row_player, row_action]
                                                               * (1 - sigma_inv[row_state, row_player, row_action]))
                             else:
-                                out_[row_index, col_index] = (1-t)**2 * eta_0 * nu[row_state, row_player, col_action]
+                                out_[row_index, col_index] = (1-t) * eta * nu[row_state, row_player, col_action]
 
                         # off-diagonal sub-blocks: derivatives w.r.t. beta[s,i',a']
                         # (other players' actions in same state)
                         else:
-                            out_[row_index, col_index] = (
-                                t * sigma[row_state, col_player, col_action]
-                                * u_tilde_sijab_ev[row_state, row_player, col_player, row_action, col_action]
-                                )
+                            out_[row_index, col_index] = (t * sigma[row_state, col_player, col_action]
+                                * u_tilde_sijab_ev[row_state, row_player, col_player, row_action, col_action])
 
                         col_index += 1
 
@@ -412,9 +418,9 @@ def J(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] rho,
                         col_index -= row_player
 
                 # derivative w.r.t. t
-                out_[row_index, col_index] = (u_hat_sia_ev[row_state, row_player, row_action] - 2*(1-t) * eta_0
+                out_[row_index, col_index] = (u_hat_sia_ev[row_state, row_player, row_action] - eta_col_factor * eta
                                               * (nu[row_state, row_player, row_action]
-                                                 * sigma_inv[row_state, row_player, row_action] + nu_beta_sum))
+                                              * sigma_inv[row_state, row_player, row_action] + nu_beta_sum))
 
                 row_index += 1
 
