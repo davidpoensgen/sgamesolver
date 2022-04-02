@@ -23,6 +23,7 @@ try:
 except ImportError:
     ct = False
 
+
 ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
 
@@ -50,7 +51,7 @@ def TracingFixedEta(game: SGame, priors: Union[str, ArrayLike] = "centroid",
         return TracingFixedEta_np(game, priors, weights, scale)
 
 
-class Tracing_Base(LogStratHomotopy):
+class Tracing_base(LogStratHomotopy):
     """Tracing homotopy: base class"""
 
     def __init__(self, game: SGame, priors: Union[str, ArrayLike] = "centroid",
@@ -68,10 +69,10 @@ class Tracing_Base(LogStratHomotopy):
             'ds_defl': 0.5,
             'ds_min': 1e-9,
             'ds_max': 100,
-            'corr_steps_max': 20,
-            'corr_dist_max': 0.5,
-            'corr_ratio_max': 0.5,
-            'detJ_change_max': 1.5,
+            'corr_steps_max': 20,  # 20 # TODO: these changes/comments?
+            'corr_dist_max': 10,  # 0.5
+            'corr_ratio_max': 0.9,  # 0.5
+            'detJ_change_max': 2,  # 1.5
             'bifurc_angle_min': 175,
         }
 
@@ -187,7 +188,7 @@ class Tracing_Base(LogStratHomotopy):
         return self.sigma_V_t_to_y(sigma, V, 0.0)
 
 
-class Tracing_ct(Tracing_Base):
+class Tracing_ct(Tracing_base):
     """Tracing homotopy: Cython implementation"""
 
     def __init__(self, *args, **kwargs):
@@ -216,7 +217,7 @@ class TracingFixedEta_ct(Tracing_ct):
         self.eta_fix = True
 
 
-class Tracing_np(Tracing_Base):
+class Tracing_np(Tracing_base):
     """Tracing homotopy: Numpy implementation"""
 
     def __init__(self, game: SGame, priors: Union[str, ArrayLike] = "centroid",

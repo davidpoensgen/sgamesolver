@@ -104,9 +104,14 @@ class SGame:
         num_actions can be specified in the following ways:
         - integer: all agents have this same fixed number of actions
         - list/tuple of 2 integers: number of actions is randomized, the input determining [min, max]
-        - array of dimension [num_states, num_actions]: number of actions for each agent
+        - array of dimension [num_states, num_actions]: number of actions for each agen
+        Similarly for delta:
+        - float: value used for all players
+        - tuple/list of 2 floats: randomized per player with (delta_min, delta_max)
+        - list or array of length num_players: values used for all players
 
-        A seed can be passed to the random number generator, ensuring that the game can be recreated later or by others.
+        Passing a seed to the random number generator ensures that the game can be recreated at a
+        later occasion or by other users.
         """
         rng = np.random.default_rng(seed=seed)
 
@@ -373,9 +378,10 @@ class SGameHomotopy:
         t = y[-1]
         return sigma, V, t
 
-    def plot_path(self, x_axis="s", max_plotted=1000):
-        """Plots the path the solver has followed. Requires that path storing was
-        enabled before starting the solver."""
+    def plot_path(self, x_axis="s", s_range=None, step_range=None):
+        """Plots the path the solver has followed. Requires that path storing was enabled before starting the solver.
+        If an s_range, i.e. tuple (s_min, s_max), is passed, only steps for which s_min < s < s_max will be plotted.
+        Likewise, passing a step_range, i.e. (first_step, last_step) also allows to plot a subset of steps only."""
         if not self.solver or not self.solver.path:
             print('No solver or no stored path.')
             return
@@ -383,15 +389,19 @@ class SGameHomotopy:
             import matplotlib.pyplot as plt
             import matplotlib.lines
         except ModuleNotFoundError:
-            print('Path cannot be plotted: Package matplotlib is required.')
+            print('Missing the the python package matplotlib. Please install to plot.')
             return
 
         path = self.solver.path
-        if path.index > max_plotted:
-            sample_freq = int(np.ceil(max_plotted / path.index))
+        if s_range is not None:
+            rows = np.nonzero((s_range[0] <= path.s) & (path.s <= s_range[1]))[0]
+        elif step_range is not None:
+            rows = np.nonzero((step_range[0] <= path.step) & (path.step <= step_range[1]))[0]
         else:
-            sample_freq = 1
-        rows = slice(0, path.index, sample_freq)
+            rows = np.arange(0, path.index)
+        if len(rows) == 0:
+            print("No data for the given range.")
+            return
 
         if x_axis == "s":
             x_plot = path.s[rows]
@@ -399,12 +409,15 @@ class SGameHomotopy:
         elif x_axis == "t":
             x_plot = path.y[rows, -1]
             x_label = "homotopy parameter t"
+        elif x_axis == "step":
+            x_plot = path.step[rows]
+            x_label = "step number"
 
         # get sigma from y
         num_rows = len(x_plot)
         sigma_plot = np.empty((num_rows, self.game.num_states, self.game.num_players, self.game.num_actions_max))
-        for row in range(path.index)[rows]:
-            sigma_plot[row, :] = self.y_to_sigma_V_t(path.y[row])[0]
+        for idx, row in np.ndenumerate(rows):
+            sigma_plot[idx, :] = self.y_to_sigma_V_t(path.y[row])[0]
         figure, axis = plt.subplots(nrows=self.game.num_states, ncols=self.game.num_players,
                                     figsize=(self.game.num_players * 2.66, self.game.num_states * 2),
                                     squeeze=False)
@@ -432,6 +445,7 @@ class SGameHomotopy:
         figure.legend(handles=legend_elements, ncol=self.game.num_actions_max,
                       loc='lower center', bbox_to_anchor=(0.5, 0))
 
+        figure.show()
         return figure
 
 
