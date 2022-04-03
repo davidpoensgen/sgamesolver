@@ -558,15 +558,7 @@ class TracingFixedEta_ct(Tracing_ct):
                                        self.game.num_actions_max, self.game.num_actions_total)
 
     def J(self, y: np.ndarray) -> np.ndarray:
-<<<<<<< HEAD:dsgamesolver/homotopy/tracing.py
-        return self.tracing_ct.J_fixed_eta(y, self.game.payoffs, self.game.transitions,
-                                           self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
-                                           self.game.num_states, self.game.num_players, self.game.nums_actions,
-                                           self.game.num_actions_max, self.game.num_actions_total)
-=======
         return _tracing_ct.J_fixed_eta(y, self.game.payoffs, self.game.transitions,
                                        self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
                                        self.game.num_states, self.game.num_players, self.game.nums_actions,
                                        self.game.num_actions_max, self.game.num_actions_total)
-
->>>>>>> 5ce1c688ab5edb12ed41356255a33eb19cbfc3fa:sgamesolver/homotopy/_tracing.py
