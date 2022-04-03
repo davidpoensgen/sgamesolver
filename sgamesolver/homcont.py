@@ -1,7 +1,6 @@
 import numpy as np
 import time
 from datetime import timedelta
-import sys
 import os
 import json
 
@@ -216,7 +215,7 @@ class HomCont:
         self.store_cond = False
         self.test_segment_jumping = False
 
-        self.debug = False
+        self.debug = None
 
     # Properties: These mainly serve to cache the results of potentially expensive function calls
     @property
@@ -486,7 +485,7 @@ class HomCont:
            - H could not be evaluated during corrections
              (indicates leaving H's domain)
            - corrector step was successful, but t_target was crossed
-        If ds is to be decreased below ds_min, continuation is failed.
+        If ds is to be decreased below ds_min, continuation fails.
 
         If t_target is finite, stepsize is capped so that the predictor will not cross t_target.
         """
@@ -585,7 +584,7 @@ class HomCont:
             t_axis[-1] = 1
             tangent_angle = angle(self.tangent, t_axis)
             if abs(90 - tangent_angle) < 2.5:
-                print(f'Warning: Tangent has angle {tangent_angle:.1f}° '
+                print(f'Note: Tangent has angle {tangent_angle:.1f}° '
                       'relative to t-axis. Starting point may violate transversality.')
 
     def set_greedy_sign(self):

@@ -275,7 +275,7 @@ class StrategyProfile:
         if t is not None:
             self.homotopy_parameter = t
 
-    def to_string(self, roundoff=3) -> str:
+    def to_string(self, decimals=3) -> str:
         """Renders the strategy profile and associated values as human-readable string."""
         string = ""
         for state in range(self.num_states):
@@ -284,14 +284,14 @@ class StrategyProfile:
                 V_si = self.values[state, player]
                 sigma_si = self.strategies[state, player, :self._nums_actions[state, player]]
                 string += f'player{player}: v={V_si:#5.2f}, ' \
-                          f's={np.array2string(sigma_si, formatter={"float_kind": lambda x: f"%.{roundoff}f" % x})}\n'
+                          f's={np.array2string(sigma_si, formatter={"float_kind": lambda x: f"%.{decimals}f" % x})}\n'
         return string
 
-    def to_list(self, roundoff: int = None) -> list:
-        if roundoff is None:
+    def to_list(self, decimals: int = None) -> list:
+        if decimals is None:
             sigma = self.strategies
         else:
-            sigma = np.round(self.strategies, roundoff)
+            sigma = np.round(self.strategies, decimals)
         list_ = [[sigma[s, p, :self._nums_actions[s, p]].tolist() for p in range(self.num_players)]
                  for s in range(self.num_states)]
         return list_
@@ -300,15 +300,8 @@ class StrategyProfile:
         return self.to_string()
 
 
-# %% blueprint for homotopy classes
-
-
 class SGameHomotopy:
-    """General homotopy class for some SGame.
-
-    TODO: document order of (beta, V, T) in y
-    TODO: document order of equations in H (and thus J)
-    """
+    """General homotopy class for stochastic games."""
 
     def __init__(self, game: SGame) -> None:
         self.game = game
@@ -330,7 +323,7 @@ class SGameHomotopy:
     def solve(self) -> None:
         """Start the solver and stores the equilibrium if it is successful."""
         if not self.solver:
-            print('Please run .initialize() first to set up the solver.')
+            print('Please run .setup_solver() first to set up the solver.')
             return
         solution = self.solver.start()
         if solution['success']:
