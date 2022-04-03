@@ -69,10 +69,10 @@ class Tracing_base(LogStratHomotopy):
             'ds_defl': 0.5,
             'ds_min': 1e-9,
             'ds_max': 100,
-            'corr_steps_max': 20,  # 20 # TODO: these changes/comments?
-            'corr_dist_max': 10,  # 0.5
-            'corr_ratio_max': 0.9,  # 0.5
-            'detJ_change_max': 2,  # 1.5
+            'corr_steps_max': 20,
+            'corr_dist_max': .5,
+            'corr_ratio_max': 0.5,
+            'detJ_change_max': 1.5,
             'bifurc_angle_min': 175,
         }
 
