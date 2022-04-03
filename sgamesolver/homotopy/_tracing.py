@@ -69,7 +69,7 @@ class Tracing_base(LogStratHomotopy):
             'ds_defl': 0.5,
             'ds_min': 1e-9,
             'ds_max': 100,
-            'corr_steps_max': 20,  # 20
+            'corr_steps_max': 20,  # 20 # TODO: these changes/comments?
             'corr_dist_max': 10,  # 0.5
             'corr_ratio_max': 0.9,  # 0.5
             'detJ_change_max': 2,  # 1.5
@@ -186,6 +186,35 @@ class Tracing_base(LogStratHomotopy):
             warnings.warn('Value function iteration has not converged during computation of the starting point.')
 
         return self.sigma_V_t_to_y(sigma, V, 0.0)
+
+
+class Tracing_ct(Tracing_base):
+    """Tracing homotopy: Cython implementation"""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.cache = _tracing_ct.TracingCache()
+        self.eta_fix = False
+
+    def H(self, y: np.ndarray) -> np.ndarray:
+        return _tracing_ct.H(y, self.game.payoffs, self.game.transitions,
+                             self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
+                             self.game.nums_actions, self.eta_fix, self.cache)
+
+    def J(self, y: np.ndarray) -> np.ndarray:
+        return _tracing_ct.J(y, self.game.payoffs, self.game.transitions,
+                             self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
+                             self.game.nums_actions, self.eta_fix, self.cache)
+
+
+class TracingFixedEta_ct(Tracing_ct):
+    """Tracing homotopy with fixed eta: Cython implementation"""
+
+    def __init__(self, game: SGame, priors: Union[str, ArrayLike] = "centroid",
+                 weights: Optional[ArrayLike] = None, scale: Union[float, int] = 1.0) -> None:
+        super().__init__(game, priors, weights)
+        self.eta = scale
+        self.eta_fix = True
 
 
 class Tracing_np(Tracing_base):
@@ -400,22 +429,6 @@ class Tracing_np(Tracing_base):
         return J[self.J_mask]
 
 
-class Tracing_ct(Tracing_base):
-    """Tracing homotopy: Cython implementation"""
-
-    def H(self, y: np.ndarray) -> np.ndarray:
-        return _tracing_ct.H(y, self.game.payoffs, self.game.transitions,
-                             self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
-                             self.game.num_states, self.game.num_players, self.game.nums_actions,
-                             self.game.num_actions_max, self.game.num_actions_total)
-
-    def J(self, y: np.ndarray) -> np.ndarray:
-        return _tracing_ct.J(y, self.game.payoffs, self.game.transitions,
-                             self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
-                             self.game.num_states, self.game.num_players, self.game.nums_actions,
-                             self.game.num_actions_max, self.game.num_actions_total)
-
-
 class TracingFixedEta_np(Tracing_np):
     """Tracing homotopy with fixed eta: Numpy implementation"""
 
@@ -541,24 +554,3 @@ class TracingFixedEta_np(Tracing_np):
         # dH_strat_dt = 0
 
         return J[self.J_mask]
-
-
-class TracingFixedEta_ct(Tracing_ct):
-    """Tracing homotopy with fixed eta: Cython implementation"""
-
-    def __init__(self, game: SGame, priors: Union[str, ArrayLike] = "centroid",
-                 weights: Optional[ArrayLike] = None, scale: Union[float, int] = 1.0) -> None:
-        super().__init__(game, priors, weights)
-        self.eta = scale
-
-    def H(self, y: np.ndarray) -> np.ndarray:
-        return _tracing_ct.H_fixed_eta(y, self.game.payoffs, self.game.transitions,
-                                       self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
-                                       self.game.num_states, self.game.num_players, self.game.nums_actions,
-                                       self.game.num_actions_max, self.game.num_actions_total)
-
-    def J(self, y: np.ndarray) -> np.ndarray:
-        return _tracing_ct.J_fixed_eta(y, self.game.payoffs, self.game.transitions,
-                                       self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
-                                       self.game.num_states, self.game.num_players, self.game.nums_actions,
-                                       self.game.num_actions_max, self.game.num_actions_total)

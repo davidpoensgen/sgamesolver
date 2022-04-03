@@ -8,150 +8,9 @@ cimport numpy as np
 np.import_array()
 
 
-# %% auxiliary functions
-
-
-def u_tilde(u, V, phi):
-    """Payoffs including continuation values."""
-    return u + np.einsum('sp...S,Sp->sp...', phi, V)
-
-
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def u_tilde_sia(np.ndarray[np.float64_t, ndim=1] u_tilde_ravel, np.ndarray[np.float64_t, ndim=3] sigma,
-                int num_s, int num_p, np.ndarray[np.int32_t, ndim=2] nums_a, int num_a_max):
-    """Payoffs (including continuation values) of player i using pure action a in state s,
-    given other players play according to mixed strategy profile sigma[s,p,a].
-    """
-
-    cdef: 
-        np.ndarray[np.float64_t, ndim=3] out_ = np.zeros((num_s, num_p, num_a_max))
-
-        np.ndarray[np.int32_t, ndim=1] loop_profile = np.zeros(num_p + 1, dtype=np.int32)
-        # loop_profile is used to loop over all action profiles.
-        # loop_profile[1:num_p+1] gives current action profile.
-        # loop_profile[0] in {0,1} indicates whether all action profiles have been explored (1) or not (0).
-        # Last element of action profile is iterated first.
-        # Once that is done, increase second last element by one and set last element to zero again, and so on.
-        # Continue until very first element of loop_profile is increased from zero to one.
-
-        double temp_prob 
-        int state, player, other, n
-        int flat_index = 0
-
-    for state in range(num_s):
-        for player in range(num_p):
-            loop_profile[0 : num_p+1] = 0
-            while loop_profile[0] == 0:
-
-                temp_prob = 1
-                for other in range(num_p):
-                    if other == player:
-                        continue
-                    temp_prob *= sigma[state, other, loop_profile[other+1]]
-
-                out_[state, player, loop_profile[player+1]] += temp_prob * u_tilde_ravel[flat_index]
-                flat_index += 1
-
-                loop_profile[num_p] += 1
-                for n in range(num_p):
-                    if loop_profile[num_p-n] == nums_a[state, num_p-n-1]:
-                        loop_profile[num_p-n-1] += 1
-                        loop_profile[num_p-n] = 0
-                        flat_index += (num_a_max - nums_a[state, num_p-n-1]) * num_a_max**n        
-
-    return out_
-
-
-@cython.boundscheck(False)
-@cython.wraparound(False)   
-def u_tilde_sia_partial_beta(np.ndarray[np.float64_t, ndim=1] u_tilde_ravel, np.ndarray[np.float64_t, ndim=3] sigma,
-                             int num_s, int num_p, np.ndarray[np.int32_t, ndim=2] nums_a, int num_a_max):
-    """Derivatives of u_tilde[s,i,a] w.r.t. log strategies beta[i',a'].
-    No index s' in beta because the corresponding derivative is zero.
-    """
-    
-    cdef: 
-        np.ndarray[np.float64_t, ndim=5] out_ = np.zeros((num_s, num_p, num_a_max, num_p, num_a_max))
-        np.ndarray[np.int32_t, ndim=1] loop_profile = np.zeros(num_p+1, dtype=np.int32)
-        double temp_prob
-        int state, player, player_j, other, n
-        int flat_index = 0
-
-    for state in range(num_s):
-        for player in range(num_p):
-            loop_profile[0 : num_p+1] = 0
-            while loop_profile[0] == 0:
-
-                temp_prob = 1
-                for other in range(num_p):
-                    if other == player:
-                        continue
-                    temp_prob *= sigma[state, other, loop_profile[other+1]]
-
-                for player_j in range(num_p):
-                    if player_j == player:
-                        continue
-                    out_[state, player, loop_profile[player+1], player_j, loop_profile[player_j+1]] += (
-                        temp_prob * u_tilde_ravel[flat_index]
-                        )
-                flat_index += 1
-
-                loop_profile[num_p] += 1
-                for n in range(num_p):
-                    if loop_profile[num_p-n] == nums_a[state, num_p-n-1]:
-                        loop_profile[num_p-n-1] += 1
-                        loop_profile[num_p-n] = 0
-                        flat_index += (num_a_max - nums_a[state, num_p-n-1]) * num_a_max**n       
-
-    return out_
-
-
-@cython.boundscheck(False)
-@cython.wraparound(False)
-def u_tilde_sia_partial_V(np.ndarray[np.float64_t, ndim=1] phi_ravel, np.ndarray[np.float64_t, ndim=3] sigma,
-                          int num_s, int num_p, np.ndarray[np.int32_t, ndim=2] nums_a, int num_a_max):
-    """Derivatives of u_tilde[s,i,a] w.r.t. continuation values V[s',i']."""
-
-    cdef:
-        np.ndarray[np.float64_t, ndim=5] out_ = np.zeros((num_s, num_p, num_a_max, num_s, num_p))
-        np.ndarray[np.int32_t, ndim=1] loop_profile = np.zeros(num_p+1, dtype=np.int32)
-        double temp_prob 
-        int state, player, other, to_state, n
-        int flat_index = 0
-
-    for state in range(num_s):
-        for player in range(num_p):
-            loop_profile[0 : num_p+1] = 0
-            while loop_profile[0] == 0:
-
-                temp_prob = 1
-                for other in range(num_p):
-                    if other == player:
-                        continue
-                    temp_prob *= sigma[state, other, loop_profile[other+1]]
-
-                for to_state in range(num_s):
-                    out_[state, player, loop_profile[player+1], to_state, player] += temp_prob * phi_ravel[flat_index]
-                    flat_index += 1
-
-                loop_profile[num_p] += 1
-                for n in range(num_p):
-                    if loop_profile[num_p-n] == nums_a[state, num_p-n-1]:
-                        loop_profile[num_p-n-1] += 1
-                        loop_profile[num_p-n] = 0
-                        flat_index += num_s * (num_a_max - nums_a[state,num_p-n-1]) * num_a_max**n
-
-    return out_
-
-
-# %% homotopy function
-
-
-@cython.boundscheck(False)
-@cython.wraparound(False)
-def H(np.ndarray[np.float64_t, ndim=1] y, u, phi, int num_s, int num_p,
-      np.ndarray[np.int32_t, ndim=2] nums_a, int num_a_max, int num_a_tot):
+def H(np.ndarray[np.float64_t, ndim=1] y, u, phi, int [:,::1] nums_a, QreCache cache):
     """Homotopy function.
 
     H(y) = [  H_strat[s,i,a]  ]
@@ -161,8 +20,19 @@ def H(np.ndarray[np.float64_t, ndim=1] y, u, phi, int num_s, int num_p,
     """
 
     cdef:
+        int num_s = nums_a.shape[0]
+        int num_p = nums_a.shape[1]
+        int num_a_max = np.max(nums_a)
+        int num_a_tot = np.sum(nums_a)
         np.ndarray[np.float64_t, ndim=1] out_ = np.zeros(num_a_tot + num_s*num_p)
         np.ndarray[np.float64_t, ndim=3] beta = np.zeros((num_s, num_p, num_a_max))
+        np.ndarray[np.float64_t, ndim=3] sigma
+        np.ndarray[np.float64_t, ndim=2] V = y[num_a_tot : num_a_tot + num_s*num_p].reshape(num_s, num_p)
+        double lambda_ = y[num_a_tot + num_s*num_p]
+
+        np.ndarray[np.float64_t, ndim=1] u_tilde_ev_ravel
+        np.ndarray[np.float64_t, ndim=3] u_tilde_sia_ev
+
         int state, player, action, a
         int flat_index = 0
 
@@ -171,14 +41,21 @@ def H(np.ndarray[np.float64_t, ndim=1] y, u, phi, int num_s, int num_p,
             for action in range(nums_a[state, player]):
                 beta[state, player, action] = y[flat_index]
                 flat_index += 1
+    sigma = np.exp(beta)
 
-    cdef:
-        np.ndarray[np.float64_t, ndim=3] sigma = np.exp(beta)
-        np.ndarray[np.float64_t, ndim=2] V = y[num_a_tot : num_a_tot + num_s*num_p].reshape(num_s, num_p)
-        double lambda_ = y[num_a_tot + num_s*num_p]
-        np.ndarray[np.float64_t, ndim=1] u_tilde_ev_ravel = u_tilde(u, V, phi).ravel()
-        np.ndarray[np.float64_t, ndim=3] u_tilde_sia_ev = u_tilde_sia(u_tilde_ev_ravel, sigma, num_s, num_p,
-                                                                      nums_a, num_a_max)
+    if cache is None:
+        # cache disabled -> always calculate all intermediate variables.
+        u_tilde_ev_ravel = u_tilde(u, V, phi).ravel()
+        u_tilde_sia_ev = u_tilde_sia(u_tilde_ev_ravel, sigma, num_s, num_p, nums_a, num_a_max)
+    elif arrays_equal(y, cache.y):
+        # intermediate values already in cache. for H, u_tilde_ev_ravel is not needed.
+        u_tilde_sia_ev = np.asarray(cache.u_tilde_sia_ev)
+    else:
+        cache.y = y
+        cache.u_tilde_ev_ravel = u_tilde(u, V, phi).ravel()
+        u_tilde_ev_ravel = np.asarray(cache.u_tilde_ev_ravel)
+        cache.u_tilde_sia_ev = u_tilde_sia(u_tilde_ev_ravel, sigma, num_s, num_p, nums_a, num_a_max)
+        u_tilde_sia_ev = np.asarray(cache.u_tilde_sia_ev)
 
     flat_index = 0
     for state in range(num_s):
@@ -199,7 +76,7 @@ def H(np.ndarray[np.float64_t, ndim=1] y, u, phi, int num_s, int num_p,
         for player in range(num_p):
             out_[flat_index] -= V[state, player]
             for action in range(nums_a[state, player]):
-                out_[flat_index] += sigma[state, player, action] * u_tilde_sia_ev[state, player, action] 
+                out_[flat_index] += sigma[state, player, action] * u_tilde_sia_ev[state, player, action]
             flat_index += 1
 
     return out_
@@ -210,8 +87,7 @@ def H(np.ndarray[np.float64_t, ndim=1] y, u, phi, int num_s, int num_p,
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def J(np.ndarray[np.float64_t, ndim=1] y, u, phi, int num_s, int num_p, 
-      np.ndarray[np.int32_t, ndim=2] nums_a, int num_a_max, int num_a_tot):
+def J(np.ndarray[np.float64_t, ndim=1] y, u, phi,  int [:,::1] nums_a, QreCache cache):
     """Jacobian matrix.
 
     J(y) = [  d_H_strat[s,i,a] / d_beta[s',i',a'],  d_H_strat[s,i,a] / d_V[s',i'],  d_H_strat[s,i,a] / d_lambda  ]
@@ -221,10 +97,27 @@ def J(np.ndarray[np.float64_t, ndim=1] y, u, phi, int num_s, int num_p,
     """
 
     cdef:
+        int num_s = nums_a.shape[0]
+        int num_p = nums_a.shape[1]
+        int num_a_max = np.max(nums_a)
+        int num_a_tot = np.sum(nums_a)
+
         np.ndarray[np.float64_t, ndim=2] out_ = np.zeros((num_a_tot + num_s*num_p, num_a_tot + num_s*num_p + 1))
         np.ndarray[np.float64_t, ndim=3] beta = np.zeros((num_s, num_p, num_a_max))
+        np.ndarray[np.float64_t, ndim=3] sigma
+        np.ndarray[np.float64_t, ndim=2] V = y[num_a_tot : num_a_tot + num_s*num_p].reshape(num_s, num_p)
+        double lambda_ = y[num_a_tot + num_s*num_p]
+
+        np.ndarray[np.float64_t, ndim=1] u_tilde_ev_ravel
+        np.ndarray[np.float64_t, ndim=3] u_tilde_sia_ev
+        np.ndarray[np.float64_t, ndim=5] u_tilde_sia_partial_beta_ev
+        np.ndarray[np.float64_t, ndim=5] u_tilde_sia_partial_V_ev
+
         int state, player, action
         int flat_index = 0
+        int row_state, row_player, row_action
+        int col_state, col_player, col_action
+        int row_index, col_index, col_index_init
 
     for state in range(num_s):
         for player in range(num_p):
@@ -232,20 +125,26 @@ def J(np.ndarray[np.float64_t, ndim=1] y, u, phi, int num_s, int num_p,
                 beta[state, player, action] = y[flat_index]
                 flat_index += 1
 
-    cdef:
-        np.ndarray[np.float64_t, ndim=3] sigma = np.exp(beta)
-        np.ndarray[np.float64_t, ndim=2] V = y[num_a_tot : num_a_tot + num_s*num_p].reshape(num_s, num_p)
-        double lambda_ = y[num_a_tot + num_s*num_p]
-        np.ndarray[np.float64_t, ndim=1] u_tilde_ev_ravel = u_tilde(u, V, phi).ravel()
-        np.ndarray[np.float64_t, ndim=3] u_tilde_sia_ev = u_tilde_sia(u_tilde_ev_ravel, sigma, num_s, num_p,
-                                                                      nums_a, num_a_max)
-        np.ndarray[np.float64_t, ndim=5] u_tilde_sia_partial_beta_ev = (u_tilde_sia_partial_beta(u_tilde_ev_ravel,
-                                                                        sigma, num_s, num_p, nums_a, num_a_max))
-        np.ndarray[np.float64_t, ndim=5] u_tilde_sia_partial_V_ev = (u_tilde_sia_partial_V(phi.ravel(),
-                                                                     sigma, num_s, num_p, nums_a, num_a_max))
-        int row_state, row_player, row_action
-        int col_state, col_player, col_action
-        int row_index, col_index, col_index_init
+    sigma = np.exp(beta)
+
+    if cache is None:
+        # cache disabled
+        u_tilde_ev_ravel = u_tilde(u, V, phi).ravel()
+        u_tilde_sia_ev = u_tilde_sia(u_tilde_ev_ravel, sigma, num_s, num_p, nums_a, num_a_max)
+    elif arrays_equal(y, cache.y):
+        # read intermediate values from cache
+        u_tilde_ev_ravel = np.asarray(cache.u_tilde_ev_ravel)
+        u_tilde_sia_ev = np.asarray(cache.u_tilde_sia_ev)
+    else:
+        # compute and write to cache
+        cache.y = y
+        cache.u_tilde_ev_ravel = u_tilde(u, V, phi).ravel()
+        u_tilde_ev_ravel = np.asarray(cache.u_tilde_ev_ravel)
+        cache.u_tilde_sia_ev = u_tilde_sia(u_tilde_ev_ravel, sigma, num_s, num_p, nums_a, num_a_max)
+        u_tilde_sia_ev = np.asarray(cache.u_tilde_sia_ev)
+
+    u_tilde_sia_partial_beta_ev = u_tilde_sia_partial_beta(u_tilde_ev_ravel, sigma, num_s, num_p, nums_a, num_a_max)
+    u_tilde_sia_partial_V_ev = u_tilde_sia_partial_V(phi.ravel(), sigma, num_s, num_p, nums_a, num_a_max)
 
     # first block: rows with d_H_strat[s,i,a]
     row_index = 0
@@ -288,7 +187,7 @@ def J(np.ndarray[np.float64_t, ndim=1] y, u, phi, int num_s, int num_p,
                 for col_state in range(num_s):
                     for col_player in range(num_p):
                         if row_action != 0:
-                            out_[row_index, col_index] = lambda_ * (  
+                            out_[row_index, col_index] = lambda_ * (
                                   u_tilde_sia_partial_V_ev[row_state, row_player, row_action, col_state, col_player]
                                 - u_tilde_sia_partial_V_ev[row_state, row_player,          0, col_state, col_player]
                                 )
@@ -351,3 +250,171 @@ def J(np.ndarray[np.float64_t, ndim=1] y, u, phi, int num_s, int num_p,
             col_index_init += nums_a[row_state, row_player]
 
     return out_
+
+
+# %% auxiliary functions
+
+
+def u_tilde(u, V, phi):
+    """Payoffs including continuation values."""
+    return u + np.einsum('sp...S,Sp->sp...', phi, V)
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+cdef np.ndarray[np.float64_t, ndim=3] u_tilde_sia(np.ndarray[np.float64_t, ndim=1] u_tilde_ravel,
+                                                  np.ndarray[np.float64_t, ndim=3] sigma,
+                                                  int num_s, int num_p, int [:,::1] nums_a,
+                                                  int num_a_max):
+    """Payoffs (including continuation values) of player i using pure action a in state s,
+    given other players play according to mixed strategy profile sigma[s,p,a].
+    """
+
+    cdef:
+        np.ndarray[np.float64_t, ndim=3] out_ = np.zeros((num_s, num_p, num_a_max))
+        int [:] loop_profile = np.zeros(num_p + 1, dtype=np.int32)
+        # loop_profile is used to loop over all action profiles.
+        # loop_profile[1:num_p+1] gives current action profile.
+        # loop_profile[0] in {0,1} indicates whether all action profiles have been explored (1) or not (0).
+        # Last element of action profile is iterated first.
+        # Once that is done, increase second last element by one and set last element to zero again, and so on.
+        # Continue until very first element of loop_profile is increased from zero to one.
+
+        double temp_prob
+        int state, player, other, n
+        int flat_index = 0
+
+    for state in range(num_s):
+        for player in range(num_p):
+            loop_profile[0 : num_p+1] = 0
+            while loop_profile[0] == 0:
+
+                temp_prob = 1
+                for other in range(num_p):
+                    if other == player:
+                        continue
+                    temp_prob *= sigma[state, other, loop_profile[other+1]]
+
+                out_[state, player, loop_profile[player+1]] += temp_prob * u_tilde_ravel[flat_index]
+                flat_index += 1
+
+                loop_profile[num_p] += 1
+                for n in range(num_p):
+                    if loop_profile[num_p-n] == nums_a[state, num_p-n-1]:
+                        loop_profile[num_p-n-1] += 1
+                        loop_profile[num_p-n] = 0
+                        flat_index += (num_a_max - nums_a[state, num_p-n-1]) * num_a_max**n
+
+    return out_
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+cdef np.ndarray[np.float64_t, ndim=5] u_tilde_sia_partial_beta(np.ndarray[np.float64_t, ndim=1] u_tilde_ravel,
+                                                               np.ndarray[np.float64_t, ndim=3] sigma,
+                                                               int num_s, int num_p,
+                                                               int [:,::1] nums_a, int num_a_max):
+    """Derivatives of u_tilde[s,i,a] w.r.t. log strategies beta[i',a'].
+    No index s' in beta because the corresponding derivative is zero.
+    """
+
+    cdef:
+        np.ndarray[np.float64_t, ndim=5] out_ = np.zeros((num_s, num_p, num_a_max, num_p, num_a_max))
+        int [:] loop_profile = np.zeros(num_p+1, dtype=np.int32)
+        double temp_prob
+        int state, player, player_j, other, n
+        int flat_index = 0
+
+    for state in range(num_s):
+        for player in range(num_p):
+            loop_profile[0 : num_p+1] = 0
+            while loop_profile[0] == 0:
+
+                temp_prob = 1
+                for other in range(num_p):
+                    if other == player:
+                        continue
+                    temp_prob *= sigma[state, other, loop_profile[other+1]]
+
+                for player_j in range(num_p):
+                    if player_j == player:
+                        continue
+                    out_[state, player, loop_profile[player+1], player_j, loop_profile[player_j+1]] += (
+                        temp_prob * u_tilde_ravel[flat_index]
+                        )
+                flat_index += 1
+
+                loop_profile[num_p] += 1
+                for n in range(num_p):
+                    if loop_profile[num_p-n] == nums_a[state, num_p-n-1]:
+                        loop_profile[num_p-n-1] += 1
+                        loop_profile[num_p-n] = 0
+                        flat_index += (num_a_max - nums_a[state, num_p-n-1]) * num_a_max**n
+
+    return out_
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+cdef np.ndarray[np.float64_t, ndim=5] u_tilde_sia_partial_V(np.ndarray[np.float64_t, ndim=1] phi_ravel,
+                                                            np.ndarray[np.float64_t, ndim=3] sigma,
+                                                            int num_s, int num_p,
+                                                            int [:,::1] nums_a, int num_a_max):
+    """Derivatives of u_tilde[s,i,a] w.r.t. continuation values V[s',i']."""
+
+    cdef:
+        np.ndarray[np.float64_t, ndim=5] out_ = np.zeros((num_s, num_p, num_a_max, num_s, num_p))
+        int [:] loop_profile = np.zeros(num_p+1, dtype=np.int32)
+        double temp_prob 
+        int state, player, other, to_state, n
+        int flat_index = 0
+
+    for state in range(num_s):
+        for player in range(num_p):
+            loop_profile[0 : num_p+1] = 0
+            while loop_profile[0] == 0:
+
+                temp_prob = 1
+                for other in range(num_p):
+                    if other == player:
+                        continue
+                    temp_prob *= sigma[state, other, loop_profile[other+1]]
+
+                for to_state in range(num_s):
+                    out_[state, player, loop_profile[player+1], to_state, player] += temp_prob * phi_ravel[flat_index]
+                    flat_index += 1
+
+                loop_profile[num_p] += 1
+                for n in range(num_p):
+                    if loop_profile[num_p-n] == nums_a[state, num_p-n-1]:
+                        loop_profile[num_p-n-1] += 1
+                        loop_profile[num_p-n] = 0
+                        flat_index += num_s * (num_a_max - nums_a[state,num_p-n-1]) * num_a_max**n
+
+    return out_
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+cdef bint arrays_equal(double [:] a, double [:] b):
+    """Check if two 1d-arrays are identical."""
+    cdef int i
+    if a.shape[0] != b.shape[0]:
+        return False
+    for i in range(a.shape[0]):
+        if a[i] != b[i]:
+            return False
+    return True
+
+
+cdef class QreCache:
+    """Caches intermediate results during computation of H or J, to be used later by the other Function."""
+    cdef:
+        double [::1] y
+        double [::1] u_tilde_ev_ravel
+        double [:,:,::1] u_tilde_sia_ev
+
+    def __cinit__(self):
+        self.y = np.zeros(1)
+        self.u_tilde_ev_ravel = np.zeros(1)
+        self.u_tilde_sia_ev = np.zeros((1,1,1))
