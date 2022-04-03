@@ -12,6 +12,9 @@ payoff_matrix = np.array([[[-1, -3],
                           [[-1,  0],
                            [-3, -2]]])
 
+# payoff_matrix.shape = (2,2,2)
+# indices: [player, action_1, action_2]
+
 # define game
 game = SGame.one_shot_game(payoff_matrix=payoff_matrix)
 
