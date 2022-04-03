@@ -554,4 +554,3 @@ class TracingFixedEta_np(Tracing_np):
         # dH_strat_dt = 0
 
         return J[self.J_mask]
-

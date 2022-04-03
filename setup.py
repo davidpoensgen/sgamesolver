@@ -27,7 +27,7 @@ setup(name='sgamesolver',
       description='A homotopy-based solver for stochastic games',
       long_description=long_description,
       long_description_content_type='text/markdown',
-      url='TO-BE-PUT-HERE',
+      url='https://github.com/seibelsh/sgamesolver',
       project_urls={
           'Bug Tracker': 'TO-BE-PUT-HERE-2',
           'Please cite this paper': 'TO-BE-PUT-HERE-3'
@@ -52,4 +52,3 @@ setup(name='sgamesolver',
 
       zip_safe=False,
       )
-

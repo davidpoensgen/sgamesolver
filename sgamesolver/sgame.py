@@ -323,7 +323,7 @@ class SGameHomotopy:
     def solve(self) -> None:
         """Start the solver and stores the equilibrium if it is successful."""
         if not self.solver:
-            print('Please run .setup_solver() first to set up the solver.')
+            print('Please run .solver_setup() first to set up the solver.')
             return
         solution = self.solver.start()
         if solution['success']:
@@ -470,5 +470,3 @@ class LogStratHomotopy(SGameHomotopy):
         sigma_difference = np.exp(y_new[:self.game.num_actions_total]) - np.exp(y_old[:self.game.num_actions_total])
         sigma_distance = np.max(np.abs(sigma_difference))
         return sigma_distance / np.abs(y_new[-1] - y_old[-1])
-
-

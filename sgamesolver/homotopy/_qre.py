@@ -206,7 +206,6 @@ class QRE_np(QRE_base):
             'dEu_tilde_dbeta': f'sp{ABC[0:num_p]},sp{ABC[0:num_p]}tqb->sptqb',
         }
 
-
     def H(self, y: np.ndarray) -> np.ndarray:
         """Homotopy function."""
 
@@ -323,4 +322,3 @@ class QRE_ct(QRE_base):
 
     def J(self, y: np.ndarray) -> np.ndarray:
         return _qre_ct.J(y, self.game.payoffs, self.game.transitions, self.game.nums_actions, self.cache)
-

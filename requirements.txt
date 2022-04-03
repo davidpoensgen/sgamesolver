@@ -1,7 +1,7 @@
-python=3.9
+python>=3.6
 numpy
-# scipy         # optional
+scipy
+cython
 # matplotlib    # optional
 # numdifftools  # optional
-# cython        # optional
 # gxx_linux-64  # optional
