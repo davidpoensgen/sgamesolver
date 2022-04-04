@@ -38,24 +38,23 @@ class HomCont:
     -----------
     t_target : float, optional
     convergence_tol: float, optional
-    x_tol: float, optional
     distance_function: callable, optional
 
         The solver allows 2 possible modes to determine convergence:
         a) if t_target is a real number, the solver will attempt to find a solution to H(x, t_target) = 0.
-           Specifically, the solver stops once solution to H(x,t) = 0 is found for which |t-t_target| < t_tol.
+           Specifically, the solver stops once solution to H(x,t) = 0 is found for which |t-t_target| < convergence_tol.
         b) if t_target is np.inf (the default), the solver will let t increase without bounds, but continuously
            monitor whether all other variables, i.e. x, have converged. Concretely, the convergence criterion is
-           max(|x_new - x_old|) / |t_new - t_old| < x_tol.
+           max(|x_new - x_old|) / |t_new - t_old| < convergence_tol.
            If desired, one can pass a distance_function to the solver to be used for this criterion instead.
            This function should take 2 arguments, the vectors y_new and y_old, and return a non-negative
-           real number. Convergence then requires distance_function(y_new, y_old) < x_tol.
+           real number. Convergence then requires distance_function(y_new, y_old) < convergence_tol.
            A possible use case: H takes variables as input that are a transformation of those one is actually
            interested in, e.g. logarithms; then one can use a custom distance_function to monitor whether the
            original, non-transformed variables have converged.
            Note that it is also possible to define convergence criteria in this manner that are not actually
            distances. An example from the economic context might be to have distance_function calculate the
-           epsilon-deviation from optimal behavior for y_new, and terminate once this is lower than x_tol.
+           epsilon-deviation from optimal behavior for y_new, and terminate once this is lower than convergence_tol.
 
     sign: int, +1, -1, or None
         Orientation in which the path is traced.
@@ -81,32 +80,32 @@ class HomCont:
 
         The parameters are:
         ----------
-        x_tol : float  # TODO: rename to distance_tol? merge parameters x_tol, t_tol to convergence_tol
-                       #TODO:  , since it's only ever one that matters?
-            Continuation is considered to have converged successfully once max(|x_new-x_old|) / |t_new-t_old| < x_tol,
-            i.e. x has stabilized. If a distance_function is provided, it is used to calculate the distance instead.
-            Active only if t_target = np.inf. Defaults to 1e-7.
-        t_tol : float
-            Continuation is considered to have converged successfully once |t - t_target| < t_tol.
-            Active only if t_target < np.inf. Defaults to 1e-7.
-        ds0 : float
+        convergence_tol : float
+            - if t_target is finite:
+                Convergence criterion for the solver: |t - t_target| < convergence_tol
+            - if t_target is infinite:
+                Convergence criterion for the solver: max(|x_new-x_old|) / |t_new-t_old| < convergence_tol,
+                i.e. all variables in y except t have stabilized.
+                (If a distance_function is provided, the criterion is distance(y_new, y_old) < convergence_tol instead.)
+            Defaults to 1e-7
+        ds_initial : float
             Initial step size, defaults to 0.01.
-        ds_infl : float
+        ds_inflation_factor : float
             Step size inflation factor, defaults to 1.2.
-        ds_defl : float
+        ds_deflation_factor : float
             Step size deflation factor, defaults to 0.5.
         ds_min : float
             Minimum step size, defaults to 1e-9.
         ds_max : float
             Maximum step size, defaults to 1000.
-        H_tol : float
-            Convergence criterion used for corrector step: max(|H(y_corr)|) < H_tol.
+        corrector_tol : float
+            Convergence criterion used for each corrector step: max(|H(y_corr)|) < corrector_tol.
             Defaults to 1e-7.
-        corr_steps_max : int
+        corrector_steps_max : int
             Maximum number of corrector steps, defaults to 20.
-        corr_dist_max : float
+        corrector_distance_max : float
             Maximum distance of corrector steps, defaults to 0.3.
-        corr_ratio_max : float
+        corrector_ratio_max : float
             Maximum ratio between consecutive corrector steps, defaults to 0.3.
         detJ_change_max : float
             Maximum relative change of determinant of augmented Jacobian between consecutive
@@ -114,7 +113,7 @@ class HomCont:
             detJ_change_max < |detJ_new|/|det_j_old| < 1/detJ_change_max.
             (Large relative changes in augmented determinant indicate potential segment jumping.)
             Defaults to 0.5.
-        bifurc_angle_min : float
+        bifurcation_angle_min : float
             Minimum angle (in degrees) between two consecutive predictor tangents to be considered a bifurcation,
             defaults to 177.5. If a bifurcations is crossed, path orientation is swapped.
     """
@@ -153,20 +152,19 @@ class HomCont:
         self.verbose = verbose
 
         # set default parameters
-        self.x_tol = 1e-7
-        self.t_tol = 1e-7
-        self.H_tol = 1e-7
-        self.ds0 = 0.01
-        self.ds_infl = 1.2
-        self.ds_infl_max_corr_steps = 9
-        self.ds_defl = 0.5
+        self.convergence_tol = 1e-7
+        self.corrector_tol = 1e-7
         self.ds_min = 1e-9
         self.ds_max = 1000
-        self.corr_steps_max = 20
-        self.corr_dist_max = 0.3
-        self.corr_ratio_max = 0.3
+        self.ds_initial = 0.01
+        self.ds_inflation_factor = 1.2
+        self.ds_deflation_factor = 0.5
+        self.max_corr_steps_for_ds_inflation = 9
+        self.corrector_steps_max = 20
+        self.corrector_distance_max = 0.3
+        self.corrector_ratio_max = 0.3
         self.detJ_change_max = 0.5
-        self.bifurc_angle_min = 177.5
+        self.bifurcation_angle_min = 177.5
 
         if sign is not None and sign != 0:
             self.sign = np.sign(sign)
@@ -174,16 +172,16 @@ class HomCont:
             self.set_greedy_sign()
 
         self.tangent_old = self.tangent
-        self.ds = self.ds0
+        self.ds = self.ds_initial
 
         # attributes to be used later
         self.start_time = None
         self.step = 0
         self.s = 0.0
         self.corrector_success = False
-        self.corr_fail_dist = False
-        self.corr_fail_ratio = False
-        self.corr_fail_steps = False
+        self.corrector_fail_distance = False
+        self.corrector_fail_ratio = False
+        self.corrector_fail_steps = False
         self.converged = False
         self.det_ratio = None
 
@@ -291,7 +289,6 @@ class HomCont:
             self._Jpinv_needs_update = False
         return self._Jpinv
 
-    # shorthand for t = y[-1]
     @property
     def t(self):
         return self._y[-1]
@@ -344,7 +341,7 @@ class HomCont:
                 self.adapt_stepsize()
 
                 # important to store path after adapt_stepsize:
-                # this way, return_to_step and re-starting the solver will produce consistent results
+                # this way, returning to previous step and re-starting the solver will produce consistent results
                 if self.store_path and self.corrector_success:
                     self.path.update()
 
@@ -363,7 +360,7 @@ class HomCont:
         self.H_pred = self.H_func(self.y_pred)
         if np.isnan(self.H_pred).any():
             if self.ds > self.ds_min:
-                self.ds = max(self.ds_defl*self.ds, self.ds_min)
+                self.ds = max(self.ds_deflation_factor*self.ds, self.ds_min)
                 self.predict()
             else:
                 raise ContinuationFailed('predictor')
@@ -375,9 +372,9 @@ class HomCont:
         predictor point, not anew at each Newton iteration.
         """
         self.corrector_success = False
-        self.corr_fail_dist = False
-        self.corr_fail_ratio = False
-        self.corr_fail_steps = False
+        self.corrector_fail_distance = False
+        self.corrector_fail_ratio = False
+        self.corrector_fail_steps = False
         corr_dist_old = np.inf
         self.corr_step = 0
 
@@ -385,7 +382,7 @@ class HomCont:
         H_corr = self.H_pred
 
         # corrector loop
-        while np.max(np.abs(H_corr)) > self.H_tol:
+        while np.max(np.abs(H_corr)) > self.corrector_tol:
             self.corr_step += 1
             correction = np.dot(self.Jpinv, H_corr)
             self.y_corr = self.y_corr - correction
@@ -396,20 +393,21 @@ class HomCont:
 
             # If corrector step violates any restriction given by parameters:
             # Correction failed, reduce stepsize and predict again.
-            # Note: corr_dist_max has to be relaxed for large ds: thus, * max(ds, 1)
-            # TODO: current implementation of corr_steps_max is not sensible: checks violation after performing step?
-            self.corr_fail_dist = corr_dist > self.corr_dist_max * max(self.ds, 1)
-            self.corr_fail_ratio = corr_ratio > self.corr_ratio_max
-            self.corr_fail_steps = self.corr_step > self.corr_steps_max
-            if self.corr_fail_dist or self.corr_fail_ratio or self.corr_fail_steps:
+            # Note: corrector_distance_max has to be relaxed for large ds: thus, * max(ds, 1)
+            # TODO: current implementation of corrector_steps_max is not sensible: checks violation after performing step?
+            self.corrector_fail_distance = corr_dist > self.corrector_distance_max * max(self.ds, 1)
+            self.corrector_fail_ratio = corr_ratio > self.corrector_ratio_max
+            self.corrector_fail_steps = self.corr_step > self.corrector_steps_max
+            if self.corrector_fail_distance or self.corrector_fail_ratio or self.corrector_fail_steps:
                 if self.verbose >= 3:
                     err_msg = f'Corrector loop failed. Step {self.corr_step}:'
-                    if self.corr_fail_dist:
-                        err_msg += f' corr_dist = {corr_dist/max(self.ds, 1):0.2f} (max: {self.corr_dist_max:0.2f});'
-                    if self.corr_fail_ratio:
-                        err_msg += f' corr_ratio = {corr_ratio:0.2f} (max: {self.corr_ratio_max:0.2f});'
-                    if self.corr_fail_steps:
-                        err_msg += f' corr_step = {self.corr_step} (max: {self.corr_steps_max});'
+                    if self.corrector_fail_distance:
+                        err_msg += f' corr_dist = {corr_dist/max(self.ds, 1):0.2f} ' \
+                                   f'(max: {self.corrector_distance_max:0.2f});'
+                    if self.corrector_fail_ratio:
+                        err_msg += f' corr_ratio = {corr_ratio:0.2f} (max: {self.corrector_ratio_max:0.2f});'
+                    if self.corrector_fail_steps:
+                        err_msg += f' corr_step = {self.corr_step} (max: {self.corrector_steps_max});'
                     cond = np.linalg.cond(self.J_pred)
                     err_msg += f' cond(J_pred) = {cond:#.4g}'
                     self._report_step()
@@ -450,18 +448,18 @@ class HomCont:
 
        2 possible criteria:
            a) t_target is a finite real number.
-              Then convergence is achieved if |t_target - t_current| < t_tol.
+              Then convergence is achieved if |t_target - t_current| < convergence_tol.
               [This function also checks if corrector accidentally crossed t_target.
                This should be rare, due to stepsize control. In that case, the current
-               step is discarded, the algorithm reduces ds is and returns to the prediction step.]
+               step is discarded, the algorithm reduces ds and returns to the prediction step.]
            b) t_target is inf or -inf.
               Then convergence is achieved once all variables (besides t) have stabilized, and step size is maximal,
-              i.e. distance(y_new-y_old) < x_tol. By default, distance is measured using the method
+              i.e. distance(y_new-y_old) < convergence_tol. By default, distance is measured using the method
               distance_function; it is possible to pass an alternative function to be used instead.
         """
         # Case a): t_target is finite
         if not np.isinf(self.t_target):
-            if np.abs(self.y_corr[-1] - self.t_target) < self.t_tol:
+            if np.abs(self.y_corr[-1] - self.t_target) < self.convergence_tol:
                 self.converged = True
             # otherwise, check whether t_target was accidentally crossed.
             elif (self.t - self.t_target) * (self.y_corr[-1] - self.t_target) < 0:
@@ -470,13 +468,13 @@ class HomCont:
         # Case b): t_target is infinite
         elif np.isinf(self.t_target):
             if self.ds >= self.ds_max:
-                if self.distance(y_new=self.y_corr, y_old=self.y) < self.x_tol:
+                if self.distance(y_new=self.y_corr, y_old=self.y) < self.convergence_tol:
                     self.converged = True
 
     def adapt_stepsize(self):
         """Adapt stepsize at the end of a predictor-corrector cycle:
         Increase ds if:
-           - corrector step successful & took less than ds_infl_max_corr_steps iterates (= 10 by default)
+           - corrector step successful & took at most max_corr_steps_for_ds_inflation iterates (= 9 by default)
         Maintain ds if:
             - corrector step successful, but required 10+ iterates
         Decrease ds if:
@@ -490,12 +488,12 @@ class HomCont:
         If t_target is finite, stepsize is capped so that the predictor will not cross t_target.
         """
 
-        if self.corrector_success and self.corr_step <= self.ds_infl_max_corr_steps:
-            self.ds = min(self.ds * self.ds_infl, self.ds_max)
+        if self.corrector_success and self.corr_step <= self.max_corr_steps_for_ds_inflation:
+            self.ds = min(self.ds * self.ds_inflation_factor, self.ds_max)
 
         elif not self.corrector_success:
             if self.ds > self.ds_min:
-                self.ds = max(self.ds_defl * self.ds, self.ds_min)
+                self.ds = max(self.ds_deflation_factor * self.ds, self.ds_min)
             else:
                 raise ContinuationFailed("corrector")
 
@@ -513,7 +511,7 @@ class HomCont:
 
        After successful prediction/correction step:
        If angle between new and old tangent is close to 180°: perform a sign swap.
-       parameter 'bifurc_angle_min' is crucial:
+       parameter 'bifurcation_angle_min' is crucial:
            If too close to 180°, actual bifurcations may be undetected.
            If too far away from 180°, bifurcations may be falsely detected.
 
@@ -523,7 +521,7 @@ class HomCont:
        points where a change of orientation is necessary. This is possibly because it is only guaranteed
        to detect simple bifurcations, and does not necessarily detect higher order bifurcations.
         """
-        if angle(self.tangent_old, self.tangent) > self.bifurc_angle_min:
+        if angle(self.tangent_old, self.tangent) > self.bifurcation_angle_min:
             if self.verbose >= 2:
                 self._report_step()
                 print(f'\nStep {self.step:5d}: Bifurcation point encountered at '
@@ -538,8 +536,8 @@ class HomCont:
             if not hasattr(self, key):
                 print(f'Warning: "{key}" is not a valid parameter.')
             setattr(self, key, value)
-        if 'ds0' in inputs:
-            self.ds = self.ds0
+        if 'ds_initial' in inputs:
+            self.ds = self.ds_initial
 
     def check_inputs(self):
         """Check user-provided starting point and homotopy functions."""
@@ -561,7 +559,7 @@ class HomCont:
             raise ValueError(f'"H(y0)" should have length {len(self.y) - 1}, '
                              f'but has length {len(H0)}.')
 
-        if np.max(np.abs(H0)) > self.H_tol:
+        if np.max(np.abs(H0)) > self.corrector_tol:
             print(f'Warning: "H(y0)" is not 0 (max deviation: {np.max(np.abs(H0))}).\n'
                   '   Solution might still be possible (because the first corrector step may fix this issue).\n'
                   '   However, it is advised to start with a better approximation for the starting point.')
@@ -655,7 +653,7 @@ class HomCont:
         if ds is not None:
             self.ds = ds
         else:
-            self.ds = self.ds0
+            self.ds = self.ds_initial
 
         self.check_inputs()
 
@@ -928,9 +926,9 @@ class DebugLog:
     def update(self):
         self.data[0, self.index] = self.solver.step
         self.data[1, self.index] = self.solver.corr_step
-        self.data[2, self.index] = self.solver.corr_fail_steps
-        self.data[3, self.index] = self.solver.corr_fail_dist
-        self.data[4, self.index] = self.solver.corr_fail_ratio
+        self.data[2, self.index] = self.solver.corrector_fail_steps
+        self.data[3, self.index] = self.solver.corrector_fail_distance
+        self.data[4, self.index] = self.solver.corrector_fail_ratio
         if self.solver.test_segment_jumping:
             self.data[5, self.index] = self.solver.det_ratio
         self.data[6, self.index] = self.solver.ds
@@ -945,7 +943,7 @@ class DebugLog:
         counts = "total |"
         ratio = "ratio |"
         dist = "dist  |"
-        for i in range(self.solver.corr_steps_max + 1):
+        for i in range(self.solver.corrector_steps_max + 1):
             count = (self.corrector_steps == i).sum()
             ratio_count = ((self.corrector_fail_ratio > 0) * (self.corrector_steps == i)).sum()
             dist_count = ((self.corrector_fail_dist > 0) * (self.corrector_steps == i)).sum()

@@ -61,35 +61,33 @@ class Tracing_base(LogStratHomotopy):
         # TODO: adjust parameters with scale of payoff matrix:
 
         self.tracking_parameters['normal'] = {
-            'x_tol': 1e-7,
-            't_tol': 1e-7,
-            'H_tol': 1e-7,
-            'ds0': 0.1,
-            'ds_infl': 1.2,
-            'ds_defl': 0.5,
+            'convergence_tol': 1e-7,
+            'corrector_tol': 1e-7,
+            'ds_initial': 0.1,
+            'ds_inflation_factor': 1.2,
+            'ds_deflation_factor': 0.5,
             'ds_min': 1e-9,
             'ds_max': 100,
-            'corr_steps_max': 20,
-            'corr_dist_max': .5,
-            'corr_ratio_max': 0.5,
+            'corrector_steps_max': 20,
+            'corrector_distance_max': .5,
+            'corrector_ratio_max': 0.5,
             'detJ_change_max': 1.5,
-            'bifurc_angle_min': 175,
+            'bifurcation_angle_min': 175,
         }
 
         self.tracking_parameters['robust'] = {
-            'x_tol': 1e-7,
-            't_tol': 1e-7,
-            'H_tol': 1e-8,
-            'ds0': 0.1,
-            'ds_infl': 1.1,
-            'ds_defl': 0.5,
+            'convergence_tol': 1e-7,
+            'corrector_tol': 1e-8,
+            'ds_initial': 0.1,
+            'ds_inflation_factor': 1.1,
+            'ds_deflation_factor': 0.5,
             'ds_min': 1e-9,
             'ds_max': 10,
-            'corr_steps_max': 30,
-            'corr_dist_max': 0.3,
-            'corr_ratio_max': 0.3,
+            'corrector_steps_max': 30,
+            'corrector_distance_max': 0.3,
+            'corrector_ratio_max': 0.3,
             'detJ_change_max': 1.3,
-            'bifurc_angle_min': 175,
+            'bifurcation_angle_min': 175,
         }
 
         if priors == "centroid":
