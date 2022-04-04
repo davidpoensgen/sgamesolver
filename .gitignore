@@ -3,12 +3,13 @@ __pycache__/
 **/__build__
 *.c
 *.so
-build/
+*.pyd
 *.egg-info/
 
+build/
+dist/
 docs/_build/
 
-.git/
 .pytest_cache/
 .spyproject/
 .vscode/
