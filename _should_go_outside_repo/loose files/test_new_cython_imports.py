@@ -17,12 +17,16 @@ tracing_np = sgamesolver.homotopy.LogTracing(game, implementation="numpy")
 tracing_np.solver_setup()
 tracing_np.solve()
 
-tracing_fix = sgamesolver.homotopy.LogTracingFixedEta(game)
-tracing_fix.solver_setup()
-tracing_fix.solve()
-tracing_fix_np = sgamesolver.homotopy.LogTracingFixedEta(game, implementation="numpy")
-tracing_fix_np.solver_setup()
-tracing_fix_np.solve()
+tracing_f = sgamesolver.homotopy.LogTracing(game)
+tracing_f.eta_fix = True
+tracing_f.solver_setup()
+tracing_f.solve()
+tracing_f_np = sgamesolver.homotopy.LogTracing(game, implementation="numpy")
+tracing_f_np.eta_fix = True
+tracing_f_np.solver_setup()
+tracing_f_np.solve()
+
+
 
 loggame = sgamesolver.homotopy.LogGame(game)
 loggame.solver_setup()

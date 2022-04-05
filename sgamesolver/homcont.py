@@ -362,8 +362,8 @@ class HomCont:
     def correct(self):
         """Perform corrector iteration.
 
-        Method is quasi-Newton: Jacobian pseudo-inverse is computed once at
-        predictor point, not anew at each Newton iteration.
+        Method is quasi-Newton by default: Jacobian pseudo-inverse is computed once at predictor point,
+        not anew at each Newton iteration. (Set HomCont.quasi_newton = False for full Newton steps instead.)
         """
         self.corrector_success = False
         self.corrector_fail_distance = False
@@ -969,6 +969,6 @@ class DebugLog:
             f'- Ratio: {self.corrector_fail_ratio.sum():.0f}\n'
             f'- Distance: {self.corrector_fail_dist.sum():.0f}\n'
             f'ds: maxed during {ds_max_count} of {self.index+1} steps, corresponding to {ds_max_distance:.1f} '
-            f'of {self.solver.s:.1f} ({ds_max_distance/self.solver.s:.1f}%) total distance travelled.'
+            f'of {self.solver.s:.1f} total distance travelled ({ds_max_distance/self.solver.s*100:.1f}%).'
         )
         print(summary)
