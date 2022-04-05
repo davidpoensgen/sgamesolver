@@ -201,12 +201,13 @@ class HomCont:
         self.check_inputs()
 
         self.store_path = False
+        self.debug = None
+
         self.path = None
         self.store_cond = False
+
         self.test_segment_jumping = False
         self.quasi_newton = True
-
-        self.debug = None
 
     # Properties: These mainly serve to cache the results of potentially expensive function calls
     @property
