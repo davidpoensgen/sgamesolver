@@ -151,31 +151,30 @@ class SGame:
         """Generate a random strategy profile. Padded with NaNs, or zeros under the respective option."""
 
         strategy_profile = np.full((self.num_states, self.num_players, self.num_actions_max), 0.0 if zeros else np.NaN)
-
         for s in range(self.num_states):
             for p in range(self.num_players):
                 sigma = np.random.exponential(scale=1, size=self.nums_actions[s, p])
                 strategy_profile[s, p, :self.nums_actions[s, p]] = sigma / sigma.sum()
-
         return strategy_profile
 
-    def centroid_strategy(self, weights: Optional[ArrayLike] = None, zeros=False) -> np.ndarray:
-        """Generate the (weighted) centroid strategy profile. Padded with NaNs, or zeros under the respective option."""
-
-        if weights is None:
-            weights = np.ones((self.num_states, self.num_players, self.num_actions_max))
-        else:
-            weights = np.array(weights)
+    def centroid_strategy(self, zeros=False) -> np.ndarray:
+        """Generate the centroid strategy profile. Padded with NaNs, or zeros under the respective option."""
 
         strategy_profile = np.full((self.num_states, self.num_players, self.num_actions_max), 0.0 if zeros else np.NaN)
+        for s in range(self.num_states):
+            for p in range(self.num_players):
+                strategy_profile[s, p, :self.nums_actions[s, p]] = 1 / self.nums_actions[s, p]
+        return strategy_profile
 
+    def weighted_centroid_strategy(self, weights: ArrayLike, zeros=False) -> np.ndarray:
+        """Generate a weighted centroid strategy profile. Padded with NaNs, or zeros under the respective option."""
+
+        strategy_profile = np.full((self.num_states, self.num_players, self.num_actions_max), 0.0 if zeros else np.NaN)
         for s in range(self.num_states):
             for p in range(self.num_players):
                 strategy_profile[s, p, :self.nums_actions[s, p]] = (weights[s, p, :self.nums_actions[s, p]]
                                                                     / np.sum(weights[s, p, :self.nums_actions[s, p]]))
-
         return strategy_profile
-
 
     def flatten_strategies(self, strategies: ArrayLike) -> np.ndarray:
         """Convert a jagged array of shape (num_states, num_players, num_actions_max), e.g. strategy profile,

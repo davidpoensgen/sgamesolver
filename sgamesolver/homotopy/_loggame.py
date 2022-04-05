@@ -78,7 +78,7 @@ class LogGame_base(LogStratHomotopy):
                               distance_function=self.sigma_distance)
 
     def find_y0(self) -> np.ndarray:
-        sigma = self.game.centroid_strategy(self.nu)
+        sigma = self.game.weighted_centroid_strategy(self.nu)
 
         # compute values including log penalty terms
         V = np.empty((self.game.num_states, self.game.num_players))
