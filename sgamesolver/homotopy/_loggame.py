@@ -18,21 +18,21 @@ except ImportError:
 ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
 
-def LogGame(game: SGame, weights: Optional[ArrayLike] = None, implementation='auto'):
+def LogGame(game: SGame, nu: Optional[ArrayLike] = None, implementation='auto'):
     """LogGame homotopy for stochastic games."""
     if implementation == 'cython' or (implementation == 'auto' and ct):
-        return LogGame_ct(game, weights)
+        return LogGame_ct(game, nu)
     else:
         if implementation == 'auto' and not ct:
             print('Defaulting to numpy implementation of LogGame, because cython version is not installed. Numpy '
                   'may be substantially slower. For help setting up the cython version, please consult the manual.')
-        return LogGame_np(game, weights)
+        return LogGame_np(game, nu)
 
 
 class LogGame_base(LogStratHomotopy):
     """Logarithmic game homotopy: base class"""
 
-    def __init__(self, game: SGame, weights: Optional[ArrayLike] = None) -> None:
+    def __init__(self, game: SGame, nu: Optional[ArrayLike] = None) -> None:
         super().__init__(game)
 
         self.tracking_parameters['normal'] = {
@@ -65,11 +65,10 @@ class LogGame_base(LogStratHomotopy):
             'bifurcation_angle_min': 175,
         }
 
-        # nu
-        if weights is None:
+        if nu is None:
             self.nu = np.ones((self.game.num_states, self.game.num_players, self.game.num_actions_max))
         else:
-            self.nu = weights
+            self.nu = nu
 
     def solver_setup(self) -> None:
         self.y0 = self.find_y0()
@@ -90,16 +89,30 @@ class LogGame_base(LogStratHomotopy):
         return self.sigma_V_t_to_y(sigma, V, 0.0)
 
 
+class LogGame_ct(LogGame_base):
+    """Logarithmic game homotopy: Cython implementation"""
+
+    def H(self, y: np.ndarray) -> np.ndarray:
+        return _loggame_ct.H(y, self.game.payoffs, self.game.transitions, self.nu,
+                             self.game.num_states, self.game.num_players, self.game.nums_actions,
+                             self.game.num_actions_max, self.game.num_actions_total)
+
+    def J(self, y: np.ndarray) -> np.ndarray:
+        return _loggame_ct.J(y, self.game.payoffs, self.game.transitions, self.nu,
+                             self.game.num_states, self.game.num_players, self.game.nums_actions,
+                             self.game.num_actions_max, self.game.num_actions_total)
+
+
 class LogGame_np(LogGame_base):
     """Logarithmic game homotopy: Numpy implementation"""
 
-    def __init__(self, game: SGame, weights: Optional[ArrayLike] = None) -> None:
+    def __init__(self, game: SGame, nu: Optional[ArrayLike] = None) -> None:
         """prepares the following:
             - H_mask, J_mask
             - T_H, T_J
             - einsum_eqs
         """
-        super().__init__(game, weights)
+        super().__init__(game, nu)
 
         num_s, num_p, nums_a = self.game.num_states, self.game.num_players, self.game.nums_actions
         num_a_max = self.game.num_actions_max
@@ -289,17 +302,3 @@ class LogGame_np(LogGame_base):
         # dH_strat_dt = 0
 
         return J[self.J_mask]
-
-
-class LogGame_ct(LogGame_base):
-    """Logarithmic game homotopy: Cython implementation"""
-
-    def H(self, y: np.ndarray) -> np.ndarray:
-        return _loggame_ct.H(y, self.game.payoffs, self.game.transitions, self.nu,
-                             self.game.num_states, self.game.num_players, self.game.nums_actions,
-                             self.game.num_actions_max, self.game.num_actions_total)
-
-    def J(self, y: np.ndarray) -> np.ndarray:
-        return _loggame_ct.J(y, self.game.payoffs, self.game.transitions, self.nu,
-                             self.game.num_states, self.game.num_players, self.game.nums_actions,
-                             self.game.num_actions_max, self.game.num_actions_total)
