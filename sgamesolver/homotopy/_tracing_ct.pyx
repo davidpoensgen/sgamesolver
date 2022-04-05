@@ -9,7 +9,7 @@ np.import_array()
 def H(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] rho,
       np.ndarray[np.float64_t, ndim=3] nu, double eta,
       np.ndarray[np.float64_t, ndim=3] u_rho, np.ndarray[np.float64_t, ndim=4] phi_rho,
-      np.ndarray[np.int32_t, ndim=2] nums_a, bint eta_fix, TracingCache cache):
+      int [:,::1] nums_a, bint eta_fix, TracingCache cache):
     """Homotopy function.
     
     H(y) = [  H_val[s,i,a]  ]
@@ -107,7 +107,7 @@ def H(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] rho,
 def J(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] rho,
       np.ndarray[np.float64_t, ndim=3] nu, double eta,
       np.ndarray[np.float64_t, ndim=3] u_rho, np.ndarray[np.float64_t, ndim=4] phi_rho,
-      np.ndarray[np.int32_t, ndim=2] nums_a, bint eta_fix, TracingCache cache):
+      int [:,::1] nums_a, bint eta_fix, TracingCache cache):
     """Jacobian matrix.
 
     J(y) = [  d_H_val[s,i]     / d_beta[s',i',a'],  d_H_val[s,i]     / d_V[s',i'],  d_H_val[s,i]     / d_t  ]
@@ -299,7 +299,7 @@ def u_tilde(u, V, phi):
 @cython.wraparound(False)
 cdef np.ndarray[np.float64_t, ndim=3] u_tilde_sia(np.ndarray[np.float64_t, ndim=1] u_tilde_ravel,
                                                   np.ndarray[np.float64_t, ndim=3] sigma,
-                                                  int num_s, int num_p, np.ndarray[np.int32_t, ndim=2] nums_a,
+                                                  int num_s, int num_p, int [:,::1] nums_a,
                                                   int num_a_max):
     """Payoffs (including continuation values) of player i using pure action a in state s,
     given other players play according to mixed strategy profile sigma[s,p,a].
@@ -308,7 +308,7 @@ cdef np.ndarray[np.float64_t, ndim=3] u_tilde_sia(np.ndarray[np.float64_t, ndim=
     cdef:
         np.ndarray[np.float64_t, ndim=3] out_ = np.zeros((num_s, num_p, num_a_max))
 
-        np.ndarray[np.int32_t, ndim=1] loop_profile = np.zeros(num_p + 1, dtype=np.int32)
+        int [:] loop_profile = np.zeros(num_p + 1, dtype=np.int32)
         # loop_profile is used to loop over all action profiles.
         # loop_profile[1:num_p+1] gives current action profile.
         # loop_profile[0] in {0,1} indicates whether all action profiles have been explored (1) or not (0).
@@ -348,7 +348,7 @@ cdef np.ndarray[np.float64_t, ndim=3] u_tilde_sia(np.ndarray[np.float64_t, ndim=
 @cython.wraparound(False)
 cdef np.ndarray[np.float64_t, ndim=5] u_tilde_sijab(np.ndarray[np.float64_t, ndim=1] u_tilde_ravel,
                                                     np.ndarray[np.float64_t, ndim=3] sigma,
-                                                    int num_s, int num_p, np.ndarray[np.int32_t, ndim=2] nums_a,
+                                                    int num_s, int num_p, int [:,::1] nums_a,
                                                     int num_a_max):
     """Payoffs u_tilde_[s,i,i',a,a'] (including continuation values) of player i using pure action a in state s,
     given player i' uses pure action a' and other players use mixed strategy profile sigma[s,i,a].
@@ -358,7 +358,7 @@ cdef np.ndarray[np.float64_t, ndim=5] u_tilde_sijab(np.ndarray[np.float64_t, ndi
 
     cdef:
         np.ndarray[np.float64_t, ndim=5] out_ = np.zeros((num_s, num_p, num_p, num_a_max, num_a_max))
-        np.ndarray[np.int32_t, ndim=1] loop_profile = np.zeros(num_p + 1, dtype=np.int32)
+        int [:] loop_profile = np.zeros(num_p + 1, dtype=np.int32)
         double temp_prob
         int state, player1, player2, other, n
         int flat_index = 0
@@ -397,7 +397,7 @@ cdef np.ndarray[np.float64_t, ndim=5] u_tilde_sijab(np.ndarray[np.float64_t, ndi
 @cython.wraparound(False)
 cdef np.ndarray[np.float64_t, ndim=4] phi_tilde_siat(np.ndarray[np.float64_t, ndim=1] phi_ravel,
                                                      np.ndarray[np.float64_t, ndim=3] sigma,
-                                                     int num_s, int num_p, np.ndarray[np.int32_t, ndim=2] nums_a,
+                                                     int num_s, int num_p, int [:,::1] nums_a,
                                                      int num_a_max):
     """Transition probabilities phi_[s,i,a,s'] of player i using pure action a in state s,
     given other players use mixed strategy profile sigma[s,i,a]
@@ -405,7 +405,7 @@ cdef np.ndarray[np.float64_t, ndim=4] phi_tilde_siat(np.ndarray[np.float64_t, nd
 
     cdef:
         np.ndarray[np.float64_t, ndim=4] out_ = np.zeros((num_s, num_p, num_a_max, num_s))
-        np.ndarray[np.int32_t, ndim=1] loop_profile = np.zeros(num_p + 1, dtype=np.int32)
+        int [:] loop_profile = np.zeros(num_p + 1, dtype=np.int32)
         double temp_prob
         int state, player, other, to_state, n
         int flat_index = 0
@@ -449,7 +449,7 @@ cdef bint arrays_equal(double [:] a, double [:] b):
 
 
 cdef class TracingCache:
-    """Caches intermediate results during computation of H or J, to be used later by the other Function."""
+    """Caches intermediate results during computation of H or J, to be used later by the other function."""
     cdef:
         double [::1] y
         double [:,:,::1] u_sigma

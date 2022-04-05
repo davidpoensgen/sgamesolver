@@ -395,6 +395,7 @@ class HomCont:
             # Correction failed, reduce stepsize and predict again.
             # Note: corrector_distance_max has to be relaxed for large ds: thus, * max(ds, 1)
             # TODO: current implementation of corrector_steps_max is not sensible: checks violation after performing step?
+            # TODO: kind of irrelevant, since the steps criterion never seems to trigger anyway
             self.corrector_fail_distance = corr_dist > self.corrector_distance_max * max(self.ds, 1)
             self.corrector_fail_ratio = corr_ratio > self.corrector_ratio_max
             self.corrector_fail_steps = self.corr_step > self.corrector_steps_max
@@ -468,7 +469,7 @@ class HomCont:
         # Case b): t_target is infinite
         elif np.isinf(self.t_target):
             if self.ds >= self.ds_max:
-                if self.distance(y_new=self.y_corr, y_old=self.y) < self.convergence_tol:
+                if self.distance(self.y_corr, self.y) < self.convergence_tol:
                     self.converged = True
 
     def adapt_stepsize(self):
