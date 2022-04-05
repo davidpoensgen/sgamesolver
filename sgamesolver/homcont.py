@@ -56,11 +56,6 @@ class HomCont:
            distances. An example from the economic context might be to have distance_function calculate the
            epsilon-deviation from optimal behavior for y_new, and terminate once this is lower than convergence_tol.
 
-    sign: int, +1, -1, or None
-        Orientation in which the path is traced.
-        If None (default), program will choose orientation so that tracing starts towards t_target.
-        (Usually this should simply be left at None, unless the user has a specific reason to set a
-          certain orientation.)
     max_steps : int, optional
         Maximum number of predictor-corrector iterations, by default np.inf.
     verbose : int, optional
@@ -124,7 +119,6 @@ class HomCont:
                  J: callable = None,
                  t_target: float = np.inf,
                  max_steps: int = np.inf,
-                 sign: int = None,
                  distance_function: callable = None,
                  verbose: int = 1,
                  parameters: dict = None,
@@ -166,10 +160,7 @@ class HomCont:
         self.detJ_change_max = 0.5
         self.bifurcation_angle_min = 177.5
 
-        if sign is not None and sign != 0:
-            self.sign = np.sign(sign)
-        else:
-            self.set_greedy_sign()
+        self.set_greedy_sign()
 
         self.tangent_old = self.tangent
         self.ds = self.ds_initial
@@ -212,6 +203,7 @@ class HomCont:
         self.path = None
         self.store_cond = False
         self.test_segment_jumping = False
+        self.quasi_newton = True
 
         self.debug = None
 

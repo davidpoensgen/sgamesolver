@@ -1,8 +1,5 @@
 """Classes for stochastic game and corresponding homotopy."""
 
-# TODO: define scale of game for adjusting tracking parameters
-# TODO: symmetry
-
 
 from typing import Union, Optional
 
@@ -76,10 +73,9 @@ class SGame:
         else:
             self.discount_factors = discount_factors * np.ones(self.num_players)
 
-        # define scale for adjusting tracking parameters
+        # scale potentially useful for adjusting tracking parameters
         self.payoff_min = self.payoffs[self.payoff_mask].min()
         self.payoff_max = self.payoffs[self.payoff_mask].max()
-        # TODO
 
         # bring transition_matrices to list of np.ndarray, one array for each state
         transition_matrices = [np.array(transition_matrices[s], dtype=np.float64) for s in range(self.num_states)]
@@ -149,13 +145,13 @@ class SGame:
 
     def detect_symmetries(self) -> None:
         """Detect symmetries between agents."""
-        # TODO
         pass
 
-    def random_strategy(self) -> np.ndarray:
-        """Generate a random strategy profile."""
+    def random_strategy(self, zeros=False) -> np.ndarray:
+        """Generate a random strategy profile. Padded with NaNs, or zeros under the respective option."""
 
-        strategy_profile = np.nan * np.empty((self.num_states, self.num_players, self.num_actions_max))
+        strategy_profile = np.full((self.num_states, self.num_players, self.num_actions_max), 0.0 if zeros else np.NaN)
+
         for s in range(self.num_states):
             for p in range(self.num_players):
                 sigma = np.random.exponential(scale=1, size=self.nums_actions[s, p])
@@ -163,21 +159,23 @@ class SGame:
 
         return strategy_profile
 
-    def centroid_strategy(self, weights: Optional[ArrayLike] = None) -> np.ndarray:
-        """Generate the (weighted) centroid strategy profile."""
+    def centroid_strategy(self, weights: Optional[ArrayLike] = None, zeros=False) -> np.ndarray:
+        """Generate the (weighted) centroid strategy profile. Padded with NaNs, or zeros under the respective option."""
 
         if weights is None:
             weights = np.ones((self.num_states, self.num_players, self.num_actions_max))
         else:
             weights = np.array(weights)
 
-        strategy_profile = np.nan * np.empty((self.num_states, self.num_players, self.num_actions_max))
+        strategy_profile = np.full((self.num_states, self.num_players, self.num_actions_max), 0.0 if zeros else np.NaN)
+
         for s in range(self.num_states):
             for p in range(self.num_players):
                 strategy_profile[s, p, :self.nums_actions[s, p]] = (weights[s, p, :self.nums_actions[s, p]]
                                                                     / np.sum(weights[s, p, :self.nums_actions[s, p]]))
 
         return strategy_profile
+
 
     def flatten_strategies(self, strategies: ArrayLike) -> np.ndarray:
         """Convert a jagged array of shape (num_states, num_players, num_actions_max), e.g. strategy profile,
@@ -348,12 +346,10 @@ class SGameHomotopy:
 
     def H_reduced(self, y: np.ndarray) -> np.ndarray:
         """H evaluated at y, reduced by exploiting symmetries."""
-        # TODO: to be implemented here
         pass
 
     def J_reduced(self, y: np.ndarray) -> np.ndarray:
         """J evaluated at y, reduced by exploiting symmetries."""
-        # TODO: to be implemented here
         pass
 
     def sigma_V_t_to_y(self, sigma: np.ndarray, V: np.ndarray, t: Union[float, int]) -> np.ndarray:
@@ -372,8 +368,9 @@ class SGameHomotopy:
         return sigma, V, t
 
     def plot_path(self, x_axis="s", s_range=None, step_range=None):
-        """Plots the path the solver has followed. Requires that path storing was enabled before starting the solver.
-        If an s_range, i.e. tuple (s_min, s_max), is passed, only steps for which s_min < s < s_max will be plotted.
+        """Plots the path the solver has followed.
+        Requires that path storing was enabled before starting the solver.
+        If an s_range, i.e. a tuple (s_min, s_max), is passed, only steps for which s_min < s < s_max will be plotted.
         Likewise, passing a step_range, i.e. (first_step, last_step) also allows to plot a subset of steps only."""
         if not self.solver or not self.solver.path:
             print('No solver or no stored path.')

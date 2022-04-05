@@ -1,10 +1,9 @@
 """Interior point method homotopy."""
 
-# TODO: @Steffen, please re-write to remove x-transformer; write a distance function instead if desired
+# TODO: @Steffen, please re-write to remove x-transformer;
+# TODO: write a distance function instead if desired (don't think that makes sense for IPM though?)
 
 # TODO: check user-provided initial_strategies and weights?
-# TODO: adjust tracking parameters with "scale" of game
-# TODO: add Numpy implementation?
 
 
 from typing import Union, Optional
@@ -78,18 +77,11 @@ class IPM_base(SGameHomotopy):
             'detJ_change_max': 1.3,
             'bifurcation_angle_min': 175,
         }
-        # TODO: use SGame methods
+
         if initial_strategies == "centroid":
-            self.sigma_0 = np.zeros((self.game.num_states, self.game.num_players, self.game.num_actions_max))
-            for s in range(self.game.num_states):
-                for p in range(self.game.num_players):
-                    self.sigma_0[s, p, 0:self.game.nums_actions[s, p]] = 1 / self.game.nums_actions[s, p]
+            self.sigma_0 = self.game.centroid_strategy(zeros=True)
         elif initial_strategies == "random":
-            self.sigma_0 = np.zeros((self.game.num_states, self.game.num_players, self.game.num_actions_max))
-            for s in range(self.game.num_states):
-                for p in range(self.game.num_players):
-                    sigma = np.random.exponential(scale=1, size=self.game.nums_actions[s, p])
-                    self.sigma_0[s, p, 0:self.game.nums_actions[s, p]] = sigma / sigma.sum()
+            self.sigma_0 = self.game.random_strategy(zeros=True)
         else:
             # TODO: document how initial strategies should be specified / should they be checked?
             self.sigma_0 = np.array(initial_strategies)
@@ -106,8 +98,7 @@ class IPM_base(SGameHomotopy):
         self.y0 = self.find_y0()
         # Note: homotopy parameter t goes from 1 to 0
         self.solver = HomCont(self.H, self.y0, self.J, t_target=0.0,
-                              parameters=self.tracking_parameters['normal'],
-                              x_transformer=self.x_transformer)
+                              parameters=self.tracking_parameters['normal'])
 
     def find_y0(self) -> np.ndarray:
         V = np.ones((self.game.num_states, self.game.num_players))

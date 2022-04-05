@@ -15,7 +15,7 @@ ext_modules = [Extension('sgamesolver.homotopy._ipm_ct', ['sgamesolver/homotopy/
                          include_dirs=[np.get_include()]),
                Extension('sgamesolver.homotopy._qre_ct', ['sgamesolver/homotopy/_qre_ct.pyx'],
                          include_dirs=[np.get_include()]),
-               Extension('sgamesolver.homotopy._tracing_ct', ['sgamesolver/homotopy/_tracing_ct.pyx'],
+               Extension('sgamesolver.homotopy._logtracing_ct', ['sgamesolver/homotopy/_logtracing_ct.pyx'],
                          include_dirs=[np.get_include()]),
                ]
 

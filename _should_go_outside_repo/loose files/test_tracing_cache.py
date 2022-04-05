@@ -5,23 +5,23 @@ import matplotlib.pyplot as plt
 game = sgamesolver.SGame.random_game(6, 6, 6, seed=123)
 # game = sgamesolver.SGame.random_game(5, 5, 5, seed=123)
 
-tracing = sgamesolver.homotopy.Tracing(game)
+tracing = sgamesolver.homotopy.LogTracing(game)
 tracing.solver_setup()
 tracing.solver.max_steps = 100
 tracing.solve()
 
-tracing = sgamesolver.homotopy.Tracing(game)
+tracing = sgamesolver.homotopy.LogTracing(game)
 tracing.solver_setup()
 tracing.cache = None
 tracing.solver.max_steps = 100
 tracing.solve()
 
-tracing = sgamesolver.homotopy.TracingFixedEta(game)
+tracing = sgamesolver.homotopy.LogTracingFixedEta(game)
 tracing.solver_setup()
 tracing.solver.max_steps = 100
 tracing.solve()
 
-tracing = sgamesolver.homotopy.TracingFixedEta(game)
+tracing = sgamesolver.homotopy.LogTracingFixedEta(game)
 tracing.solver_setup()
 tracing.cache = None
 tracing.solver.max_steps = 100

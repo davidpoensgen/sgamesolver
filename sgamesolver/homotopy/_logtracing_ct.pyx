@@ -22,7 +22,7 @@ def H(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] rho,
         int num_s = nums_a.shape[0]
         int num_p = nums_a.shape[1]
         int num_a_max = np.max(nums_a)
-        int num_a_tot = nums_a.sum()
+        int num_a_tot = np.sum(nums_a)
 
         np.ndarray[np.float64_t, ndim=1] out_ = np.zeros(num_a_tot + num_s * num_p)
         np.ndarray[np.float64_t, ndim=3] beta = np.ones((num_s, num_p, num_a_max))
@@ -120,7 +120,7 @@ def J(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] rho,
         int num_s = nums_a.shape[0]
         int num_p = nums_a.shape[1]
         int num_a_max = np.max(nums_a)
-        int num_a_tot = nums_a.sum()
+        int num_a_tot = np.sum(nums_a)
 
         np.ndarray[np.float64_t, ndim=2] out_ = np.zeros((num_a_tot + num_s*num_p, num_a_tot + num_s*num_p + 1))
         np.ndarray[np.float64_t, ndim=3] beta = np.ones((num_s, num_p, num_a_max))

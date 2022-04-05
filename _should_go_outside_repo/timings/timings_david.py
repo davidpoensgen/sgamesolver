@@ -4,7 +4,7 @@ import sgamesolver
 from datetime import datetime
 
 name = "test3"
-Homotopy = sgamesolver.homotopy.Tracing
+Homotopy = sgamesolver.homotopy.LogTracing
 
 default_count = 100
 counts = {

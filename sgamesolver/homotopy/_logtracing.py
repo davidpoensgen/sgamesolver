@@ -18,40 +18,40 @@ from sgamesolver.sgame import SGame, LogStratHomotopy
 from sgamesolver.homcont import HomCont
 
 try:
-    import sgamesolver.homotopy._tracing_ct as _tracing_ct
+    import sgamesolver.homotopy._logtracing_ct as _logtracing_ct
+
     ct = True
 except ImportError:
     ct = False
 
-
 ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
 
-def Tracing(game: SGame, priors: Union[str, ArrayLike] = "centroid",
-            weights: Optional[ArrayLike] = None, implementation='auto'):
+def LogTracing(game: SGame, priors: Union[str, ArrayLike] = "centroid",
+               weights: Optional[ArrayLike] = None, implementation='auto'):
     """Tracing homotopy for stochastic games."""
     if implementation == 'cython' or (implementation == 'auto' and ct):
-        return Tracing_ct(game, priors, weights)
+        return LogTracing_ct(game, priors, weights)
     else:
         if implementation == 'auto' and not ct:
             print('Defaulting to numpy implementation of LogTracing, because cython version is not installed. Numpy '
                   'may be substantially slower. For help setting up the cython version, please consult the manual.')
-        return Tracing_np(game, priors, weights)
+        return LogTracing_np(game, priors, weights)
 
 
-def TracingFixedEta(game: SGame, priors: Union[str, ArrayLike] = "centroid",
-                    weights: Optional[ArrayLike] = None, scale: Union[float, int] = 1.0, implementation='auto'):
+def LogTracingFixedEta(game: SGame, priors: Union[str, ArrayLike] = "centroid",
+                       weights: Optional[ArrayLike] = None, scale: Union[float, int] = 1.0, implementation='auto'):
     """Tracing homotopy with fixed eta for stochastic games."""
     if implementation == 'cython' or (implementation == 'auto' and ct):
-        return TracingFixedEta_ct(game, priors, weights, scale)
+        return LogTracingFixedEta_ct(game, priors, weights, scale)
     else:
         if implementation == 'auto' and not ct:
             print('Defaulting to numpy implementation of LogTracing, because cython version is not installed. Numpy '
                   'may be substantially slower. For help setting up the cython version, please consult the manual.')
-        return TracingFixedEta_np(game, priors, weights, scale)
+        return LogTracingFixedEta_np(game, priors, weights, scale)
 
 
-class Tracing_base(LogStratHomotopy):
+class LogTracing_base(LogStratHomotopy):
     """Tracing homotopy: base class"""
 
     def __init__(self, game: SGame, priors: Union[str, ArrayLike] = "centroid",
@@ -91,16 +91,9 @@ class Tracing_base(LogStratHomotopy):
         }
 
         if priors == "centroid":
-            self.rho = np.zeros((self.game.num_states, self.game.num_players, self.game.num_actions_max))
-            for s in range(self.game.num_states):
-                for p in range(self.game.num_players):
-                    self.rho[s, p, 0:self.game.nums_actions[s, p]] = 1 / self.game.nums_actions[s, p]
+            self.rho = self.game.centroid_strategy(zeros=True)
         elif priors == "random":
-            self.rho = np.zeros((self.game.num_states, self.game.num_players, self.game.num_actions_max))
-            for s in range(self.game.num_states):
-                for p in range(self.game.num_players):
-                    sigma = np.random.exponential(scale=1, size=self.game.nums_actions[s, p])
-                    self.rho[s, p, 0:self.game.nums_actions[s, p]] = sigma / sigma.sum()
+            self.rho = self.game.random_strategy(zeros=True)
         else:
             # TODO: document how priors should be specified / should they be checked?
             self.rho = np.array(priors)
@@ -186,26 +179,26 @@ class Tracing_base(LogStratHomotopy):
         return self.sigma_V_t_to_y(sigma, V, 0.0)
 
 
-class Tracing_ct(Tracing_base):
+class LogTracing_ct(LogTracing_base):
     """Tracing homotopy: Cython implementation"""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.cache = _tracing_ct.TracingCache()
+        self.cache = _logtracing_ct.TracingCache()
         self.eta_fix = False
 
     def H(self, y: np.ndarray) -> np.ndarray:
-        return _tracing_ct.H(y, self.game.payoffs, self.game.transitions,
-                             self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
-                             self.game.nums_actions, self.eta_fix, self.cache)
+        return _logtracing_ct.H(y, self.game.payoffs, self.game.transitions,
+                                self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
+                                self.game.nums_actions, self.eta_fix, self.cache)
 
     def J(self, y: np.ndarray) -> np.ndarray:
-        return _tracing_ct.J(y, self.game.payoffs, self.game.transitions,
-                             self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
-                             self.game.nums_actions, self.eta_fix, self.cache)
+        return _logtracing_ct.J(y, self.game.payoffs, self.game.transitions,
+                                self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
+                                self.game.nums_actions, self.eta_fix, self.cache)
 
 
-class TracingFixedEta_ct(Tracing_ct):
+class LogTracingFixedEta_ct(LogTracing_ct):
     """Tracing homotopy with fixed eta: Cython implementation"""
 
     def __init__(self, game: SGame, priors: Union[str, ArrayLike] = "centroid",
@@ -215,7 +208,7 @@ class TracingFixedEta_ct(Tracing_ct):
         self.eta_fix = True
 
 
-class Tracing_np(Tracing_base):
+class LogTracing_np(LogTracing_base):
     """Tracing homotopy: Numpy implementation"""
 
     def __init__(self, game: SGame, priors: Union[str, ArrayLike] = "centroid",
@@ -302,10 +295,6 @@ class Tracing_np(Tracing_base):
             ['s' + ABC[0:num_p] + ',s'.join([''] + [ABC[p_] for p_ in range(num_p) if p_ not in [p, q]])
              + '->s' + ABC[p] + (ABC[q] if q != p else '') for q in range(num_p)] for p in range(num_p)
         ]
-
-        # optimal paths to be used by einsum
-        # TODO
-        self.einsum_paths = {}
 
     def H(self, y: np.ndarray) -> np.ndarray:
         """Homotopy function."""
@@ -427,7 +416,7 @@ class Tracing_np(Tracing_base):
         return J[self.J_mask]
 
 
-class TracingFixedEta_np(Tracing_np):
+class LogTracingFixedEta_np(LogTracing_np):
     """Tracing homotopy with fixed eta: Numpy implementation"""
 
     def __init__(self, game: SGame, priors: Union[str, ArrayLike] = "centroid",
