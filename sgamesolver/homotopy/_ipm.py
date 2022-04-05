@@ -4,7 +4,6 @@
 
 # TODO: check user-provided initial_strategies and weights?
 # TODO: adjust tracking parameters with "scale" of game
-# TODO: think about Cython import
 # TODO: add Numpy implementation?
 
 
@@ -16,14 +15,32 @@ from numpy.typing import ArrayLike
 from sgamesolver.sgame import SGame, SGameHomotopy
 from sgamesolver.homcont import HomCont
 
+try:
+    import sgamesolver.homotopy._ipm_ct as _ipm_ct
+
+    ct = True
+except ImportError:
+    ct = False
 
 ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+
+
+def IPM(game: SGame, initial_strategies: Union[str, ArrayLike] = "centroid",
+        weights: Optional[ArrayLike] = None, implementation='auto'):
+    """Interior point method (IPM) homotopy for stochastic games."""
+    if implementation == 'cython' or (implementation == 'auto' and ct):
+        return IPM_ct(game, initial_strategies, weights)
+    else:
+        if implementation == 'auto' and not ct:
+            print('Defaulting to sympy+numpy implementation of IPM, because cython version is not installed. This '
+                  'version is substantially slower. For help setting up the cython version, please consult the manual.')
+        return IPM_sp(game, initial_strategies, weights)
 
 
 # %% parent class for interior point method homotopy
 
 
-class IPM(SGameHomotopy):
+class IPM_base(SGameHomotopy):
     """Interior point method homotopy: base class"""
 
     def __init__(self, game: SGame, initial_strategies: Union[str, ArrayLike] = "centroid",
@@ -99,12 +116,12 @@ class IPM(SGameHomotopy):
     def x_transformer(self, y: np.ndarray) -> np.ndarray:
         x = y.copy()
         z, t = x[0:self.game.num_actions_total], x[-1]
-        x[0:self.game.num_actions_total] = 0.25 * (z + (z**2 + 4*t*self.sigma_0_flat**0.5)**0.5)**2
+        x[0:self.game.num_actions_total] = 0.25 * (z + (z ** 2 + 4 * t * self.sigma_0_flat ** 0.5) ** 0.5) ** 2
         return x
 
     def sigma_V_t_to_y(self, sigma: np.ndarray, V: np.ndarray, t: float) -> np.ndarray:
         sigma_flat = self.game.flatten_strategies(sigma)
-        z_flat = (sigma_flat - t * self.sigma_0_flat**0.5) / sigma_flat**0.5
+        z_flat = (sigma_flat - t * self.sigma_0_flat ** 0.5) / sigma_flat ** 0.5
         V_flat = self.game.flatten_values(V)
         return np.concatenate([z_flat, V_flat, [t]])
 
@@ -119,42 +136,28 @@ class IPM(SGameHomotopy):
 # %% Cython implementation of IPM
 
 
-class IPM_ct(IPM):
+class IPM_ct(IPM_base):
     """Interior point method homotopy: Cython implementation"""
 
     def __init__(self, game: SGame, initial_strategies: Union[str, ArrayLike] = "centroid",
                  weights: Optional[ArrayLike] = None) -> None:
         super().__init__(game, initial_strategies, weights)
 
-        # only import Cython module on class instantiation
-        try:
-            import sgamesolver.homotopy._ipm_ct as ipm_ct
-
-        except ImportError:
-            raise ImportError("Cython implementation of IPM homotopy could not be imported. ",
-                              "Make sure your system has the relevant C compilers installed. ",
-                              "For Windows, check https://wiki.python.org/moin/WindowsCompilers ",
-                              "to find the right Microsoft Visual C++ compiler for your Python version. ",
-                              "Standalone compilers are sufficient, there is no need to install Visual Studio. ",
-                              "For Linux, make sure the Python package gxx_linux-64 is installed in your environment.")
-
-        self.ipm_ct = ipm_ct
-
     def H(self, y: np.ndarray) -> np.ndarray:
-        return self.ipm_ct.H(y, self.game.payoffs, self.game.transitions, self.sigma_0, self.nu,
-                             self.game.num_states, self.game.num_players, self.game.nums_actions,
-                             self.game.num_actions_max, self.game.num_actions_total)
+        return _ipm_ct.H(y, self.game.payoffs, self.game.transitions, self.sigma_0, self.nu,
+                         self.game.num_states, self.game.num_players, self.game.nums_actions,
+                         self.game.num_actions_max, self.game.num_actions_total)
 
     def J(self, y: np.ndarray) -> np.ndarray:
-        return self.ipm_ct.J(y, self.game.payoffs, self.game.transitions, self.sigma_0, self.nu,
-                             self.game.num_states, self.game.num_players, self.game.nums_actions,
-                             self.game.num_actions_max, self.game.num_actions_total)
+        return _ipm_ct.J(y, self.game.payoffs, self.game.transitions, self.sigma_0, self.nu,
+                         self.game.num_states, self.game.num_players, self.game.nums_actions,
+                         self.game.num_actions_max, self.game.num_actions_total)
 
 
 # %% Sympy implementation of IPM
 
 
-class IPM_sp(IPM):
+class IPM_sp(IPM_base):
     """Interior point method homotopy: Sympy implementation"""
 
     def __init__(self, game: SGame, initial_strategies: Union[str, ArrayLike] = "centroid",
@@ -174,7 +177,7 @@ class IPM_sp(IPM):
         num_a_max, num_a_tot = self.game.num_actions_max, self.game.num_actions_total
 
         # symbols
-        y = sp.symarray('y', num_a_tot + num_s*num_p + 1)
+        y = sp.symarray('y', num_a_tot + num_s * num_p + 1)
 
         # strategies, values and homotopy parameter
 
@@ -196,8 +199,8 @@ class IPM_sp(IPM):
         t = y[-1]
 
         # transformations
-        sigma = 0.25*(z + (z**2 + 4*t*self.sigma_0**0.5)**0.5)**2
-        lambda_ = 0.25*(-z + (z**2 + 4*t*self.sigma_0**0.5)**0.5)**2
+        sigma = 0.25 * (z + (z ** 2 + 4 * t * self.sigma_0 ** 0.5) ** 0.5) ** 2
+        lambda_ = 0.25 * (-z + (z ** 2 + 4 * t * self.sigma_0 ** 0.5) ** 0.5) ** 2
 
         # payoffs including continuation values
 
@@ -215,15 +218,16 @@ class IPM_sp(IPM):
             for other in range(num_p):
                 if other == index[1]:
                     continue
-                temp_prob *= sigma[index[0], other, index[other+2]]
-            Eu_tilde_a[index[0], index[1], index[index[1]+2]] += temp_prob * util
+                temp_prob *= sigma[index[0], other, index[other + 2]]
+            Eu_tilde_a[index[0], index[1], index[index[1] + 2]] += temp_prob * util
 
         # homotopy function
         H_list = []
         for s in range(num_s):
             for p in range(num_p):
                 for a in range(nums_a[s, p]):
-                    H_list.append((1-t)*Eu_tilde_a[s, p, a] + lambda_[s, p, a] - V[s, p] - t*(1-t)*self.nu[s, p, a])
+                    H_list.append(
+                        (1 - t) * Eu_tilde_a[s, p, a] + lambda_[s, p, a] - V[s, p] - t * (1 - t) * self.nu[s, p, a])
         for s in range(num_s):
             for p in range(num_p):
                 H_list.append(sigma[s, p, 0:nums_a[s, p]].sum() - 1)
@@ -241,4 +245,3 @@ class IPM_sp(IPM):
 
     def J(self, y: np.ndarray) -> np.ndarray:
         return self.J_num(*tuple(np.array(y)))
-

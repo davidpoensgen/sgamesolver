@@ -429,8 +429,8 @@ class HomCont:
 
         if self.test_segment_jumping:
             # Optional test for large relative changes in augmented determinant - a potential indicator for segment
-            # jumping (see Choi et al. 1995). Uses slogdet to avoid overflows for large systems.
-            # If a potential jump is detected, the step is discarded and ds decreased.
+            # jumping (see Choi et al. 1996). Uses slogdet to avoid overflows for large systems.
+            # If the relative change is too large, the step is discarded and ds decreased.
             old_log_det = np.linalg.slogdet(np.vstack([self.J, self.tangent]))[1]
             new_log_det = np.linalg.slogdet(np.vstack([self.J_corr, self.tangent]))[1]
             log_det_diff = np.abs(new_log_det - old_log_det)
