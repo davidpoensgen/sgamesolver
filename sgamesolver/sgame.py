@@ -104,7 +104,7 @@ class SGame:
         num_actions can be specified in the following ways:
         - integer: all agents have this same fixed number of actions
         - list/tuple of 2 integers: number of actions is randomized, the input determining [min, max]
-        - array of dimension [num_states, num_actions]: number of actions for each agen
+        - array of dimension [num_states, num_actions]: number of actions for each agent
         Similarly for delta:
         - float: value used for all players
         - tuple/list of 2 floats: randomized per player with (delta_min, delta_max)
