@@ -186,10 +186,7 @@ class SGame:
         """Convert a flat array containing a strategy profile (or parameters of same shape) to an array
         with shape (num_states, num_players, num_actions_max), padded with NaNs (or zeros under the respective option.)
         """
-        if zeros:
-            strategies = np.zeros((self.num_states, self.num_players, self.num_actions_max))
-        else:
-            strategies = np.nan * np.empty((self.num_states, self.num_players, self.num_actions_max))
+        strategies = np.full((self.num_states, self.num_players, self.num_actions_max), 0.0 if zeros else np.NaN)
         np.place(strategies, self.action_mask, strategies_flat)
         return strategies
 
@@ -245,41 +242,24 @@ class SGame:
 
         return losses
 
-    def sigma_V_to_string(self, sigma, V=None) -> str:
-        """Renders a strategy profile and associated values as human-readable string."""
-        if V is None:
-            V = self.get_values(sigma)
-        string = ""
-        for state in range(self.num_states):
-            string += f'+++++++ state{state} +++++++\n'
-            for player in range(self.num_players):
-                V_si = V[state, player]
-                sigma_si = sigma[state, player, :self.nums_actions[state, player]]
-                string += f'player{player}: v={V_si:#5.2f}, ' \
-                          f's={np.array2string(sigma_si, formatter={"float_kind": lambda x: "%.3f" % x})}\n'
-        return string
-
 
 class StrategyProfile:
     """Container for equilbria and other strategy profiles."""
 
-    def __init__(self, nums_actions, sigma, V, t=None):
-        self._nums_actions = nums_actions
-        self.num_states = self._nums_actions.shape[0]
-        self.num_players = self._nums_actions.shape[1]
+    def __init__(self, game, sigma, V, t=None):
+        self.game = game
         self.strategies = sigma
         self.values = V
-        if t is not None:
-            self.homotopy_parameter = t
+        self.homotopy_parameter = t
 
     def to_string(self, decimals=3) -> str:
         """Renders the strategy profile and associated values as human-readable string."""
         string = ""
-        for state in range(self.num_states):
+        for state in range(self.game.num_states):
             string += f'+++++++ state{state} +++++++\n'
-            for player in range(self.num_players):
+            for player in range(self.game.num_players):
                 V_si = self.values[state, player]
-                sigma_si = self.strategies[state, player, :self._nums_actions[state, player]]
+                sigma_si = self.strategies[state, player, :self.game.nums_actions[state, player]]
                 string += f'player{player}: v={V_si:#5.2f}, ' \
                           f's={np.array2string(sigma_si, formatter={"float_kind": lambda x: f"%.{decimals}f" % x})}\n'
         return string
@@ -289,8 +269,8 @@ class StrategyProfile:
             sigma = self.strategies
         else:
             sigma = np.round(self.strategies, decimals)
-        list_ = [[sigma[s, p, :self._nums_actions[s, p]].tolist() for p in range(self.num_players)]
-                 for s in range(self.num_states)]
+        list_ = [[sigma[s, p, :self.game.nums_actions[s, p]].tolist() for p in range(self.game.num_players)]
+                 for s in range(self.game.num_states)]
         return list_
 
     def __str__(self):
@@ -325,7 +305,7 @@ class SGameHomotopy:
         solution = self.solver.start()
         if solution['success']:
             sigma, V, t = self.y_to_sigma_V_t(solution['y'])
-            self.equilibrium = StrategyProfile(self.game.nums_actions, sigma, V, t)
+            self.equilibrium = StrategyProfile(self.game, sigma, V, t)
             print('An equilibrium was found via homotopy continuation.')
         else:
             print('The solver failed to find an equilibrium. Please refer to the manual'
