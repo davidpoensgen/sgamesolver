@@ -1,10 +1,5 @@
 """(Markov logit) quantal response equilibrium (QRE) homotopy."""
 
-# TODO: adjust tracking parameters with "scale" of game
-
-# TODO: play with numba boost on numpy implementation
-
-
 import numpy as np
 
 from sgamesolver.sgame import SGame, LogStratHomotopy

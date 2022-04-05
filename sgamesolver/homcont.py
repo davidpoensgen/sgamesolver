@@ -160,6 +160,7 @@ class HomCont:
         self.detJ_change_max = 0.5
         self.bifurcation_angle_min = 177.5
 
+        self.sign = 0
         self.set_greedy_sign()
 
         self.tangent_old = self.tangent
@@ -376,7 +377,13 @@ class HomCont:
         # corrector loop
         while np.max(np.abs(H_corr)) > self.corrector_tol:
             self.corr_step += 1
-            correction = np.dot(self.Jpinv, H_corr)
+
+            if self.quasi_newton:
+                correction = np.dot(self.Jpinv, H_corr)
+            else:
+                Jpinv = qr_inv(self.J_func(self.y_corr))
+                correction = np.dot(Jpinv, H_corr)
+
             self.y_corr = self.y_corr - correction
 
             corr_dist = np.linalg.norm(correction)
@@ -386,7 +393,7 @@ class HomCont:
             # If corrector step violates any restriction given by parameters:
             # Correction failed, reduce stepsize and predict again.
             # Note: corrector_distance_max has to be relaxed for large ds: thus, * max(ds, 1)
-            # TODO: current implementation of corrector_steps_max is not sensible: checks violation after performing step?
+            # TODO: current implementation of corrector_steps_max is not sensible: checks violation after step?
             # TODO: kind of irrelevant, since the steps criterion never seems to trigger anyway
             self.corrector_fail_distance = corr_dist > self.corrector_distance_max * max(self.ds, 1)
             self.corrector_fail_ratio = corr_ratio > self.corrector_ratio_max

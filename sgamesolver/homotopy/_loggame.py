@@ -1,7 +1,5 @@
 """Logarithmic game homotopy."""
 
-# TODO: check user-provided weights?
-
 from typing import Optional
 
 import numpy as np
@@ -37,8 +35,6 @@ class LogGame_base(LogStratHomotopy):
     def __init__(self, game: SGame, weights: Optional[ArrayLike] = None) -> None:
         super().__init__(game)
 
-        # TODO: adjust parameters with scale of payoff matrix:
-
         self.tracking_parameters['normal'] = {
             'convergence_tol': 1e-7,
             'corrector_tol': 1e-7,
@@ -73,7 +69,6 @@ class LogGame_base(LogStratHomotopy):
         if weights is None:
             self.nu = np.ones((self.game.num_states, self.game.num_players, self.game.num_actions_max))
         else:
-            # TODO: document how weights should be specified / should they be checked?
             self.nu = weights
 
     def solver_setup(self) -> None:

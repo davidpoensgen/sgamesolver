@@ -3,10 +3,6 @@
 # TODO: check user-provided priors and weights?
 # TODO: maybe write custom optimization for find_y0 to avoid scipy import
 
-# TODO: play with einsum_path
-# TODO: adjust tracking parameters with "scale" of game
-
-
 import warnings
 from typing import Union, Optional
 
@@ -58,8 +54,6 @@ class LogTracing_base(LogStratHomotopy):
                  weights: Optional[ArrayLike] = None) -> None:
         super().__init__(game)
 
-        # TODO: adjust parameters with scale of payoff matrix:
-
         self.tracking_parameters['normal'] = {
             'convergence_tol': 1e-7,
             'corrector_tol': 1e-7,
@@ -95,13 +89,11 @@ class LogTracing_base(LogStratHomotopy):
         elif priors == "random":
             self.rho = self.game.random_strategy(zeros=True)
         else:
-            # TODO: document how priors should be specified / should they be checked?
             self.rho = np.array(priors)
 
         if weights is None:
             self.nu = np.ones((self.game.num_states, self.game.num_players, self.game.num_actions_max))
         else:
-            # TODO: document how weights should be specified / should they be checked?
             self.nu = weights
 
         self.eta = 1.0

@@ -1,7 +1,7 @@
 import sgamesolver
 import numpy as np
 
-game = sgamesolver.SGame.random_game(4, 4, 4, seed=123)
+game = sgamesolver.SGame.random_game(5, 5, 5, seed=123)
 
 qre = sgamesolver.homotopy.QRE(game)
 qre.solver_setup()

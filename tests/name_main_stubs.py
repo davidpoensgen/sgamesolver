@@ -1,5 +1,5 @@
-# TODO: this file collects tests that were found spread over the individual modules
-#  when re-structuring the project in March/22 - D
+# this file collects tests that were found spread over the individual modules
+# when re-structuring the project in March/22 - D
 
 
 # %% sgame.py

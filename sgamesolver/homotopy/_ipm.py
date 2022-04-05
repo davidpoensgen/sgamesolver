@@ -3,9 +3,6 @@
 # TODO: @Steffen, please re-write to remove x-transformer;
 # TODO: write a distance function instead if desired (don't think that makes sense for IPM though?)
 
-# TODO: check user-provided initial_strategies and weights?
-
-
 from typing import Union, Optional
 
 import numpy as np
@@ -46,8 +43,6 @@ class IPM_base(SGameHomotopy):
                  weights: Optional[ArrayLike] = None) -> None:
         super().__init__(game)
 
-        # TODO: adjust parameters with scale of payoff matrix:
-
         self.tracking_parameters['normal'] = {
             'convergence_tol': 1e-7,
             'corrector_tol': 1e-7,
@@ -83,7 +78,6 @@ class IPM_base(SGameHomotopy):
         elif initial_strategies == "random":
             self.sigma_0 = self.game.random_strategy(zeros=True)
         else:
-            # TODO: document how initial strategies should be specified / should they be checked?
             self.sigma_0 = np.array(initial_strategies)
 
         self.sigma_0_flat = self.game.flatten_strategies(self.sigma_0)
@@ -91,7 +85,6 @@ class IPM_base(SGameHomotopy):
         if weights is None:
             self.nu = np.ones((self.game.num_states, self.game.num_players, self.game.num_actions_max))
         else:
-            # TODO: document how weights should be specified / should they be checked?
             self.nu = weights
 
     def solver_setup(self) -> None:
