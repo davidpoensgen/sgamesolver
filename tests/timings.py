@@ -30,7 +30,10 @@ class HomotopyTimer:
         self.filename = filename
 
     def run(self, verbose: bool = True) -> HomotopyTimer:
-        """Run all timings and write to file."""
+        """
+        Run all timings using specs from csv file.
+        If csv file does not exist, make new empty one and run all timings.
+        """
 
         timings = self.load_file()
         timings_to_be_done = timings.loc[~timings['done']]
@@ -40,10 +43,10 @@ class HomotopyTimer:
         for idx, row in timings_to_be_done.iterrows():
             homotopy, num_s, num_p, num_a, rep, seed = row[['homotopy', 'states', 'players', 'actions', 'rep', 'seed']]
 
-            if verbose >= 1:
+            if verbose:
                 toc = datetime.now()
                 sys.stdout.write(f"\r{homotopy} - (S,I,A) = ({num_s},{num_p},{num_a}): Starting timing #{rep+1},"
-                                 f" elapsed = {str(toc-tic).split('.')[0]}  ")
+                                 f" elapsed = {str(toc-tic).split('.')[0]}            ")
                 sys.stdout.flush()
 
             timings.loc[idx, 'timestamp'] = datetime.now().strftime('%Y-%m-%d %H:%M')
@@ -80,60 +83,69 @@ class HomotopyTimer:
 
         return self
 
-    def make_latex_table(self) -> str:
-        """Generate LaTeX code for timings table. Use timings from file."""
+    def make_latex_tables(self) -> dict[str, str]:
+        """
+        Generate LaTeX code for timings tables.
+        Use timings from file.
+        Return one table for each homotopy in file.
+        """
 
         timings = self.load_file()
         finished_timings = timings.loc[timings['done']]
 
-        nums_s = np.unique(finished_timings['states'])
-        nums_p = np.unique(finished_timings['players'])
-        nums_a = np.unique(finished_timings['actions'])
+        latex_tables = dict()
 
-        seconds = dict()
-        for num_s in nums_s:
-            for num_p in nums_p:
+        for homotopy in np.unique(finished_timings['homotopy']):
+            homotopy_timings = finished_timings.loc[finished_timings['homotopy'] == homotopy]
+
+            nums_s = np.unique(homotopy_timings['states'])
+            nums_p = np.unique(homotopy_timings['players'])
+            nums_a = np.unique(homotopy_timings['actions'])
+
+            seconds = dict()
+            for num_s in nums_s:
+                for num_p in nums_p:
+                    for num_a in nums_a:
+                        sub_df = homotopy_timings.loc[homotopy_timings['success']
+                                                      & (homotopy_timings['states'] == num_s)
+                                                      & (homotopy_timings['players'] == num_p)
+                                                      & (homotopy_timings['actions'] == num_a)]
+
+                        seconds[(num_s, num_p, num_a)] = {'mean': sub_df['seconds'].mean(),
+                                                          'std': sub_df['seconds'].std()}
+
+            code_lines = ['\\begin{tabular}{lc' + "c".join(['rl']*len(nums_p)) + '}',
+                          '\\hline',
+                          '$|A|$ / $|I|$ &  & ' + ' &  & '.join(str(num_p) + ' & ' for num_p in nums_p) + ' \\\\',
+                          '\\hline']
+
+            for k, num_s in enumerate(nums_s):
+                if k > 0:
+                    code_lines.append(' &  & ' + ' &  & '.join([' & ']*len(nums_p)) + ' \\\\')
+
+                code_lines.append('$|S|$ = ' + str(num_s) + ' &  & ' + ''.join([' &  & ']*len(nums_p)) + ' \\\\')
+
                 for num_a in nums_a:
-                    sub_df = finished_timings.loc[
-                        finished_timings['success']
-                        & (finished_timings['states'] == num_s)
-                        & (finished_timings['players'] == num_p)
-                        & (finished_timings['actions'] == num_a)
-                    ]
-                    seconds[(num_s, num_p, num_a)] = {
-                        'mean': sub_df['seconds'].mean(),
-                        'std': sub_df['seconds'].std(),
-                    }
+                    code_lines.append(str(num_a) + ' &  & '
+                                      + ' &  & '.join(f"{seconds[(num_s, num_p, num_a)]['mean']:0.2f}"
+                                                      + ' & \\hspace{-0.6em} ('
+                                                      + f"{seconds[(num_s, num_p, num_a)]['std']:0.2f})"
+                                                      for num_p in nums_p)
+                                      + ' \\\\')
 
-        code_lines = ['\\begin{tabular}{lc' + "c".join(['rl']*len(nums_p)) + '}',
-                      '\\hline',
-                      '$|A|$ / $|I|$ &  & ' + ' &  & '.join(str(num_p) + ' & ' for num_p in nums_p) + ' \\\\',
-                      '\\hline',
-                      ]
+            code_lines.append('\\hline')
+            code_lines.append('\\end{tabular}')
 
-        for k, num_s in enumerate(nums_s):
-            if k > 0:
-                code_lines.append(' &  & ' + ' &  & '.join([' & ']*len(nums_p)) + ' \\\\')
+            latex_table = '\n'.join(code_lines)
+            latex_tables[homotopy] = latex_table
 
-            code_lines.append('$|S|$ = ' + str(num_s) + ' &  & ' + ''.join([' &  & ']*len(nums_p)) + ' \\\\')
+            print(f"\n{homotopy}:\n\n{latex_table}\n")
 
-            for num_a in nums_a:
-                code_lines.append(str(num_a) + ' &  & '
-                                  + ' &  & '.join(f"{seconds[(num_s, num_p, num_a)]['mean']:0.2f}"
-                                                  + ' & \\hspace{-0.6em} ('
-                                                  + f"{seconds[(num_s, num_p, num_a)]['std']:0.2f})"
-                                                  for num_p in nums_p)
-                                  + ' \\\\')
-
-        code_lines.append('\\hline')
-        code_lines.append('\\end{tabular}')
-
-        latex_table = '\n'.join(code_lines)
-
-        print('\n' + latex_table + '\n')
         return latex_table
 
-    def plot_timings(self, homotopy: str, num_s: int, num_p: int, num_a: int) -> Optional[Any]:
+    def plot_spec_timings(self, homotopy: str, num_s: int, num_p: int, num_a: int) -> Optional[Any]:
+        """Plot histograms of timing results for given homotopy and game specs (S,I,A)."""
+
         timings = self.load_file()
         timings_for_spec = timings.loc[timings['done'] & (timings['homotopy'] == homotopy)
                                        & (timings['states'] == num_s) & (timings['players'] == num_p)
@@ -176,37 +188,34 @@ class HomotopyTimer:
 
     def make_file(self, homotopy: str = 'QRE', num_states: list[int] = [1, 2, 5, 10, 20],
                   num_players: list[int] = [1, 2, 3, 4, 5], num_actions: list[int] = [2, 5, 10], num_reps: int = 100,
-                  special_num_reps: dict[tuple[int, int, int], int] = {(20, 5, 10): 3, (10, 5, 10): 3},
+                  special_num_reps: dict[tuple[int, int, int], int] = {(20, 5, 10): 3, (10, 5, 10): 5, (5, 5, 10): 20},
                   override: bool = False) -> pd.DataFrame:
+        """Make empty csv file for timing results."""
 
-        timings = pd.DataFrame(
-            [
-                {
-                    'homotopy': homotopy,
-                    'states': num_s,
-                    'players': num_p,
-                    'actions': num_a,
-                    'rep': rep,
-                    'seed': self.generate_seed(num_s=num_s, num_p=num_p, num_a=num_a, rep=rep),
-                    'done': False,
-                    'timestamp': None,
-                    'success': False,
-                    'seconds': np.nan,
-                    'steps': np.nan,
-                    'path_len': np.nan,
-                    'hom_par': np.nan,
-                    'failure_reason': None,
-                    'exception': None,
-                }
-                for num_s in num_states for num_p in num_players for num_a in num_actions
-                for rep in range(special_num_reps.get((num_s, num_p, num_a), num_reps))
-            ]
-        )
+        timings = pd.DataFrame([{'homotopy': homotopy,
+                                 'states': num_s,
+                                 'players': num_p,
+                                 'actions': num_a,
+                                 'rep': rep,
+                                 'seed': self.generate_seed(num_s=num_s, num_p=num_p, num_a=num_a, rep=rep),
+                                 'done': False,
+                                 'timestamp': None,
+                                 'success': False,
+                                 'seconds': np.nan,
+                                 'steps': np.nan,
+                                 'path_len': np.nan,
+                                 'hom_par': np.nan,
+                                 'failure_reason': None,
+                                 'exception': None}
+                                for num_s in num_states for num_p in num_players for num_a in num_actions
+                                for rep in range(special_num_reps.get((num_s, num_p, num_a), num_reps))])
 
         self.write_to_file(frame=timings, override=override)
         return timings
 
     def load_file(self) -> pd.DataFrame:
+        """Load csv file for timing results. If file does not exist, make new empty one."""
+
         try:
             timings = self.read_from_file()
 
@@ -266,6 +275,7 @@ class HomotopyTimer:
 
     def solve_random_game(self, homotopy: str, num_s: int, num_p: int, num_a: int, seed: int,
                           delta: float = 0.95, max_steps: int = 1e5, method: str = "normal") -> dict:
+
         game = sgamesolver.SGame.random_game(num_states=num_s, num_players=num_p, num_actions=num_a,
                                              delta=delta, seed=seed)
 
@@ -317,12 +327,12 @@ if __name__ == '__main__':
     # small test run:
 
     timer = HomotopyTimer()
-    timer.make_file(num_states=[5], num_players=[5], num_actions=[5], num_reps=20, override=True)
+    timer.make_file(num_states=[5], num_players=[5], num_actions=[5], num_reps=2, override=True)
 
     timer.run()
 
-    timer.plot_timings(homotopy='QRE', num_s=5, num_p=5, num_a=5)
-    timer.make_latex_table()
+    timer.plot_spec_timings(homotopy='QRE', num_s=5, num_p=5, num_a=5)
+    timer.make_latex_tables()
 
     # full run:
 
