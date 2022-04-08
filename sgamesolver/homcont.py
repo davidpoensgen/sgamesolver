@@ -792,7 +792,7 @@ class HomPath:
         try:
             import matplotlib.pyplot as plt
         except ModuleNotFoundError:
-            print('Missing the the python package matplotlib. Please install to plot.')
+            print('Missing the python package matplotlib. Please install to plot.')
             return
 
         if self.index > max_plotted:
@@ -823,9 +823,9 @@ class HomPath:
         ax1.grid()
         # path length -> variables
         ax2 = fig.add_subplot(222)
-        ax2.set_title(fr'Variables in y')
+        ax2.set_title(r'Variables in y')
         ax2.set_xlabel(r'path length $s$')
-        ax2.set_ylabel(fr'$y_i$')
+        ax2.set_ylabel(r'$y_i$')
         ax2.set_ylim(x_plot_min, x_plot_max)
         ax2.plot(s_plot, x_plot)
         ax2.grid()
@@ -848,9 +848,9 @@ class HomPath:
             ax3.grid()
         # t -> y
         ax4 = fig.add_subplot(224)
-        ax4.set_title(fr'Variables in y II')
+        ax4.set_title(r'Variables in y II')
         ax4.set_xlabel(r'homotopy parameter $t$')
-        ax4.set_ylabel(fr'$y_i$')
+        ax4.set_ylabel(r'$y_i$')
         ax4.set_ylim(x_plot_min, x_plot_max)
         ax4.plot(t_plot, x_plot)
         ax4.grid()
