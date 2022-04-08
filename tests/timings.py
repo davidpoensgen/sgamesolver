@@ -327,7 +327,7 @@ if __name__ == '__main__':
     # small test run:
 
     timer = HomotopyTimer()
-    timer.make_file(num_states=[5], num_players=[5], num_actions=[5], num_reps=2, override=True)
+    timer.make_file(num_states=[5], num_players=[5], num_actions=[5], num_reps=20, override=True)
 
     timer.run()
 
