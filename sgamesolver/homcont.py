@@ -195,9 +195,6 @@ class HomCont:
         self._Jpinv = None
         self._Jpinv_needs_update = True
 
-        # overwrite defaults with user-provided parameters if present
-        self.set_parameters(parameters, **kwargs)
-
         self.check_inputs()
 
         self.store_path = False
@@ -208,6 +205,9 @@ class HomCont:
 
         self.test_segment_jumping = False
         self.quasi_newton = True
+
+        # overwrite defaults with user-provided parameters if present
+        self.set_parameters(parameters, **kwargs)
 
     # Properties: These mainly serve to cache the results of potentially expensive function calls
     @property
@@ -521,7 +521,7 @@ class HomCont:
        of the augmented Jacobian (as suggested by Allgower/Georg, 1990, p. 79) seems to miss some
        points where a change of orientation is necessary. This is possibly because it is only guaranteed
        to detect simple bifurcations, and does not necessarily detect higher order bifurcations.
-        """
+       """
         if angle(self.tangent_old, self.tangent) > self.bifurcation_angle_min:
             if self.verbose >= 2:
                 self._report_step()

@@ -244,7 +244,7 @@ class SGame:
 
 
 class StrategyProfile:
-    """Container for equilbria and other strategy profiles."""
+    """Container for equilibria and other strategy profiles."""
 
     def __init__(self, game, sigma, V, t=None):
         self.game = game
@@ -435,7 +435,7 @@ class LogStratHomotopy(SGameHomotopy):
         """Translate a vector y to arrays representing strategies sigma, values V and homotopy parameter t.
         (Version for homotopies operating on logarithmized strategies.)
         """
-        sigma = self.game.unflatten_strategies(np.exp(y[0:self.game.num_actions_total]), zeros=zeros)
+        sigma = self.game.unflatten_strategies(np.exp(y[:self.game.num_actions_total]), zeros=zeros)
         V = self.game.unflatten_values(y[self.game.num_actions_total:-1])
         t = y[-1]
         return sigma, V, t
