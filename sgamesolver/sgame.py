@@ -1,10 +1,10 @@
 """Classes for stochastic game and corresponding homotopy."""
 
 
-from typing import Union
+from typing import Union, List, Tuple
 
 import numpy as np
-from numpy.typing import ArrayLike
+# from numpy.typing import ArrayLike
 
 ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
@@ -15,8 +15,8 @@ ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 class SGame:
     """A stochastic game."""
 
-    def __init__(self, payoff_matrices: list[ArrayLike], transition_matrices: list[ArrayLike],
-                 discount_factors: Union[ArrayLike, float, int] = 0.0) -> None:
+    def __init__(self, payoff_matrices: List[np.ndarray], transition_matrices: List[np.ndarray],
+                 discount_factors: Union[np.ndarray, float, int] = 0.0) -> None:
         """Inputs:
 
         payoff_matrices:      list of array-like, one for each state: payoff_matrices[s][p,A]
@@ -136,7 +136,7 @@ class SGame:
         return cls(u, phi, delta)
 
     @classmethod
-    def one_shot_game(cls, payoff_matrix: ArrayLike):
+    def one_shot_game(cls, payoff_matrix: np.ndarray):
         """Creates a one-shot (=single-state/simultaneous) game from a payoff array."""
         # phi: zeros with shape like u, but dropping first dimension (player)
         # and appending a len-1-dimension for to-state
@@ -166,7 +166,7 @@ class SGame:
                 strategy_profile[s, p, :self.nums_actions[s, p]] = 1 / self.nums_actions[s, p]
         return strategy_profile
 
-    def weighted_centroid_strategy(self, weights: ArrayLike, zeros=False) -> np.ndarray:
+    def weighted_centroid_strategy(self, weights: np.ndarray, zeros=False) -> np.ndarray:
         """Generate a weighted centroid strategy profile. Padded with NaNs, or zeros under the respective option."""
 
         strategy_profile = np.full((self.num_states, self.num_players, self.num_actions_max), 0.0 if zeros else np.NaN)
@@ -176,13 +176,13 @@ class SGame:
                                                                     / np.sum(weights[s, p, :self.nums_actions[s, p]]))
         return strategy_profile
 
-    def flatten_strategies(self, strategies: ArrayLike) -> np.ndarray:
+    def flatten_strategies(self, strategies: np.ndarray) -> np.ndarray:
         """Convert a jagged array of shape (num_states, num_players, num_actions_max), e.g. strategy profile,
         to a flat array, removing all NaNs.
         """
         return np.extract(self.action_mask, strategies)
 
-    def unflatten_strategies(self, strategies_flat: ArrayLike, zeros: bool = False) -> np.ndarray:
+    def unflatten_strategies(self, strategies_flat: np.ndarray, zeros: bool = False) -> np.ndarray:
         """Convert a flat array containing a strategy profile (or parameters of same shape) to an array
         with shape (num_states, num_players, num_actions_max), padded with NaNs (or zeros under the respective option.)
         """
@@ -190,7 +190,7 @@ class SGame:
         np.place(strategies, self.action_mask, strategies_flat)
         return strategies
 
-    def get_values(self, strategy_profile: ArrayLike) -> np.ndarray:
+    def get_values(self, strategy_profile: np.ndarray) -> np.ndarray:
         """Calculate state-player values for a given strategy profile."""
 
         sigma = np.nan_to_num(strategy_profile)
@@ -213,15 +213,15 @@ class SGame:
         return values
 
     @staticmethod
-    def flatten_values(values: ArrayLike) -> np.ndarray:
+    def flatten_values(values: np.ndarray) -> np.ndarray:
         """Flatten an array with shape (num_states, num_players), e.g. state-player values."""
         return np.array(values).reshape(-1)
 
-    def unflatten_values(self, values_flat: ArrayLike) -> np.ndarray:
+    def unflatten_values(self, values_flat: np.ndarray) -> np.ndarray:
         """Convert a flat array to shape (num_states, num_players), e.g. state-player values."""
         return np.array(values_flat).reshape((self.num_states, self.num_players))
 
-    def check_equilibrium(self, strategy_profile: ArrayLike) -> np.ndarray:
+    def check_equilibrium(self, strategy_profile: np.ndarray) -> np.ndarray:
         """Calculate "epsilon-equilibriumness" (maximum total utility each agent could gain by a one-shot deviation)
         of a given strategy profile.
         """
@@ -338,7 +338,7 @@ class SGameHomotopy:
         V_flat = self.game.flatten_values(V)
         return np.concatenate([sigma_flat, V_flat, [t]])
 
-    def y_to_sigma_V_t(self, y: np.ndarray, zeros: bool = False) -> tuple[np.ndarray, np.ndarray, float]:
+    def y_to_sigma_V_t(self, y: np.ndarray, zeros: bool = False) -> Tuple[np.ndarray, np.ndarray, float]:
         """Translate a vector y to arrays representing strategies sigma, values V and homotopy parameter t.
         """
         sigma = self.game.unflatten_strategies(y[0:self.game.num_actions_total], zeros=zeros)
@@ -431,7 +431,7 @@ class LogStratHomotopy(SGameHomotopy):
         V_flat = self.game.flatten_values(V)
         return np.concatenate([beta_flat, V_flat, [t]])
 
-    def y_to_sigma_V_t(self, y: np.ndarray, zeros: bool = False) -> tuple[np.ndarray, np.ndarray, float]:
+    def y_to_sigma_V_t(self, y: np.ndarray, zeros: bool = False) -> Tuple[np.ndarray, np.ndarray, float]:
         """Translate a vector y to arrays representing strategies sigma, values V and homotopy parameter t.
         (Version for homotopies operating on logarithmized strategies.)
         """

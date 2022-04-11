@@ -3,10 +3,9 @@
 # TODO: @Steffen, please re-write to remove x-transformer;
 # TODO: write a distance function instead if desired (don't think that makes sense for IPM though?)
 
-from typing import Union, Optional
+from typing import Union, Optional, Tuple
 
 import numpy as np
-from numpy.typing import ArrayLike
 
 from sgamesolver.sgame import SGame, SGameHomotopy
 from sgamesolver.homcont import HomCont
@@ -21,8 +20,8 @@ except ImportError:
 ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
 
-def IPM(game: SGame, initial_strategies: Union[str, ArrayLike] = "centroid",
-        weights: Optional[ArrayLike] = None, implementation='auto'):
+def IPM(game: SGame, initial_strategies: Union[str, np.ndarray] = "centroid",
+        weights: Optional[np.ndarray] = None, implementation='auto'):
     """Interior point method (IPM) homotopy for stochastic games."""
     if implementation == 'cython' or (implementation == 'auto' and ct):
         return IPM_ct(game, initial_strategies, weights)
@@ -39,8 +38,8 @@ def IPM(game: SGame, initial_strategies: Union[str, ArrayLike] = "centroid",
 class IPM_base(SGameHomotopy):
     """Interior point method homotopy: base class"""
 
-    def __init__(self, game: SGame, initial_strategies: Union[str, ArrayLike] = "centroid",
-                 weights: Optional[ArrayLike] = None) -> None:
+    def __init__(self, game: SGame, initial_strategies: Union[str, np.ndarray] = "centroid",
+                 weights: Optional[np.ndarray] = None) -> None:
         super().__init__(game)
 
         self.tracking_parameters['normal'] = {
@@ -109,7 +108,7 @@ class IPM_base(SGameHomotopy):
         V_flat = self.game.flatten_values(V)
         return np.concatenate([z_flat, V_flat, [t]])
 
-    def y_to_sigma_V_t(self, y: np.ndarray, zeros: bool = False) -> tuple[np.ndarray, np.ndarray, float]:
+    def y_to_sigma_V_t(self, y: np.ndarray, zeros: bool = False) -> Tuple[np.ndarray, np.ndarray, float]:
         sigma_V_t_flat = self.x_transformer(y)
         sigma = self.game.unflatten_strategies(sigma_V_t_flat[0:self.game.num_actions_total], zeros=zeros)
         V = self.game.unflatten_values(sigma_V_t_flat[self.game.num_actions_total:-1])
@@ -123,8 +122,8 @@ class IPM_base(SGameHomotopy):
 class IPM_ct(IPM_base):
     """Interior point method homotopy: Cython implementation"""
 
-    def __init__(self, game: SGame, initial_strategies: Union[str, ArrayLike] = "centroid",
-                 weights: Optional[ArrayLike] = None) -> None:
+    def __init__(self, game: SGame, initial_strategies: Union[str, np.ndarray] = "centroid",
+                 weights: Optional[np.ndarray] = None) -> None:
         super().__init__(game, initial_strategies, weights)
 
     def H(self, y: np.ndarray) -> np.ndarray:
@@ -144,8 +143,8 @@ class IPM_ct(IPM_base):
 class IPM_sp(IPM_base):
     """Interior point method homotopy: Sympy implementation"""
 
-    def __init__(self, game: SGame, initial_strategies: Union[str, ArrayLike] = "centroid",
-                 weights: Optional[ArrayLike] = None) -> None:
+    def __init__(self, game: SGame, initial_strategies: Union[str, np.ndarray] = "centroid",
+                 weights: Optional[np.ndarray] = None) -> None:
         super().__init__(game, initial_strategies, weights)
 
         # only import Sympy module on class instantiation

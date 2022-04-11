@@ -3,7 +3,6 @@
 from typing import Optional
 
 import numpy as np
-from numpy.typing import ArrayLike
 
 from sgamesolver.sgame import SGame, LogStratHomotopy
 from sgamesolver.homcont import HomCont
@@ -18,7 +17,7 @@ except ImportError:
 ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
 
-def LogGame(game: SGame, nu: Optional[ArrayLike] = None, implementation='auto'):
+def LogGame(game: SGame, nu: Optional[np.ndarray] = None, implementation='auto'):
     """LogGame homotopy for stochastic games."""
     if implementation == 'cython' or (implementation == 'auto' and ct):
         return LogGame_ct(game, nu)
@@ -32,7 +31,7 @@ def LogGame(game: SGame, nu: Optional[ArrayLike] = None, implementation='auto'):
 class LogGame_base(LogStratHomotopy):
     """Logarithmic game homotopy: base class"""
 
-    def __init__(self, game: SGame, nu: Optional[ArrayLike] = None) -> None:
+    def __init__(self, game: SGame, nu: Optional[np.ndarray] = None) -> None:
         super().__init__(game)
 
         self.tracking_parameters['normal'] = {
@@ -106,7 +105,7 @@ class LogGame_ct(LogGame_base):
 class LogGame_np(LogGame_base):
     """Logarithmic game homotopy: Numpy implementation"""
 
-    def __init__(self, game: SGame, nu: Optional[ArrayLike] = None) -> None:
+    def __init__(self, game: SGame, nu: Optional[np.ndarray] = None) -> None:
         """prepares the following:
             - H_mask, J_mask
             - T_H, T_J

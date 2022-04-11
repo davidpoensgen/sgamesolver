@@ -7,7 +7,6 @@ import warnings
 from typing import Union, Optional
 
 import numpy as np
-from numpy.typing import ArrayLike
 from scipy.optimize import brentq
 
 from sgamesolver.sgame import SGame, LogStratHomotopy
@@ -22,8 +21,8 @@ except ImportError:
 ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
 
-def LogTracing(game: SGame, rho: Union[str, ArrayLike] = "centroid",
-               nu: Optional[ArrayLike] = None, eta: Optional[float] = 1.0, implementation='auto'):
+def LogTracing(game: SGame, rho: Union[str, np.ndarray] = "centroid",
+               nu: Optional[np.ndarray] = None, eta: Optional[float] = 1.0, implementation='auto'):
     """Tracing homotopy for stochastic games."""
     if implementation == 'cython' or (implementation == 'auto' and ct):
         return LogTracing_ct(game, rho, nu, eta)
@@ -37,8 +36,8 @@ def LogTracing(game: SGame, rho: Union[str, ArrayLike] = "centroid",
 class LogTracing_base(LogStratHomotopy):
     """Tracing homotopy: base class"""
 
-    def __init__(self, game: SGame, rho: Union[str, ArrayLike] = "centroid",
-                 nu: Optional[ArrayLike] = None, eta: Optional[float] = 1.0) -> None:
+    def __init__(self, game: SGame, rho: Union[str, np.ndarray] = "centroid",
+                 nu: Optional[np.ndarray] = None, eta: Optional[float] = 1.0) -> None:
         super().__init__(game)
 
         self.tracking_parameters['normal'] = {
@@ -162,8 +161,8 @@ class LogTracing_base(LogStratHomotopy):
 class LogTracing_ct(LogTracing_base):
     """Tracing homotopy: Cython implementation"""
 
-    def __init__(self, game: SGame, rho: Union[str, ArrayLike] = "centroid",
-                 nu: Optional[ArrayLike] = None, eta: Optional[float] = 1.0):
+    def __init__(self, game: SGame, rho: Union[str, np.ndarray] = "centroid",
+                 nu: Optional[np.ndarray] = None, eta: Optional[float] = 1.0):
         super().__init__(game, rho, nu, eta)
         self.cache = _logtracing_ct.TracingCache()
 
@@ -181,8 +180,8 @@ class LogTracing_ct(LogTracing_base):
 class LogTracing_np(LogTracing_base):
     """Tracing homotopy: Numpy implementation"""
 
-    def __init__(self, game: SGame, rho: Union[str, ArrayLike] = "centroid",
-                 nu: Optional[ArrayLike] = None, eta: Optional[float] = 1.0):
+    def __init__(self, game: SGame, rho: Union[str, np.ndarray] = "centroid",
+                 nu: Optional[np.ndarray] = None, eta: Optional[float] = 1.0):
         """prepares the following:
             - H_mask, J_mask
             - T_H, T_J
