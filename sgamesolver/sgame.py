@@ -298,7 +298,7 @@ class SGameHomotopy:
         pass
 
     def solve(self) -> None:
-        """Start the solver and stores the equilibrium if it is successful."""
+        """Start the solver and store the equilibrium if solver is successful."""
         if not self.solver:
             print('Please run .solver_setup() first to set up the solver.')
             return

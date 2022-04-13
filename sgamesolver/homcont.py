@@ -890,7 +890,8 @@ class DebugLog:
     def __init__(self, solver: HomCont):
         self.solver = solver
         self.index = 0
-        self.data = np.zeros((8, 1000))
+        self.data = np.zeros((8, 1000), order='f')
+        # f-order: necessary so that data.resize increases dim1 without affecting existing entries
 
     @property
     def step(self):

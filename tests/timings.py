@@ -46,7 +46,7 @@ class HomotopyTimer:
             if verbose:
                 toc = datetime.now()
                 sys.stdout.write(f"\r{homotopy} - (S,I,A) = ({num_s},{num_p},{num_a}): Starting timing #{rep+1},"
-                                 f" elapsed = {str(toc-tic).split('.')[0]}            ")
+                                 f" elapsed = {str(toc-tic).split('.')[0]}")
                 sys.stdout.flush()
 
             timings.loc[idx, 'timestamp'] = datetime.now().strftime('%Y-%m-%d %H:%M')
