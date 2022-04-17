@@ -197,10 +197,9 @@ class HomCont:
 
         self.check_inputs()
 
+        self.debug = None  # type: DebugLog
         self.store_path = False
-        self.debug = None
-
-        self.path = None
+        self.path = None  # type: HomPath
         self.store_cond = False
 
         self.test_segment_jumping = False
@@ -300,9 +299,10 @@ class HomCont:
 
         self.converged = False
 
-        while not self.converged:
-            # try-except block: allows sub-functions to exit the main loop by raising ContinuationFailed
-            try:
+        # try-except block: sub-functions may exit the main loop by raising ContinuationFailed
+        try:
+            while not self.converged:
+
                 self.step += 1
 
                 self.predict()
@@ -342,8 +342,8 @@ class HomCont:
                 if self.step >= self.max_steps:
                     raise ContinuationFailed('max_steps')
 
-            except ContinuationFailed as exception:
-                return self._report_result(exception=exception)
+        except ContinuationFailed as exception:
+            return self._report_result(exception=exception)
 
     def predict(self):
         """Compute predictor point y_pred, starting at y."""
@@ -377,6 +377,13 @@ class HomCont:
 
         # corrector loop
         while np.max(np.abs(H_corr)) > self.corrector_tol:
+
+            if self.corr_step + 1 > self.corrector_steps_max:
+                self.corrector_fail_steps = True
+                if self.verbose >= 3:
+                    self._report_corrector_fail()
+                return
+
             self.corr_step += 1
 
             if self.quasi_newton:
@@ -391,29 +398,12 @@ class HomCont:
             corr_ratio = corr_dist / corr_dist_old
             corr_dist_old = corr_dist
 
-            # If corrector step violates any restriction given by parameters:
-            # Correction failed, reduce stepsize and predict again.
             # Note: corrector_distance_max has to be relaxed for large ds: thus, * max(ds, 1)
-            # TODO: current implementation of corrector_steps_max is not sensible: checks violation after step?
-            # TODO: kind of irrelevant, since the steps criterion never seems to trigger anyway
             self.corrector_fail_distance = corr_dist > self.corrector_distance_max * max(self.ds, 1)
             self.corrector_fail_ratio = corr_ratio > self.corrector_ratio_max
-            self.corrector_fail_steps = self.corr_step > self.corrector_steps_max
-            if self.corrector_fail_distance or self.corrector_fail_ratio or self.corrector_fail_steps:
+            if self.corrector_fail_distance or self.corrector_fail_ratio:
                 if self.verbose >= 3:
-                    err_msg = f'Corrector loop failed. Step {self.corr_step}:'
-                    if self.corrector_fail_distance:
-                        err_msg += f' corr_dist = {corr_dist/max(self.ds, 1):0.2f} ' \
-                                   f'(max: {self.corrector_distance_max:0.2f});'
-                    if self.corrector_fail_ratio:
-                        err_msg += f' corr_ratio = {corr_ratio:0.2f} (max: {self.corrector_ratio_max:0.2f});'
-                    if self.corrector_fail_steps:
-                        err_msg += f' corr_step = {self.corr_step} (max: {self.corrector_steps_max});'
-                    cond = np.linalg.cond(self.J_pred)
-                    err_msg += f' cond(J_pred) = {cond:#.4g}'
-                    self._report_step()
-                    print(f'\nStep {self.step:5d}: {err_msg}')
-
+                    self._report_corrector_fail(corr_dist, corr_ratio)
                 return
 
             # If corrector has not failed: get new H
@@ -637,6 +627,20 @@ class HomCont:
         if self.store_cond:
             output += f', Cond(J) = {self.cond:#6.4g}'
         print(output, end='', flush=True)
+
+    def _report_corrector_fail(self, corr_dist=None, corr_ratio=None):
+        err_msg = f'Corrector loop failed. Corr_step {self.corr_step}:'
+        if self.corrector_fail_distance:
+            err_msg += f' corr_dist = {corr_dist / max(self.ds, 1):0.2f} ' \
+                       f'(max: {self.corrector_distance_max:0.2f});'
+        if self.corrector_fail_ratio:
+            err_msg += f' corr_ratio = {corr_ratio:0.2f} (max: {self.corrector_ratio_max:0.2f});'
+        if self.corrector_fail_steps:
+            err_msg += f' (max: {self.corrector_steps_max});'
+        cond = np.linalg.cond(self.J_pred)
+        err_msg += f' cond(J_pred) = {cond:#.4g}'
+        self._report_step()
+        print(f'\nStep {self.step:5d}: {err_msg}')
 
     def _load_state(self, y: np.ndarray, sign: int = None, s: float = None, step: int = 0, ds: float = None, **kwargs):
         """Load y and other state variables. Prepare to start continuation at this point."""
@@ -890,8 +894,9 @@ class DebugLog:
     def __init__(self, solver: HomCont):
         self.solver = solver
         self.index = 0
-        self.data = np.zeros((8, 1000), order='f')
-        # f-order: necessary so that data.resize increases dim1 without affecting existing entries
+        self.data = np.zeros((9, 1000), order='f')
+        # f-order: necessary so that data.resize increases dim 1 without affecting existing columns
+        self.track_determinant = False
 
     @property
     def step(self):
@@ -925,6 +930,10 @@ class DebugLog:
     def t_direction(self):
         return self.data[7, :self.index]
 
+    @property
+    def determinant(self):
+        return self.data[8, :self.index]
+
     def update(self):
         self.data[0, self.index] = self.solver.step
         self.data[1, self.index] = self.solver.corr_step
@@ -935,6 +944,11 @@ class DebugLog:
             self.data[5, self.index] = self.solver.det_ratio
         self.data[6, self.index] = self.solver.ds
         self.data[7, self.index] = self.solver.t_direction
+        if self.track_determinant:
+            try:
+                self.data[8, self.index] = np.linalg.det(np.vstack([self.solver.J, self.solver.tangent]))
+            except Exception:
+                pass
 
         self.index += 1
         if self.index >= self.data.shape[1]:

@@ -381,6 +381,8 @@ class SGameHomotopy:
         elif x_axis == "step":
             x_plot = path.step[rows]
             x_label = "step number"
+        else:
+            raise ValueError(f'"{x_axis}" is not a valid value for parameter x_axis. Try "s", "t", or "step".')
 
         # get sigma from y
         num_rows = len(x_plot)
