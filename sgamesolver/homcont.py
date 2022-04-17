@@ -154,6 +154,8 @@ class HomCont:
         self.ds_inflation_factor = 1.2
         self.ds_deflation_factor = 0.5
         self.max_corr_steps_for_ds_inflation = 9
+        self.min_successes_for_ds_inflation = 0  # TODO: clean
+        self.consecutive_successes = 0  # TODO: clean
         self.corrector_steps_max = 20
         self.corrector_distance_max = 0.3
         self.corrector_ratio_max = 0.3
@@ -479,14 +481,19 @@ class HomCont:
         If t_target is finite, stepsize is capped so that the predictor will not cross t_target.
         """
 
-        if self.corrector_success and self.corr_step <= self.max_corr_steps_for_ds_inflation:
-            self.ds = min(self.ds * self.ds_inflation_factor, self.ds_max)
-
-        elif not self.corrector_success:
-            if self.ds > self.ds_min:
-                self.ds = max(self.ds_deflation_factor * self.ds, self.ds_min)
-            else:
+        if not self.corrector_success:
+            self.consecutive_successes = 0
+            if self.ds <= self.ds_min:
                 raise ContinuationFailed("corrector")
+            self.ds = max(self.ds_deflation_factor * self.ds, self.ds_min)
+            return
+
+        self.consecutive_successes += 1
+
+        # increase ds if conditions are met
+        if self.corr_step <= self.max_corr_steps_for_ds_inflation and \
+                self.consecutive_successes >= self.min_successes_for_ds_inflation:
+            self.ds = min(self.ds * self.ds_inflation_factor, self.ds_max)
 
         if not np.isinf(self.t_target):
             try:
