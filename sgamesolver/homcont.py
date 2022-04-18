@@ -130,10 +130,9 @@ class HomCont:
         else:
             try:
                 import numdifftools as nd
+                self.J_func = nd.Jacobian(H)
             except ModuleNotFoundError:
                 raise ModuleNotFoundError('If J is not provided by user, package numdifftools is required.')
-            else:
-                self.J_func = nd.Jacobian(H)
         self.y = y0.squeeze()
 
         self.t_target = t_target
@@ -153,9 +152,8 @@ class HomCont:
         self.ds_initial = 0.01
         self.ds_inflation_factor = 1.2
         self.ds_deflation_factor = 0.5
-        self.max_corr_steps_for_ds_inflation = 9
-        self.min_successes_for_ds_inflation = 0  # TODO: clean
-        self.consecutive_successes = 0  # TODO: clean
+        self.ds_inflation_max_corr_steps = 9
+        self.ds_inflation_min_consecutive_successes = 0  # TODO: clean
         self.corrector_steps_max = 20
         self.corrector_distance_max = 0.3
         self.corrector_ratio_max = 0.3
@@ -176,6 +174,7 @@ class HomCont:
         self.corrector_fail_distance = False
         self.corrector_fail_ratio = False
         self.corrector_fail_steps = False
+        self.consecutive_successes = 0  # TODO: clean
         self.converged = False
         self.det_ratio = None
 
@@ -467,7 +466,7 @@ class HomCont:
     def adapt_stepsize(self):
         """Adapt stepsize at the end of a predictor-corrector cycle:
         Increase ds if:
-           - corrector step successful & took at most max_corr_steps_for_ds_inflation iterates (= 9 by default)
+           - corrector step successful & took at most ds_inflation_max_corr_steps iterates (= 9 by default)
         Maintain ds if:
             - corrector step successful, but required 10+ iterates
         Decrease ds if:
@@ -491,10 +490,11 @@ class HomCont:
         self.consecutive_successes += 1
 
         # increase ds if conditions are met
-        if self.corr_step <= self.max_corr_steps_for_ds_inflation and \
-                self.consecutive_successes >= self.min_successes_for_ds_inflation:
+        if (self.corr_step <= self.ds_inflation_max_corr_steps and
+                self.consecutive_successes >= self.ds_inflation_min_consecutive_successes):
             self.ds = min(self.ds * self.ds_inflation_factor, self.ds_max)
 
+        # cap to avoid crossing t_target if necessary
         if not np.isinf(self.t_target):
             try:
                 cap = (self.t_target - self.y[-1]) / (self.tangent[-1] * self.sign)
@@ -649,23 +649,15 @@ class HomCont:
         self._report_step()
         print(f'\nStep {self.step:5d}: {err_msg}')
 
-    def _load_state(self, y: np.ndarray, sign: int = None, s: float = None, step: int = 0, ds: float = None, **kwargs):
+    def _load_state(self, y: np.ndarray, sign: int, s: float, step: int, ds: float, consecutive_successes: float,
+                    **kwargs):
         """Load y and other state variables. Prepare to start continuation at this point."""
         self.y = y
-        if sign is None or sign == 0 or np.isnan(sign):
-            self.set_greedy_sign()
-        else:
-            self.sign = np.sign(sign)
-
-        if s is not None and not np.isnan(s):
-            self.s = s
-        if step is not None and not np.isnan(step):
-            self.step = int(step)
-
-        if ds is not None:
-            self.ds = ds
-        else:
-            self.ds = self.ds_initial
+        self.sign = np.sign(sign)
+        self.s = s
+        self.step = int(step)
+        self.ds = ds
+        self.consecutive_successes = int(consecutive_successes)
 
         self.check_inputs()
 
@@ -699,6 +691,7 @@ class HomCont:
                      's': self.s,
                      'sign': self.sign,
                      'ds': self.ds,
+                     'consecutive_successes': self.consecutive_successes,
                      'y': self.y.tolist()}
             json.dump(state, file, indent=4)
             print(f'Current state saved as {filename}.')
@@ -777,6 +770,7 @@ class HomPath:
         self.sign = np.nan * np.empty(shape=max_steps)
         self.step = np.nan * np.empty(shape=max_steps)
         self.ds = np.nan * np.empty(shape=max_steps)
+        self.consecutive_successes = np.nan * np.empty(shape=max_steps)
 
         self.index = 0
         self.downsample_frequency = 10
@@ -790,6 +784,7 @@ class HomPath:
         self.sign[self.index] = self.solver.sign
         self.step[self.index] = self.solver.step
         self.ds[self.index] = self.solver.ds
+        self.consecutive_successes[self.index] = self.solver.consecutive_successes
 
         self.index += 1
         if self.index >= self.max_steps:
@@ -888,7 +883,8 @@ class HomPath:
                      'sign': self.sign[index][0],
                      'step': self.step[index][0],
                      'index': int(index),
-                     'ds': self.ds[index][0]
+                     'ds': self.ds[index][0],
+                     'consecutive_successes': self.consecutive_successes[index][0]
                      }
             return state
 
