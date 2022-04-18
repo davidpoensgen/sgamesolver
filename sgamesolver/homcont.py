@@ -129,8 +129,8 @@ class HomCont:
             self.J_func = J
         else:
             try:
-                import numdifftools as nd
-                self.J_func = nd.Jacobian(H)
+                import numdifftools
+                self.J_func = numdifftools.Jacobian(H)
             except ModuleNotFoundError:
                 raise ModuleNotFoundError('If J is not provided by user, package numdifftools is required.')
         self.y = y0.squeeze()
@@ -198,6 +198,7 @@ class HomCont:
 
         self.check_inputs()
 
+        # noinspection PyTypeChecker
         self.debug = None  # type: DebugLog
         self.store_path = False
         self.path = None  # type: HomPath
@@ -663,7 +664,7 @@ class HomCont:
 
     def return_to_step(self, step_no):
         """Loads state at step_no from stored path, or if not present, the last step preceding it."""
-        if self.store_path:
+        if self.path:
             state = self.path.get_step(step_no)
             if state is not None:
                 self._load_state(**state)
@@ -949,7 +950,8 @@ class DebugLog:
         self.data[7, self.index] = self.solver.t_direction
         if self.track_determinant:
             try:
-                self.data[8, self.index] = np.linalg.det(np.vstack([self.solver.J, self.solver.tangent]))
+                self.data[8, self.index] = np.linalg.det(np.vstack([self.solver.J,
+                                                                    self.solver.tangent * self.solver.sign]))
             except Exception:
                 pass
 
