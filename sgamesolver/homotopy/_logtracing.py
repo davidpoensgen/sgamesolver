@@ -22,7 +22,7 @@ ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
 
 def LogTracing(game: SGame, rho: Union[str, np.ndarray] = "centroid",
-               nu: Optional[np.ndarray] = None, eta: Optional[float] = 1.0, implementation='auto'):
+               nu: Optional[np.ndarray] = None, eta: float = 1.0, implementation='auto'):
     """Tracing homotopy for stochastic games."""
     if implementation == 'cython' or (implementation == 'auto' and ct):
         return LogTracing_ct(game, rho, nu, eta)
@@ -37,7 +37,7 @@ class LogTracing_base(LogStratHomotopy):
     """Tracing homotopy: base class"""
 
     def __init__(self, game: SGame, rho: Union[str, np.ndarray] = "centroid",
-                 nu: Optional[np.ndarray] = None, eta: Optional[float] = 1.0) -> None:
+                 nu: Optional[np.ndarray] = None, eta: float = 1.0) -> None:
         super().__init__(game)
 
         self.tracking_parameters['normal'] = {
@@ -112,7 +112,7 @@ class LogTracing_base(LogStratHomotopy):
                               parameters=self.tracking_parameters['normal'],
                               distance_function=self.sigma_distance)
 
-    def find_y0(self, tol: Union[float, int] = 1e-12, max_iter: int = 10000) -> np.ndarray:
+    def find_y0(self, tol: float = 1e-12, max_iter: int = 10000) -> np.ndarray:
         """Value function iteration."""
 
         num_s, num_p, nums_a = self.game.num_states, self.game.num_players, self.game.nums_actions
@@ -162,7 +162,7 @@ class LogTracing_ct(LogTracing_base):
     """Tracing homotopy: Cython implementation"""
 
     def __init__(self, game: SGame, rho: Union[str, np.ndarray] = "centroid",
-                 nu: Optional[np.ndarray] = None, eta: Optional[float] = 1.0):
+                 nu: Optional[np.ndarray] = None, eta: float = 1.0):
         super().__init__(game, rho, nu, eta)
         self.cache = _logtracing_ct.TracingCache()
 
@@ -181,7 +181,7 @@ class LogTracing_np(LogTracing_base):
     """Tracing homotopy: Numpy implementation"""
 
     def __init__(self, game: SGame, rho: Union[str, np.ndarray] = "centroid",
-                 nu: Optional[np.ndarray] = None, eta: Optional[float] = 1.0):
+                 nu: Optional[np.ndarray] = None, eta: float = 1.0):
         """prepares the following:
             - H_mask, J_mask
             - T_H, T_J
