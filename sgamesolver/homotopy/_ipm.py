@@ -20,7 +20,7 @@ except ImportError:
 ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
 
-def IPM(game: SGame, initial_strategies: Union[str, np.ndarray] = "centroid",
+def IPM(game: SGame, initial_strategies: Union[str, np.ndarray] = 'centroid',
         weights: Optional[np.ndarray] = None, implementation='auto'):
     """Interior point method (IPM) homotopy for stochastic games."""
     if implementation == 'cython' or (implementation == 'auto' and ct):

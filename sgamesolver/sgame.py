@@ -1,7 +1,6 @@
 """Classes for stochastic game and corresponding homotopy."""
 from typing import Union, List, Tuple, Optional
 import numpy as np
-from sgamesolver import HomCont
 
 ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
@@ -281,7 +280,7 @@ class SGameHomotopy:
         self.game = game
         self.y0 = None
         self.tracking_parameters = {}
-        self.solver = None  # type: Optional[HomCont]
+        self.solver = None  # type: Optional[sgamesolver.HomCont]
         self.equilibrium = None  # type: Optional[StrategyProfile]
 
     def solver_setup(self) -> None:
@@ -379,7 +378,7 @@ class SGameHomotopy:
             x_plot = path.step[rows]
             x_label = "step number"
         else:
-            raise ValueError(f'"{x_axis}" is not a valid value for parameter x_axis. Try "s", "t", or "step".')
+            raise ValueError(f'"{x_axis}" is not a valid value for parameter x_axis. Allowed are "s", "t", or "step".')
 
         # get sigma from y
         num_rows = len(x_plot)
