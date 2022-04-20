@@ -146,17 +146,21 @@ class HomCont:
 
         # set default parameters
         self.convergence_tol = 1e-7
-        self.corrector_tol = 1e-7
+
         self.ds_min = 1e-9
         self.ds_max = 1000
         self.ds_initial = 0.01
-        self.ds_inflation_factor = 1.2
         self.ds_deflation_factor = 0.5
-        self.ds_inflation_max_corr_steps = 9
-        self.ds_inflation_min_consecutive_successes = 0  # TODO: clean
-        self.corrector_steps_max = 20
+        self.ds_inflation_factor = 1.2
+        self.ds_inflation_max_corrector_steps = 9
+        self.ds_inflation_min_consecutive_successes = 5
+        self.ds = self.ds_initial
+
+        self.corrector_tol = 1e-7
+        self.corrector_steps_max = 10
         self.corrector_distance_max = 0.3
         self.corrector_ratio_max = 0.3
+
         self.detJ_change_max = 0.5
         self.bifurcation_angle_min = 177.5
 
@@ -164,24 +168,27 @@ class HomCont:
         self.set_greedy_sign()
 
         self.tangent_old = self.tangent
-        self.ds = self.ds_initial
 
         # attributes to be used later
         self.start_time = None
+        self.converged = False
         self.step = 0
         self.s = 0.0
+
         self.corrector_success = False
         self.corrector_fail_distance = False
         self.corrector_fail_ratio = False
         self.corrector_fail_steps = False
-        self.consecutive_successes = 0  # TODO: clean
-        self.converged = False
-        self.det_ratio = None
+        self.corrector_step = 0
+        self.consecutive_successes = 0
+        self.det_ratio = 1
+
+        self.quasi_newton = True
+        self.test_segment_jumping = False
 
         self.H_pred = None
         self.y_corr = None
         self.J_corr = None
-        self.corr_step = None
 
         # storage vars and flags for cached attributes
         self._y_pred = None
@@ -198,14 +205,10 @@ class HomCont:
 
         self.check_inputs()
 
-        # noinspection PyTypeChecker
         self.debug = None  # type: DebugLog
         self.store_path = False
         self.path = None  # type: HomPath
         self.store_cond = False
-
-        self.test_segment_jumping = False
-        self.quasi_newton = True
 
         # overwrite defaults with user-provided parameters if present
         self.set_parameters(parameters, **kwargs)
@@ -372,7 +375,7 @@ class HomCont:
         self.corrector_fail_ratio = False
         self.corrector_fail_steps = False
         corr_dist_old = np.inf
-        self.corr_step = 0
+        self.corrector_step = 0
 
         self.y_corr = self.y_pred
         H_corr = self.H_pred
@@ -380,13 +383,13 @@ class HomCont:
         # corrector loop
         while np.max(np.abs(H_corr)) > self.corrector_tol:
 
-            if self.corr_step + 1 > self.corrector_steps_max:
+            if self.corrector_step + 1 > self.corrector_steps_max:
                 self.corrector_fail_steps = True
                 if self.verbose >= 3:
                     self._report_corrector_fail()
                 return
 
-            self.corr_step += 1
+            self.corrector_step += 1
 
             if self.quasi_newton:
                 correction = np.dot(self.Jpinv, H_corr)
@@ -467,7 +470,7 @@ class HomCont:
     def adapt_stepsize(self):
         """Adapt stepsize at the end of a predictor-corrector cycle:
         Increase ds if:
-           - corrector step successful & took at most ds_inflation_max_corr_steps iterates (= 9 by default)
+           - corrector step successful & took at most ds_inflation_max_corrector_steps iterates (= 9 by default)
         Maintain ds if:
             - corrector step successful, but required 10+ iterates
         Decrease ds if:
@@ -491,7 +494,7 @@ class HomCont:
         self.consecutive_successes += 1
 
         # increase ds if conditions are met
-        if (self.corr_step <= self.ds_inflation_max_corr_steps and
+        if (self.corrector_step <= self.ds_inflation_max_corrector_steps and
                 self.consecutive_successes >= self.ds_inflation_min_consecutive_successes):
             self.ds = min(self.ds * self.ds_inflation_factor, self.ds_max)
 
@@ -637,7 +640,7 @@ class HomCont:
         print(output, end='', flush=True)
 
     def _report_corrector_fail(self, corr_dist=None, corr_ratio=None):
-        err_msg = f'Corrector loop failed. Corr_step {self.corr_step}:'
+        err_msg = f'Corrector loop failed. corrector_step {self.corrector_step}:'
         if self.corrector_fail_distance:
             err_msg += f' corr_dist = {corr_dist / max(self.ds, 1):0.2f} ' \
                        f'(max: {self.corrector_distance_max:0.2f});'
@@ -940,7 +943,7 @@ class DebugLog:
 
     def update(self):
         self.data[0, self.index] = self.solver.step
-        self.data[1, self.index] = self.solver.corr_step
+        self.data[1, self.index] = self.solver.corrector_step
         self.data[2, self.index] = self.solver.corrector_fail_steps
         self.data[3, self.index] = self.solver.corrector_fail_distance
         self.data[4, self.index] = self.solver.corrector_fail_ratio
