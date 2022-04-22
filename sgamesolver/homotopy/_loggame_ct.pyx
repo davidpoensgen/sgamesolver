@@ -89,9 +89,9 @@ def u_tilde_sijab(np.ndarray[np.float64_t, ndim=1] u_tilde_ravel, np.ndarray[np.
                             continue
                         temp_prob *= sigma[state, other, loop_profile[other+1]]
 
-                    out_[state, player1, player2, loop_profile[player1+1], loop_profile[player2+1]] += (
+                    out_[state, player1, player2, loop_profile[player1+1], loop_profile[player2+1]] += \
                         temp_prob * u_tilde_ravel[flat_index]
-                        )
+
                     flat_index +=1  
 
                     loop_profile[num_p] +=1

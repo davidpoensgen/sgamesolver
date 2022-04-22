@@ -1,6 +1,7 @@
 """Classes for stochastic game and corresponding homotopy."""
 from typing import Union, List, Tuple, Optional
 import numpy as np
+from .homcont import HomCont
 
 ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
@@ -280,7 +281,7 @@ class SGameHomotopy:
         self.game = game
         self.y0 = None
         self.tracking_parameters = {}
-        self.solver = None  # type: Optional[sgamesolver.HomCont]
+        self.solver = None  # type: Optional[HomCont]
         self.equilibrium = None  # type: Optional[StrategyProfile]
 
     def solver_setup(self) -> None:

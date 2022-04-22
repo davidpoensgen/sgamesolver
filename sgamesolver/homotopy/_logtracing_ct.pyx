@@ -1,3 +1,5 @@
+# cython: profile=True
+
 import cython
 import numpy as np
 cimport numpy as np
@@ -375,9 +377,8 @@ cdef np.ndarray[np.float64_t, ndim=5] u_tilde_sijab(np.ndarray[np.float64_t, ndi
                             continue
                         temp_prob *= sigma[state, other, loop_profile[other + 1]]
 
-                    out_[state, player1, player2, loop_profile[player1 + 1], loop_profile[player2 + 1]] += (
-                            temp_prob * u_tilde_ravel[flat_index]
-                    )
+                    out_[state, player1, player2, loop_profile[player1 + 1], loop_profile[player2 + 1]] += \
+                        temp_prob * u_tilde_ravel[flat_index]
                     flat_index += 1
 
                     loop_profile[num_p] += 1

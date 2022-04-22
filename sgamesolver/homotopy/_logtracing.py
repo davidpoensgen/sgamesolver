@@ -22,22 +22,22 @@ ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
 
 def LogTracing(game: SGame, rho: Union[str, np.ndarray] = "centroid",
-               nu: Optional[np.ndarray] = None, eta: float = 1.0, implementation='auto'):
+               nu: Optional[np.ndarray] = None, eta: float = 1.0, eta_fix: bool = False, implementation='auto'):
     """Tracing homotopy for stochastic games."""
     if implementation == 'cython' or (implementation == 'auto' and ct):
-        return LogTracing_ct(game, rho, nu, eta)
+        return LogTracing_ct(game, rho, nu, eta, eta_fix)
     else:
         if implementation == 'auto' and not ct:
             print('Defaulting to numpy implementation of LogTracing, because cython version is not installed. Numpy '
                   'may be substantially slower. For help setting up the cython version, please consult the manual.')
-        return LogTracing_np(game, rho, nu, eta)
+        return LogTracing_np(game, rho, nu, eta, eta_fix)
 
 
 class LogTracing_base(LogStratHomotopy):
     """Tracing homotopy: base class"""
 
     def __init__(self, game: SGame, rho: Union[str, np.ndarray] = "centroid",
-                 nu: Optional[np.ndarray] = None, eta: float = 1.0) -> None:
+                 nu: Optional[np.ndarray] = None, eta: float = 1.0, eta_fix: bool = False) -> None:
         super().__init__(game)
 
         self.tracking_parameters['normal'] = {
@@ -49,7 +49,7 @@ class LogTracing_base(LogStratHomotopy):
             'ds_min': 1e-9,
             'ds_max': 100,
             'corrector_steps_max': 20,
-            'corrector_distance_max': .5,
+            'corrector_distance_max': 0.5,
             'corrector_ratio_max': 0.5,
             'detJ_change_max': 1.5,
             'bifurcation_angle_min': 175,
@@ -83,7 +83,7 @@ class LogTracing_base(LogStratHomotopy):
             self.nu = nu
 
         self.eta = eta
-        self.eta_fix = False
+        self.eta_fix = eta_fix
 
         # prepare payoffs and transition given other players follow prior
         num_s, num_p, num_a_max = self.game.num_states, self.game.num_players, self.game.num_actions_max
@@ -162,8 +162,8 @@ class LogTracing_ct(LogTracing_base):
     """Tracing homotopy: Cython implementation"""
 
     def __init__(self, game: SGame, rho: Union[str, np.ndarray] = "centroid",
-                 nu: Optional[np.ndarray] = None, eta: float = 1.0):
-        super().__init__(game, rho, nu, eta)
+                 nu: Optional[np.ndarray] = None, eta: float = 1.0, eta_fix: bool = False):
+        super().__init__(game, rho, nu, eta, eta_fix)
         self.cache = _logtracing_ct.TracingCache()
 
     def H(self, y: np.ndarray) -> np.ndarray:
@@ -181,13 +181,13 @@ class LogTracing_np(LogTracing_base):
     """Tracing homotopy: Numpy implementation"""
 
     def __init__(self, game: SGame, rho: Union[str, np.ndarray] = "centroid",
-                 nu: Optional[np.ndarray] = None, eta: float = 1.0):
+                 nu: Optional[np.ndarray] = None, eta: float = 1.0, eta_fix: bool = False):
         """prepares the following:
             - H_mask, J_mask
             - T_H, T_J
             - einsum_eqs
         """
-        super().__init__(game, rho, nu, eta)
+        super().__init__(game, rho, nu, eta, eta_fix)
 
         num_s, num_p, nums_a = self.game.num_states, self.game.num_players, self.game.nums_actions
         num_a_max = self.game.num_actions_max
