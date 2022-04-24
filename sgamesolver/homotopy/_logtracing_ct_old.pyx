@@ -348,69 +348,48 @@ cdef np.ndarray[np.float64_t, ndim=3] u_tilde_sia(np.ndarray[np.float64_t, ndim=
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cpdef np.ndarray[np.float64_t, ndim=5] u_tilde_sijab(np.ndarray[np.float64_t, ndim=1] u_tilde_ravel,
+cdef np.ndarray[np.float64_t, ndim=5] u_tilde_sijab(np.ndarray[np.float64_t, ndim=1] u_tilde_ravel,
                                                     np.ndarray[np.float64_t, ndim=3] sigma,
                                                     int num_s, int num_p, int [:,::1] nums_a,
                                                     int num_a_max):
     """Payoffs u_tilde_[s,i,i',a,a'] (including continuation values) of player i using pure action a in state s,
     given player i' uses pure action a' and other players use mixed strategy profile sigma[s,i,a].
+
+    (The case i'=i is explicitly included.)
     """
 
     cdef:
         np.ndarray[np.float64_t, ndim=5] out_ = np.zeros((num_s, num_p, num_p, num_a_max, num_a_max))
-        np.ndarray[np.int32_t, ndim = 1] loop_profile = np.zeros(num_p + 1, dtype=np.int32)
+        int [:] loop_profile = np.zeros(num_p + 1, dtype=np.int32)
         double temp_prob
-        int s, p0, p1, a0, a1, n
-        int flat_index, index_offset
+        int state, player1, player2, other, n
+        int flat_index = 0
 
-        np.ndarray[np.int32_t, ndim = 1] u_shape = np.array((num_s, num_p, *(num_a_max,) * num_p), dtype=np.int32)
-        np.ndarray[np.int32_t, ndim = 1] u_strides = np.ones(2 + num_p, dtype=np.int32)
+    for state in range(num_s):
+        for player1 in range(num_p):
+            for player2 in range(num_p):
+                loop_profile[0: num_p + 1] = 0
+                while loop_profile[0] == 0:
 
-    # strides: offsets of the specific indices in u_ravel. flat_index = multi-index (dot) u_strides
-    for n in range(num_p+1, 0, -1):
-        u_strides[:n] *= u_shape[n]
-
-    for s in range(num_s):
-        loop_profile[:] = 0
-        while loop_profile[0] == 0:
-
-            for p0 in range(num_p):
-                if loop_profile[p0+1] != 0:
-                    continue
-                for p1 in range(p0+1, num_p):
-                    if loop_profile[p1+1] != 0:
-                        continue
-
-                    # get temp_prob for all others; flat_index for p0.
-                    # can skip p0 and p1: action is 0 for both (in loop_profile). temp_prob refers to others anyway.
-                    temp_prob = 1.0
-                    flat_index = s * u_strides[0] + p0 * u_strides[1]
-                    for n in range(num_p):
-                        if n == p0 or n == p1:
+                    temp_prob = 1
+                    for other in range(num_p):
+                        if other == player1 or other == player2:
                             continue
-                        flat_index += loop_profile[n + 1] * u_strides[n + 2]
-                        temp_prob *= sigma[s, n, loop_profile[n + 1]]
-                    # index_offset is the difference of indices: u[s,p1,...] - [s,p0,...]
-                    index_offset = (p1-p0) * u_strides[1]
+                        temp_prob *= sigma[state, other, loop_profile[other + 1]]
 
-                    # now : loop over both players' actions
-                    for a0 in range(nums_a[s, p0]):
-                        for a1 in range(nums_a[s, p1]):
-                            # update out-array for p0:
-                            out_[s, p0, p1, a0, a1] += u_tilde_ravel[flat_index]*temp_prob
-                            # same, but for p1: (reverse p0,p1, a0,a1, taking offset into account)
-                            out_[s, p1, p0, a1, a0] += u_tilde_ravel[flat_index + index_offset]*temp_prob
+                    out_[state, player1, player2, loop_profile[player1 + 1], loop_profile[player2 + 1]] += \
+                        temp_prob * u_tilde_ravel[flat_index]
+                    flat_index += 1
 
-                            flat_index += u_strides[p1+2]
-                        flat_index += u_strides[p0+2] - nums_a[s, p1] * u_strides[p1+2]
+                    loop_profile[num_p] += 1
+                    for n in range(num_p):
+                        if loop_profile[num_p - n] == nums_a[state, num_p - n - 1]:
+                            loop_profile[num_p - n - 1] += 1
+                            loop_profile[num_p - n] = 0
+                            flat_index += (num_a_max - nums_a[state, num_p - n - 1]) * num_a_max ** n
 
-            loop_profile[num_p] += 1
-            for n in range(num_p):
-                if loop_profile[num_p - n] == nums_a[s, num_p - n - 1]:
-                    loop_profile[num_p - n - 1] += 1
-                    loop_profile[num_p - n] = 0
-                else:
-                    break
+                if player2 < num_p - 1:
+                    flat_index -= num_a_max ** num_p
 
     return out_
 
