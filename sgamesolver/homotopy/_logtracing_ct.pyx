@@ -315,7 +315,7 @@ cpdef np.ndarray[np.float64_t, ndim=3] u_tilde_sia(np.ndarray[np.float64_t, ndim
         np.ndarray[np.int32_t, ndim = 1] u_shape = np.array((num_s, num_p, *(num_a_max,) * num_p), dtype=np.int32)
         np.ndarray[np.int32_t, ndim = 1] u_strides = np.ones(2 + num_p, dtype=np.int32)
 
-    # strides: multi_index dot strides = flatindex
+    # strides: offsets of the respective indices in u_ravel, so that: flat_index = multi-index (dot) u_strides
     for n in range(num_p+1, 0, -1):
         u_strides[:n] *= u_shape[n]
 
@@ -371,7 +371,7 @@ cpdef np.ndarray[np.float64_t, ndim=5] u_tilde_sijab(np.ndarray[np.float64_t, nd
         np.ndarray[np.int32_t, ndim = 1] u_shape = np.array((num_s, num_p, *(num_a_max,) * num_p), dtype=np.int32)
         np.ndarray[np.int32_t, ndim = 1] u_strides = np.ones(2 + num_p, dtype=np.int32)
 
-    # strides: offsets of the specific indices in u_ravel, so that: flat_index = multi-index (dot) u_strides
+    # strides: offsets of the respective indices in u_ravel, so that: flat_index = multi-index (dot) u_strides
     for n in range(num_p+1, 0, -1):
         u_strides[:n] *= u_shape[n]
 
@@ -426,7 +426,7 @@ cpdef np.ndarray[np.float64_t, ndim=5] u_tilde_sijab(np.ndarray[np.float64_t, nd
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cdef np.ndarray[np.float64_t, ndim=4] phi_tilde_siat(np.ndarray[np.float64_t, ndim=1] phi_ravel,
+cpdef np.ndarray[np.float64_t, ndim=4] phi_tilde_siat(np.ndarray[np.float64_t, ndim=1] phi_ravel,
                                                      np.ndarray[np.float64_t, ndim=3] sigma,
                                                      int num_s, int num_p, int [:,::1] nums_a,
                                                      int num_a_max):
@@ -437,74 +437,51 @@ cdef np.ndarray[np.float64_t, ndim=4] phi_tilde_siat(np.ndarray[np.float64_t, nd
 
     cdef:
         np.ndarray[np.float64_t, ndim=4] out_ = np.zeros((num_s, num_p, num_a_max, num_s))
-        int [:] loop_profile = np.zeros(num_p + 1, dtype=np.int32)
+        np.ndarray[np.int32_t, ndim = 1] loop_profile = np.zeros(num_p + 1, dtype=np.int32)
         double temp_prob
-        int state, player, other, to_state, n
-        int flat_index = 0
+        int s, p, a, n, to_state
+        int flat_index
+        np.ndarray[np.int32_t, ndim = 1] phi_shape = np.array(
+            (num_s, num_p, *(num_a_max,) * num_p, num_s), dtype=np.int32)
+        np.ndarray[np.int32_t, ndim = 1] phi_strides = np.ones(2 + num_p + 1, dtype=np.int32)
 
-    for state in range(num_s):
-        for player in range(num_p):
-            loop_profile[0: num_p + 1] = 0
-            while loop_profile[0] == 0:
+    # note: as of now, phi-indexes are: [s, p, a0, ...., aI, s], i.e. contain a player index.
+    # strides: offsets of the respective indices in phi_ravel, so that: flat_index = multi-index (dot) phi_strides
+    for n in range(num_p+2, 0, -1):
+        phi_strides[:n] *= phi_shape[n]
 
-                temp_prob = 1
-                for other in range(num_p):
-                    if other == player:
-                        continue
-                    temp_prob *= sigma[state, other, loop_profile[other + 1]]
+    for s in range(num_s):
+        loop_profile[:] = 0
 
-                for to_state in range(num_s):
-                    out_[state, player, loop_profile[player + 1], to_state] += temp_prob * phi_ravel[flat_index]
-                    flat_index += 1
+        while loop_profile[0] == 0:
+            for p in range(num_p):
+                if loop_profile[p+1] != 0:
+                    continue
 
-                loop_profile[num_p] += 1
+                temp_prob = 1.0
+                flat_index = s * phi_strides[0] + p * phi_strides[1]  #TODO: uses p-indexed phi. might want to fix.
                 for n in range(num_p):
-                    if loop_profile[num_p - n] == nums_a[state, num_p - n - 1]:
-                        loop_profile[num_p - n - 1] += 1
-                        loop_profile[num_p - n] = 0
-                        flat_index += num_s * (num_a_max - nums_a[state, num_p - n - 1]) * num_a_max ** n
-
-    return out_
-
-
-@cython.boundscheck(False)
-@cython.wraparound(False)
-cdef np.ndarray[np.float64_t, ndim=4] phi_tilde_siat_old(np.ndarray[np.float64_t, ndim=1] phi_ravel,
-                                                     np.ndarray[np.float64_t, ndim=3] sigma,
-                                                     int num_s, int num_p, int [:,::1] nums_a,
-                                                     int num_a_max):
-    """Transition probabilities phi_[s,i,a,s'] of player i using pure action a in state s,
-    given other players use mixed strategy profile sigma[s,i,a]
-    """
-
-    cdef:
-        np.ndarray[np.float64_t, ndim=4] out_ = np.zeros((num_s, num_p, num_a_max, num_s))
-        int [:] loop_profile = np.zeros(num_p + 1, dtype=np.int32)
-        double temp_prob
-        int state, player, other, to_state, n
-        int flat_index = 0
-
-    for state in range(num_s):
-        for player in range(num_p):
-            loop_profile[0: num_p + 1] = 0
-            while loop_profile[0] == 0:
-
-                temp_prob = 1
-                for other in range(num_p):
-                    if other == player:
+                    if n == p:
                         continue
-                    temp_prob *= sigma[state, other, loop_profile[other + 1]]
+                    temp_prob *= sigma[s, n, loop_profile[n + 1]]
+                    flat_index += loop_profile[n + 1] * phi_strides[n + 2]
+                # flat-index: initial to-state is 0, so no increase necessary.
+                for a in range(nums_a[s, p]):
+                    for to_state in range(num_s):
+                        out_[s, p, a, to_state] += temp_prob * phi_ravel[flat_index]
+                        # increase index for next to-state
+                        flat_index += 1
+                    # increase to-index for next action; reset to-state index to 0.
+                    flat_index += phi_strides[p+2] - num_s
 
-                for to_state in range(num_s):
-                    out_[state, player, loop_profile[player + 1], to_state] += temp_prob * phi_ravel[flat_index]
-                    flat_index += 1
-
-                loop_profile[num_p] += 1
-                for n in range(num_p):
-                    if loop_profile[num_p - n] == nums_a[state, num_p - n - 1]:
-                        loop_profile[num_p - n - 1] += 1
-                        loop_profile[num_p - n] = 0
-                        flat_index += num_s * (num_a_max - nums_a[state, num_p - n - 1]) * num_a_max ** n
+            # go to next action profile
+            loop_profile[num_p] += 1
+            for n in range(num_p):
+                if loop_profile[num_p - n] == nums_a[s, num_p - n - 1]:
+                    loop_profile[num_p - n - 1] += 1
+                    loop_profile[num_p - n] = 0
+                else:
+                    break
 
     return out_
 
