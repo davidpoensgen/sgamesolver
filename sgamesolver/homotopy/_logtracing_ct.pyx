@@ -1,6 +1,6 @@
 # cython: profile=True
 
-import cython
+cimport cython
 import numpy as np
 cimport numpy as np
 np.import_array()
@@ -388,7 +388,7 @@ cpdef np.ndarray[np.float64_t, ndim=5] u_tilde_sijab(np.ndarray[np.float64_t, nd
                     if loop_profile[p1+1] != 0:
                         continue
 
-                    # get temp_prob for all others; flat_index for p0.
+                    # get flat_index for p0; temp_prob for all players except p0, p1 .
                     # can skip p0 and p1: action is 0 for both (in loop_profile). temp_prob only includes others anyway.
                     temp_prob = 1.0
                     flat_index = s * u_strides[0] + p0 * u_strides[1]
@@ -471,7 +471,7 @@ cpdef np.ndarray[np.float64_t, ndim=4] phi_tilde_siat(np.ndarray[np.float64_t, n
                         out_[s, p, a, to_state] += temp_prob * phi_ravel[flat_index]
                         # increase index for next to-state
                         flat_index += 1
-                    # increase to-index for next action; reset to-state index to 0.
+                    # increase index for next action; reset to-state index to 0.
                     flat_index += phi_strides[p+2] - num_s
 
             # go to next action profile
