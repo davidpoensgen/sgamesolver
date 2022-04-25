@@ -30,6 +30,25 @@ ext_modules = [
         ['sgamesolver/homotopy/_logtracing_ct.pyx'],
         include_dirs=[np.get_include()]
     ),
+    Extension(
+        'sgamesolver.homotopy._logtracing_ct_old',
+        ['sgamesolver/homotopy/_logtracing_ct_old.pyx'],
+        include_dirs=[np.get_include()]
+    ),
+    Extension(
+        'sgamesolver.homotopy._logtracing_ct_par',
+        ['sgamesolver/homotopy/_logtracing_ct_par.pyx'],
+        extra_compile_args=['/openmp'],
+        extra_link_args=['/openmp'],
+        include_dirs=[np.get_include()]
+    ),
+    Extension(
+        'sgamesolver.homotopy._logtracing_ct_unpar',
+        ['sgamesolver/homotopy/_logtracing_ct_unpar.pyx'],
+        extra_compile_args=['/openmp'],
+        extra_link_args=['/openmp'],
+        include_dirs=[np.get_include()]
+    ),
 ]
 
 for e in ext_modules:
