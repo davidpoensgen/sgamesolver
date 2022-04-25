@@ -4,6 +4,7 @@ cimport numpy as np
 np.import_array()
 from cython.parallel cimport prange
 
+@cython.nonecheck(False)
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def H(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] rho,
@@ -102,6 +103,7 @@ def H(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] rho,
     return out_
 
 
+@cython.nonecheck(False)
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def J(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] rho,
@@ -295,6 +297,7 @@ def u_tilde(u, V, phi):
     return u + np.einsum('sp...S,Sp->sp...', phi, V)
 
 
+@cython.nonecheck(False)
 @cython.boundscheck(False)
 @cython.wraparound(False)
 cpdef np.ndarray[np.float64_t, ndim=3] u_tilde_sia(double[::1] u_tilde_ravel,
@@ -307,9 +310,9 @@ cpdef np.ndarray[np.float64_t, ndim=3] u_tilde_sia(double[::1] u_tilde_ravel,
     cdef:
         double[:,:,::1] out_ = np.zeros((num_s, num_p, num_a_max))
         int[:,::1] loop_profiles = np.zeros((num_s, num_p + 1), dtype=np.int32)
-        int s, n
         int[::1] u_shape = np.array((num_s, num_p, *(num_a_max,) * num_p), dtype=np.int32)
         int[::1] u_strides = np.ones(2 + num_p, dtype=np.int32)
+        int s, n
 
     # strides: offsets of the respective indices in u_ravel, so that: flat_index = multi-index (dot) u_strides
     # strides[-1] is 1; strides[-2] is 1*shape[-1]; strides[-3] is 1*shape[-1]*shape[-2] etc
@@ -319,19 +322,20 @@ cpdef np.ndarray[np.float64_t, ndim=3] u_tilde_sia(double[::1] u_tilde_ravel,
 
     for s in prange(num_s, schedule="static", nogil=True):
         u_tilde_sia_inner(out_[s,:,:], u_tilde_ravel[s*u_strides[0]:(s+1)*u_strides[0]], sigma[s,:,:],
-                          u_strides, nums_a[s,:], num_p, loop_profiles[s,:])
+                          u_strides, num_p, nums_a[s,:], loop_profiles[s,:])
 
     return np.asarray(out_)
 
+
+@cython.nonecheck(False)
 @cython.boundscheck(False)
 @cython.wraparound(False)
 cdef void u_tilde_sia_inner(double[:,::1] out_s, double[::1] u_tilde_s, double[:,::1] sigma,
-                            int[::1] u_strides, int[::1] nums_a, int num_p, int[::1] loop_profile) nogil:
+                            int[::1] u_strides,  int num_p, int[::1] nums_a, int[::1] loop_profile) nogil:
     """Inner function (per state) of u_tilde_sia."""
     cdef:
-        int flat_index
+        int p, a, n, flat_index
         double temp_prob
-        int p, a, n
 
     while loop_profile[0] == 0:
         for p in range(num_p):
@@ -360,6 +364,7 @@ cdef void u_tilde_sia_inner(double[:,::1] out_s, double[::1] u_tilde_s, double[:
             else:
                 break
 
+@cython.nonecheck(False)
 @cython.boundscheck(False)
 @cython.wraparound(False)
 cpdef np.ndarray[np.float64_t, ndim=5] u_tilde_sijab(double [::1] u_tilde_ravel,
@@ -385,15 +390,15 @@ cpdef np.ndarray[np.float64_t, ndim=5] u_tilde_sijab(double [::1] u_tilde_ravel,
 
     for s in prange(num_s, schedule="static", nogil=True):
         u_tilde_sijab_inner(out_[s,:,:,:,:], u_tilde_ravel[s*u_strides[0]:(s+1)*u_strides[0]], sigma[s,:,:],
-                            u_strides, nums_a[s,:], num_p, loop_profiles[s,:])
+                            u_strides,  num_p, nums_a[s,:], loop_profiles[s,:])
 
     return np.asarray(out_)
 
-
+@cython.nonecheck(False)
 @cython.boundscheck(False)
 @cython.wraparound(False)
 cdef void u_tilde_sijab_inner(double[:,:,:,::1] out_s, double[::1] u_tilde_s, double[:,::1] sigma,
-                              int[::1] u_strides, int[::1] nums_a, int num_p, int[::1] loop_profile) nogil:
+                              int[::1] u_strides, int num_p, int[::1] nums_a,  int[::1] loop_profile) nogil:
     """Inner function (per state) of u_tilde_sijab."""
     cdef:
         int p0, p1, a0, a1, n
@@ -445,6 +450,7 @@ cdef void u_tilde_sijab_inner(double[:,:,:,::1] out_s, double[::1] u_tilde_s, do
                 break
 
 
+@cython.nonecheck(False)
 @cython.boundscheck(False)
 @cython.wraparound(False)
 cpdef np.ndarray[np.float64_t, ndim=4] phi_tilde_siat(double [::1] phi_ravel,
@@ -453,8 +459,8 @@ cpdef np.ndarray[np.float64_t, ndim=4] phi_tilde_siat(double [::1] phi_ravel,
                                                      int num_a_max):
     """Transition probabilities phi_[s,i,a,s'] of player i using pure action a in state s,
     given other players use mixed strategy profile sigma[s,i,a].
-    (NOTE: phi: contains a player index, delta already multiplied in)
     """
+    # NOTE: phi_ravel contains a player index / delta already multiplied in
 
     cdef:
         double[:,:,:,::1] out_ = np.zeros((num_s, num_p, num_a_max, num_s))
@@ -464,15 +470,15 @@ cpdef np.ndarray[np.float64_t, ndim=4] phi_tilde_siat(double [::1] phi_ravel,
         int s, n
 
     # note: as of now, phi-indexes are: [s, p, a0, ...., aI, s], i.e. contain a player index.
-    # strides: offsets of the respective indices in phi_ravel, so that: flat_index = multi-index (dot) phi_strides
+    # strides: offsets of the respective indices in phi_ravel, so that: flat_index = multi-index (dot) u_strides
+    # strides[-1] is 1; strides[-2] is 1*shape[-1]; strides[-3] is 1*shape[-1]*shape[-2] etc
     for n in range(num_p+3):
         for s in range(n):
             phi_strides[s] *= phi_shape[n]
 
-    for s in range(num_s):
+    for s in prange(num_s, schedule="static", nogil=True):
         phi_tilde_siat_inner(out_[s,:,:,:], phi_ravel[s*phi_strides[0]:(s+1)*phi_strides[0]], sigma[s,:,:],
                             phi_strides, num_s, num_p, nums_a[s,:], loop_profiles[s,:])
-
 
     return np.asarray(out_)
 
@@ -490,7 +496,7 @@ cdef void phi_tilde_siat_inner(double[:,:,::1] out_s, double[::1] phi_s, double[
                 continue
 
             temp_prob = 1.0
-            flat_index = p * phi_strides[1]  #TODO: uses p-indexed phi. might want to change this.
+            flat_index = p * phi_strides[1]  # phi contains a player index (delta is multiplied in already).
             for n in range(num_p):
                 if n == p:
                     continue
@@ -515,6 +521,8 @@ cdef void phi_tilde_siat_inner(double[:,:,::1] out_s, double[::1] phi_s, double[
             else:
                 break
 
+
+@cython.nonecheck(False)
 @cython.boundscheck(False)
 @cython.wraparound(False)
 cdef bint arrays_equal(double [:] a, double [:] b):
