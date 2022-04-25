@@ -28,6 +28,8 @@ ext_modules = [
     Extension(
         'sgamesolver.homotopy._logtracing_ct',
         ['sgamesolver/homotopy/_logtracing_ct.pyx'],
+        extra_compile_args=['/openmp'],
+        extra_link_args=['/openmp'],
         include_dirs=[np.get_include()]
     ),
     Extension(
