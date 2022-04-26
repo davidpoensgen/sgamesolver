@@ -91,6 +91,8 @@ class SGame:
         for p in range(self.num_players):
             self.transitions[:, p] = self.discount_factors[p] * transition_matrix
 
+        self.phi_uni = transition_matrix # TODO: clean up
+
     @classmethod
     def random_game(cls, num_states, num_players, num_actions, delta=0.95, seed=None):
         """Creates an SGame of given size, with random payoff- and transition arrays.
