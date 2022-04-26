@@ -91,7 +91,7 @@ class SGame:
         for p in range(self.num_players):
             self.transitions[:, p] = self.discount_factors[p] * transition_matrix
 
-        self.phi_uni = transition_matrix # TODO: clean up
+        self.phi_uni = transition_matrix  # TODO: clean up
 
     @classmethod
     def random_game(cls, num_states, num_players, num_actions, delta=0.95, seed=None):
@@ -118,7 +118,7 @@ class SGame:
             num_actions = rng.integers(low=num_actions[0], high=num_actions[1],
                                        size=(num_states, num_players), endpoint=True)
         # else, assume it is an array that fully specifies the game size
-        num_actions = np.array(num_actions, dtype=int)
+        num_actions = np.array(num_actions, dtype=np.int32)
 
         u = [rng.random((num_players, *num_actions[s, :])) for s in range(num_states)]
 

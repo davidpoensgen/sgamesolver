@@ -165,16 +165,17 @@ class LogTracing_ct(LogTracing_base):
                  nu: Optional[np.ndarray] = None, eta: float = 1.0, eta_fix: bool = False):
         super().__init__(game, rho, nu, eta, eta_fix)
         self.cache = _logtracing_ct.TracingCache()
+        self.parallel = False
 
     def H(self, y: np.ndarray) -> np.ndarray:
         return _logtracing_ct.H(y, self.game.payoffs, self.game.phi_uni, self.game.discount_factors,
                                 self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
-                                self.game.nums_actions, self.eta_fix, self.cache)
+                                self.game.nums_actions, self.eta_fix, self.parallel, self.cache)
 
     def J(self, y: np.ndarray) -> np.ndarray:
         return _logtracing_ct.J(y, self.game.payoffs, self.game.phi_uni, self.game.discount_factors,
                                 self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
-                                self.game.nums_actions, self.eta_fix, self.cache)
+                                self.game.nums_actions, self.eta_fix, self.parallel, self.cache)
 
 
 class LogTracing_np(LogTracing_base):
