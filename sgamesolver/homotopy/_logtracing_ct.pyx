@@ -1,5 +1,7 @@
 # cython: profile=True
 
+# note: this file is adapted so that phi => shared between all players.
+
 cimport cython
 from cython.parallel cimport prange
 import numpy as np
@@ -10,7 +12,7 @@ np.import_array()
 @cython.nonecheck(False)
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def H(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] rho,
+def H(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=1] delta, np.ndarray[np.float64_t, ndim=3] rho,
       np.ndarray[np.float64_t, ndim=3] nu, double eta,
       np.ndarray[np.float64_t, ndim=3] u_rho, np.ndarray[np.float64_t, ndim=4] phi_rho,
       int [:,::1] nums_a, bint eta_fix, TracingCache cache):
@@ -62,14 +64,14 @@ def H(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] rho,
         # u_sigma: derivatives of u wrt sigma_sia: u_si if i plays a, others play sigma (without continuation values)
         u_sigma = u_tilde_sia(u.ravel(), sigma, num_s, num_p, nums_a, num_a_max)
         # phi_sigma : derivatives of phi wrt sigma (phi_si if i plays a, rest plays sigma)
-        phi_sigma = phi_tilde_siat(phi.ravel(), sigma, num_s, num_p, nums_a, num_a_max)
+        phi_sigma = phi_siat(phi.ravel(), delta, sigma, num_s, num_p, nums_a, num_a_max)
         # u_bar : pure strat utilities if others play sigma/rho mixture
         u_bar = t * u_sigma + (1 - t) * u_rho
         # phi_bar : pure strat transition probabilities if others play sigma/rho mixture
         phi_bar = t * phi_sigma + (1 - t) * phi_rho
         # u_tilde_sia_ev : total discounted utilities if others play sigma/rho mixture.
         # note: uses u_tilde, but not same shape as in qre (here, derivatives are taken first).
-        u_tilde_sia_ev = u_tilde(u_bar, V, phi_bar)
+        u_tilde_sia_ev = u_tilde_deriv(u_bar, phi_bar, V)  # TODO: derivative version DONE
     elif arrays_equal(y, cache.y):
         # All other variables potentially in the cache are just intermediate steps in H:
         # u_sigma, phi_sigma, u_bar, phi_bar
@@ -77,11 +79,11 @@ def H(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] rho,
     else:
         cache.y = y
         cache.u_sigma = u_tilde_sia(u.ravel(), sigma, num_s, num_p, nums_a, num_a_max)
-        cache.phi_sigma = phi_tilde_siat(phi.ravel(), sigma, num_s, num_p, nums_a, num_a_max)
+        cache.phi_sigma = phi_siat(phi.ravel(), delta, sigma, num_s, num_p, nums_a, num_a_max)
         # u_bar not needed in cache
         u_bar = t * np.asarray(cache.u_sigma) + (1 - t) * u_rho
         cache.phi_bar = t * np.asarray(cache.phi_sigma) + (1 - t) * phi_rho
-        cache.u_tilde_sia_ev = u_tilde(u_bar, V, cache.phi_bar)
+        cache.u_tilde_sia_ev = u_tilde_deriv(u_bar, np.asarray(cache.phi_bar), V) # TODO: derivative version DONE
         u_tilde_sia_ev = np.asarray(cache.u_tilde_sia_ev)
 
     flat_index = 0
@@ -109,7 +111,7 @@ def H(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] rho,
 @cython.nonecheck(False)
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def J(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] rho,
+def J(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=1] delta, np.ndarray[np.float64_t, ndim=3] rho,
       np.ndarray[np.float64_t, ndim=3] nu, double eta,
       np.ndarray[np.float64_t, ndim=3] u_rho, np.ndarray[np.float64_t, ndim=4] phi_rho,
       int [:,::1] nums_a, bint eta_fix, TracingCache cache):
@@ -176,7 +178,7 @@ def J(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] rho,
         # u_sigma: derivative of u_si wrt sigma_sia -> u of pure a if others play sigma
         u_sigma = u_tilde_sia(u.ravel(), sigma, num_s, num_p, nums_a, num_a_max)
         # phi_sigma: derivative of phi_si wrt sigma_sia -> u of pure a if others play sigma
-        phi_sigma = phi_tilde_siat(phi.ravel(), sigma, num_s, num_p, nums_a, num_a_max)
+        phi_sigma = phi_siat(phi.ravel(), delta, sigma, num_s, num_p, nums_a, num_a_max)
         # u_bar, phi_bar: u/phi of si playing a if rest plays mixture sigma / rho
         u_bar = t * u_sigma + (1 - t) * u_rho
         phi_bar = t * phi_sigma + (1 - t) * phi_rho
@@ -191,12 +193,12 @@ def J(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] rho,
         cache.y = y
         cache.u_sigma = u_tilde_sia(u.ravel(), sigma, num_s, num_p, nums_a, num_a_max)
         u_sigma = np.asarray(cache.u_sigma)
-        cache.phi_sigma = phi_tilde_siat(phi.ravel(), sigma, num_s, num_p, nums_a, num_a_max)
+        cache.phi_sigma = phi_siat(phi.ravel(), delta, sigma, num_s, num_p, nums_a, num_a_max)
         phi_sigma = np.asarray(cache.phi_sigma)
         u_bar = t * u_sigma + (1 - t) * u_rho
         cache.phi_bar = t * phi_sigma + (1 - t) * phi_rho
         phi_bar = np.asarray(cache.phi_bar)
-        cache.u_tilde_sia_ev = u_tilde(u_bar, V, phi_bar)
+        cache.u_tilde_sia_ev = u_tilde_deriv(u_bar, phi_bar, V)# TODO: derivative version DONE
         u_tilde_sia_ev = np.asarray(cache.u_tilde_sia_ev)
 
     # The following are used only for J, not for H -> never in cache.
@@ -205,9 +207,9 @@ def J(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] rho,
     phi_hat = phi_sigma - phi_rho
     # now: use previous to compute total discounted versions by ein-summing in continuation values.
     # u_tilde_sia_ev = u_tilde(u_bar, V, phi_bar)
-    u_hat_sia_ev = u_tilde(u_hat, V, phi_hat)
+    u_hat_sia_ev = u_tilde_deriv(u_hat, phi_hat, V)  # TODO: derivative version DONE
     # this is the full array of total discounted utilities for all pure strat profiles
-    u_tilde_ev_ravel = u_tilde(u, V, phi).ravel()
+    u_tilde_ev_ravel = u_tilde(u.ravel(), phi.ravel(), delta, V, num_s, num_p, nums_a, num_a_max)  # TODO: regular version - will come raveled!
     # cross derivatives d^2 u / d sigma_sia d sigma_sjb
     u_tilde_sijab_ev = u_tilde_sijab(u_tilde_ev_ravel, sigma, num_s, num_p, nums_a, num_a_max)
 
@@ -295,9 +297,9 @@ def J(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=3] rho,
     return out_
 
 
-def u_tilde(u, V, phi):
-    """Add continuation values V to utilities u."""
-    return u + np.einsum('sp...S,Sp->sp...', phi, V)
+# def u_tilde(u, V, phi):
+#     """Add continuation values V to utilities u."""
+#     return u + np.einsum('sp...S,Sp->sp...', phi, V)
 
 def u_tilde_deriv(np.ndarray[np.float64_t, ndim=3] u_sia, np.ndarray[np.float64_t, ndim=4] phi_sia,
                   np.ndarray[np.float64_t, ndim=2] V):
@@ -309,7 +311,7 @@ def u_tilde_deriv(np.ndarray[np.float64_t, ndim=3] u_sia, np.ndarray[np.float64_
 @cython.nonecheck(False)
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cpdef u_tilde_CHANGED(np.ndarray[np.float64_t, ndim=1] u_ravel, np.ndarray[np.float64_t, ndim=1] phi_ravel,
+cpdef u_tilde(np.ndarray[np.float64_t, ndim=1] u_ravel, np.ndarray[np.float64_t, ndim=1] phi_ravel,
                     np.ndarray[np.float64_t, ndim=1] delta, np.ndarray[np.float64_t, ndim=2] V,
                     int num_s, int num_p, int [:,::1] nums_a, int num_a_max):
     """Add continuation values V to utilities u."""
@@ -327,14 +329,14 @@ cpdef u_tilde_CHANGED(np.ndarray[np.float64_t, ndim=1] u_ravel, np.ndarray[np.fl
 
         np.ndarray[np.float64_t, ndim=2] dV = V * delta
 
-    out_ = u_ravel.copy().reshape(num_s, num_p, -1)
-
     for n in range(num_p+2):
         for s in range(n):
             u_strides[s] *= u_shape[n]
 
+    out_ = u_ravel.copy().reshape(num_s, num_p, -1)
+
     for s in range(num_s):
-        u_tilde_CHANGED_inner(out_[s,:,:], phi_reshaped[s,:,:], dV, u_strides,
+        u_tilde_inner(out_[s,:,:], phi_reshaped[s,:,:], dV, u_strides,
                               num_s, num_p, nums_a[s,:], num_a_max, loop_profiles[s,:])
 
     return np.asarray(out_).ravel()
@@ -342,7 +344,7 @@ cpdef u_tilde_CHANGED(np.ndarray[np.float64_t, ndim=1] u_ravel, np.ndarray[np.fl
 @cython.nonecheck(False)
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cdef void u_tilde_CHANGED_inner(double[:,::1] out_s, double[:,::1] phi_s, double [:, ::1] dV, int[::1] u_strides,
+cdef void u_tilde_inner(double[:,::1] out_s, double[:,::1] phi_s, double [:, ::1] dV, int[::1] u_strides,
                                 int num_s, int num_p, int[::1] nums_a, int num_a_max, int[::1] loop_profile) nogil:
     cdef:
         int s, p, n, flat_index = 0
@@ -523,7 +525,7 @@ cdef void u_tilde_sijab_inner(double[:,:,:,::1] out_s, double[::1] u_tilde_s, do
 @cython.nonecheck(False)
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cpdef np.ndarray[np.float64_t, ndim=4] phi_tilde_siat(double [::1] phi_ravel,
+cpdef np.ndarray[np.float64_t, ndim=4] phi_tilde_siat_old(double [::1] phi_ravel,
                                                      double [:,:,::1] sigma,
                                                      int num_s, int num_p, int [:,::1] nums_a,
                                                      int num_a_max):
@@ -548,7 +550,7 @@ cpdef np.ndarray[np.float64_t, ndim=4] phi_tilde_siat(double [::1] phi_ravel,
 
     # for s in prange(num_s, schedule="static", nogil=True):
     for s in range(num_s):
-        phi_tilde_siat_inner(out_[s,:,:,:], phi_ravel[s*phi_strides[0]:(s+1)*phi_strides[0]], sigma[s,:,:],
+        phi_tilde_siat_inner_old(out_[s,:,:,:], phi_ravel[s*phi_strides[0]:(s+1)*phi_strides[0]], sigma[s,:,:],
                             phi_strides, num_s, num_p, nums_a[s,:], loop_profiles[s,:])
 
     return np.asarray(out_)
@@ -557,7 +559,7 @@ cpdef np.ndarray[np.float64_t, ndim=4] phi_tilde_siat(double [::1] phi_ravel,
 @cython.nonecheck(False)
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cdef void phi_tilde_siat_inner(double[:,:,::1] out_s, double[::1] phi_s, double[:,::1] sigma,
+cdef void phi_tilde_siat_inner_old(double[:,:,::1] out_s, double[::1] phi_s, double[:,::1] sigma,
                        int[::1] phi_strides,  int num_s, int num_p, int[::1] nums_a, int[::1] loop_profile) nogil:
     cdef:
         int p, a, n, to_state, flat_index
@@ -597,14 +599,14 @@ cdef void phi_tilde_siat_inner(double[:,:,::1] out_s, double[::1] phi_s, double[
 @cython.nonecheck(False)
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cpdef np.ndarray[np.float64_t, ndim=4] phi_tilde_CHANGED(double [::1] phi_ravel,
+cpdef np.ndarray[np.float64_t, ndim=4] phi_siat(double [::1] phi_ravel, double[:] delta,
                                                      double [:,:,::1] sigma,
                                                      int num_s, int num_p, int [:,::1] nums_a,
-                                                     int num_a_max, double[:] delta):
+                                                     int num_a_max):
     """Transition probabilities phi_[s,i,a,s'] of player i using pure action a in state s,
     given other players use mixed strategy profile sigma[s,i,a].
     """
-    # NOTE: phi_ravel contains a player index / delta already multiplied in
+    # note: this uses phi_uni.
 
     cdef:
         np.ndarray[np.float64_t, ndim = 4] out_np = np.zeros((num_s, num_p, num_a_max, num_s))
@@ -614,7 +616,7 @@ cpdef np.ndarray[np.float64_t, ndim=4] phi_tilde_CHANGED(double [::1] phi_ravel,
         int [::1] phi_strides = np.ones(2 + num_p, dtype=np.int32)
         int s, n, p
 
-    # note: as of now, phi-indexes are: [s, p, a0, ...., aI, s], i.e. contain a player index.
+    # note: as of now, phi-indexes are: [s, a0, ...., aI, s], i.e. contain no player index.
     # strides: offsets of the respective indices in phi_ravel, so that: flat_index = multi-index (dot) u_strides
     # strides[-1] is 1; strides[-2] is 1*shape[-1]; strides[-3] is 1*shape[-1]*shape[-2] etc
     for n in range(num_p+2):
@@ -623,10 +625,10 @@ cpdef np.ndarray[np.float64_t, ndim=4] phi_tilde_CHANGED(double [::1] phi_ravel,
 
     # for s in prange(num_s, schedule="static", nogil=True):
     for s in range(num_s):
-        phi_tilde_CHANGED_inner(out_[s,:,:,:], phi_ravel[s*phi_strides[0]:(s+1)*phi_strides[0]], sigma[s,:,:],
-                            phi_strides, num_s, num_p, nums_a[s,:], loop_profiles[s,:])
+        phi_siat_inner(out_[s,:,:,:], phi_ravel[s*phi_strides[0]:(s+1)*phi_strides[0]], sigma[s,:,:],
+                       phi_strides, num_s, num_p, nums_a[s,:], loop_profiles[s,:])
 
-
+    # multiply in delta for each player
     for p in range(num_p):
         out_np[:,p,:,:] *= delta[p]
 
@@ -636,7 +638,7 @@ cpdef np.ndarray[np.float64_t, ndim=4] phi_tilde_CHANGED(double [::1] phi_ravel,
 @cython.nonecheck(False)
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cdef void phi_tilde_CHANGED_inner(double[:,:,::1] out_s, double[::1] phi_s, double[:,::1] sigma,
+cdef void phi_siat_inner(double[:,:,::1] out_s, double[::1] phi_s, double[:,::1] sigma,
                        int[::1] phi_strides,  int num_s, int num_p, int[::1] nums_a, int[::1] loop_profile) nogil:
     cdef:
         int p, a, n, to_state, flat_index
@@ -649,7 +651,6 @@ cdef void phi_tilde_CHANGED_inner(double[:,:,::1] out_s, double[::1] phi_s, doub
 
             temp_prob = 1.0
             # TODO: in this version, I removed the p-index!
-            # flat_index = p * phi_strides[1]  # phi contains a player index (delta is multiplied in already).
             flat_index = 0
             for n in range(num_p):
                 if n == p:
@@ -690,18 +691,18 @@ cdef bint arrays_equal(double [:] a, double [:] b):
     return True
 
 
-cdef class GameShape:  # TODO: finish or remove
-    cdef:
-        int num_s
-        int num_p
-        int [:,::1] nums_a
-        int num_a_max
-        int num_a_tot
-        u_strides = int[::1]
-        phi_strides = int[::1]
-
-    def __cinit__(self, int num_s, int num_p, num):
-        pass
+# cdef class GameShape:  # TODO: finish or remove
+#     cdef:
+#         int num_s
+#         int num_p
+#         int [:,::1] nums_a
+#         int num_a_max
+#         int num_a_tot
+#         u_strides = int[::1]
+#         phi_strides = int[::1]
+#
+#     def __cinit__(self, int num_s, int num_p, num):
+#         pass
 
 
 cdef class TracingCache:
