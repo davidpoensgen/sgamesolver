@@ -1,4 +1,4 @@
-# cython: profile=True
+# cython: profile=False
 
 cimport cython
 from cython.parallel cimport prange
@@ -298,7 +298,7 @@ def J(np.ndarray[np.float64_t] y, u, phi, np.ndarray[np.float64_t, ndim=1] delta
 @cython.nonecheck(False)
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cpdef u_tilde(np.ndarray[np.float64_t, ndim=1] u_ravel, np.ndarray[np.float64_t, ndim=1] phi_ravel,
+cdef u_tilde(np.ndarray[np.float64_t, ndim=1] u_ravel, np.ndarray[np.float64_t, ndim=1] phi_ravel,
                     np.ndarray[np.float64_t, ndim=1] delta, np.ndarray[np.float64_t, ndim=2] V,
                     int num_s, int num_p, int [:,::1] nums_a, int num_a_max, bint parallel):
     """Add continuation values V to utilities u."""
@@ -323,7 +323,7 @@ cpdef u_tilde(np.ndarray[np.float64_t, ndim=1] u_ravel, np.ndarray[np.float64_t,
     out_ = u_ravel.copy().reshape(num_s, num_p, -1)
 
     if parallel:
-        for s in prange(num_s, schedule="static", chunksize=1, nogil=True):
+        for s in prange(num_s, schedule="static", nogil=True):
             u_tilde_inner(out_[s, :, :], phi_reshaped[s, :, :], dV, u_strides,
                           num_s, num_p, nums_a[s, :], num_a_max, loop_profiles[s, :])
     else:
@@ -363,7 +363,7 @@ cdef void u_tilde_inner(double[:,::1] out_s, double[:,::1] phi_s, double [:, ::1
 @cython.nonecheck(False)
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cpdef np.ndarray[np.float64_t, ndim=3] u_tilde_deriv(np.ndarray[np.float64_t, ndim=3] u_sia,
+cdef np.ndarray[np.float64_t, ndim=3] u_tilde_deriv(np.ndarray[np.float64_t, ndim=3] u_sia,
                                                      np.ndarray[np.float64_t, ndim=4] phi_sia,
                                                      np.ndarray[np.float64_t, ndim=2] V):
     """Add continuation values V to derivatives u_sia (= ∂u/∂sigma)."""
@@ -374,7 +374,7 @@ cpdef np.ndarray[np.float64_t, ndim=3] u_tilde_deriv(np.ndarray[np.float64_t, nd
 @cython.nonecheck(False)
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cpdef np.ndarray[np.float64_t, ndim=3] u_tilde_sia(double[::1] u_tilde_ravel,
+cdef np.ndarray[np.float64_t, ndim=3] u_tilde_sia(double[::1] u_tilde_ravel,
                                                    double[:,:,::1] sigma,
                                                    int num_s, int num_p, int [:,::1] nums_a, int num_a_max,
                                                    bint parallel):
@@ -396,7 +396,7 @@ cpdef np.ndarray[np.float64_t, ndim=3] u_tilde_sia(double[::1] u_tilde_ravel,
             u_strides[s] *= u_shape[n]
 
     if parallel:
-        for s in prange(num_s, schedule="static", chunksize=1, nogil=True):
+        for s in prange(num_s, schedule="static", nogil=True):
             u_tilde_sia_inner(out_[s, :, :], u_tilde_ravel[s * u_strides[0]:(s + 1) * u_strides[0]], sigma[s, :, :],
                               u_strides, num_p, nums_a[s, :], loop_profiles[s, :])
     else:
@@ -448,7 +448,7 @@ cdef void u_tilde_sia_inner(double[:,::1] out_s, double[::1] u_tilde_s, double[:
 @cython.nonecheck(False)
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cpdef np.ndarray[np.float64_t, ndim=5] u_tilde_sijab(double [::1] u_tilde_ravel,
+cdef np.ndarray[np.float64_t, ndim=5] u_tilde_sijab(double [::1] u_tilde_ravel,
                                                      double [:,:,::1] sigma,
                                                      int num_s, int num_p, int [:,::1] nums_a,
                                                      int num_a_max, bint parallel):
@@ -470,7 +470,7 @@ cpdef np.ndarray[np.float64_t, ndim=5] u_tilde_sijab(double [::1] u_tilde_ravel,
             u_strides[s] *= u_shape[n]
 
     if parallel:
-        for s in prange(num_s, schedule="static",chunksize=1, nogil=True):
+        for s in prange(num_s, schedule="static", nogil=True):
             u_tilde_sijab_inner(out_[s, :, :, :, :], u_tilde_ravel[s * u_strides[0]:(s + 1) * u_strides[0]],
                                 sigma[s, :, :], u_strides, num_p, nums_a[s, :], loop_profiles[s, :])
     else:
@@ -540,7 +540,7 @@ cdef void u_tilde_sijab_inner(double[:,:,:,::1] out_s, double[::1] u_tilde_s, do
 @cython.nonecheck(False)
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cpdef np.ndarray[np.float64_t, ndim=4] phi_siat(double [::1] phi_ravel, double[:] delta,  double [:,:,::1] sigma,
+cdef np.ndarray[np.float64_t, ndim=4] phi_siat(double [::1] phi_ravel, double[:] delta,  double [:,:,::1] sigma,
                                                 int num_s, int num_p, int [:,::1] nums_a, int num_a_max, bint parallel):
     """Transition probabilities phi_[s,i,a,s'] of player i using pure action a in state s,
     given other players use mixed strategy profile sigma[s,i,a].
@@ -563,7 +563,7 @@ cpdef np.ndarray[np.float64_t, ndim=4] phi_siat(double [::1] phi_ravel, double[:
             phi_strides[s] *= phi_shape[n]
 
     if parallel:
-        for s in prange(num_s, schedule="static", chunksize=1, nogil=True):
+        for s in prange(num_s, schedule="static", nogil=True):
             phi_siat_inner(out_[s, :, :, :], phi_ravel[s * phi_strides[0]:(s + 1) * phi_strides[0]], sigma[s, :, :],
                            phi_strides, num_s, num_p, nums_a[s, :], loop_profiles[s, :])
     else:
@@ -631,37 +631,6 @@ cdef bint arrays_equal(double [:] a, double [:] b):
         if a[i] != b[i]:
             return False
     return True
-
-
-cdef class GameShape:  # TODO: finish or remove
-    cdef:
-        int num_s
-        int num_p
-        int [:,::1] nums_a
-        int num_a_max
-        int num_a_tot
-        int[::1] u_strides
-        int[::1] phi_strides
-
-    def __cinit__(self, np.ndarray[np.int32_t, ndim=2] nums_a):
-        self.nums_a = nums_a.copy()
-        self.num_s = nums_a.shape[0]
-        self.num_p = nums_a.shape[1]
-        self.num_a_max = np.max(nums_a)
-        self.num_a_tot = np.sum(nums_a)
-
-        cdef:
-            int n
-            u_shape = np.array((self.num_s, self.num_p, *(self.num_a_max,) * self.num_p), dtype=np.int32)
-            u_strides = np.ones(self.num_p + 2, dtype=np.int32)
-            phi_shape = np.array((self.num_s, *(self.num_a_max,) * self.num_p, self.num_s), dtype=np.int32)
-            phi_strides = np.ones(self.num_p + 2, dtype=np.int32)
-
-        for n in range(self.num_p + 2):
-            u_strides[:n] *= u_shape[n]
-            phi_strides[:n] *= phi_shape[n]
-        self.u_strides = u_strides
-        self.phi_strides = phi_strides
 
 
 cdef class TracingCache:

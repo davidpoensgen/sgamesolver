@@ -21,11 +21,11 @@ except ImportError:
 ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
 
-def LogTracing(game: SGame, rho: Union[str, np.ndarray] = "centroid",
-               nu: Optional[np.ndarray] = None, eta: float = 1.0, eta_fix: bool = False, implementation='auto'):
+def LogTracing(game: SGame, rho: Union[str, np.ndarray] = "centroid", nu: Optional[np.ndarray] = None,
+               eta: float = 1.0, eta_fix: bool = False, implementation='auto', **kwargs):
     """Tracing homotopy for stochastic games."""
     if implementation == 'cython' or (implementation == 'auto' and ct):
-        return LogTracing_ct(game, rho, nu, eta, eta_fix)
+        return LogTracing_ct(game, rho, nu, eta, eta_fix, **kwargs)
     else:
         if implementation == 'auto' and not ct:
             print('Defaulting to numpy implementation of LogTracing, because cython version is not installed. Numpy '
@@ -75,12 +75,12 @@ class LogTracing_base(LogStratHomotopy):
         elif rho == "random":
             self.rho = self.game.random_strategy(zeros=True)
         else:
-            self.rho = np.array(rho)
+            self.rho = np.array(rho, dtype=np.float64)
 
         if nu is None:
             self.nu = np.ones((self.game.num_states, self.game.num_players, self.game.num_actions_max))
         else:
-            self.nu = nu
+            self.nu = np.array(nu, dtype=np.float64)
 
         self.eta = eta
         self.eta_fix = eta_fix
@@ -95,8 +95,8 @@ class LogTracing_base(LogStratHomotopy):
                       + '->s' + ABC[p] + 't' for p in range(num_p)],
         }
         if num_p > 1:
-            self.u_rho = np.empty((num_s, num_p, num_a_max))
-            self.phi_rho = np.empty((num_s, num_p, num_a_max, num_s))
+            self.u_rho = np.zeros((num_s, num_p, num_a_max))
+            self.phi_rho = np.zeros((num_s, num_p, num_a_max, num_s))
             for p in range(num_p):
                 self.u_rho[:, p] = np.einsum(self.einsum_eqs['u_a'][p],
                                              self.game.payoffs[:, p], *(rho_p_list[:p] + rho_p_list[(p + 1):]))
@@ -162,10 +162,14 @@ class LogTracing_ct(LogTracing_base):
     """Tracing homotopy: Cython implementation"""
 
     def __init__(self, game: SGame, rho: Union[str, np.ndarray] = "centroid",
-                 nu: Optional[np.ndarray] = None, eta: float = 1.0, eta_fix: bool = False):
+                 nu: Optional[np.ndarray] = None, eta: float = 1.0, eta_fix: bool = False, **kwargs):
         super().__init__(game, rho, nu, eta, eta_fix)
         self.cache = _logtracing_ct.TracingCache()
         self.parallel = False
+        if 'parallel' in kwargs:
+            self.parallel = kwargs['parallel']
+        if 'cache' in kwargs and not kwargs['cache']:
+            self.cache = None
 
     def H(self, y: np.ndarray) -> np.ndarray:
         return _logtracing_ct.H(y, self.game.payoffs, self.game.phi_uni, self.game.discount_factors,
@@ -182,7 +186,7 @@ class LogTracing_np(LogTracing_base):
     """Tracing homotopy: Numpy implementation"""
 
     def __init__(self, game: SGame, rho: Union[str, np.ndarray] = "centroid",
-                 nu: Optional[np.ndarray] = None, eta: float = 1.0, eta_fix: bool = False):
+                 nu: Optional[np.ndarray] = None, eta: float = 1.0, eta_fix: bool = False, **kwargs):
         """prepares the following:
             - H_mask, J_mask
             - T_H, T_J
