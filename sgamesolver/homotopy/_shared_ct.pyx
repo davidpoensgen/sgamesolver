@@ -5,7 +5,7 @@
 # arrays_equal
 
 
-# note: imports just not to confuse IDE - cleaner to comment out before compilation
+# note: imports just so IDE does not go crazy - please comment out before compilation
 # import numpy as np
 # cimport numpy as np
 # import cython
@@ -256,4 +256,3 @@ cdef bint arrays_equal(double [::1] a, double [::1] b):
         if a[i] != b[i]:
             return False
     return True
-

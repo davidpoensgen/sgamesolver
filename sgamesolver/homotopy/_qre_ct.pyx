@@ -1,5 +1,3 @@
-# cython: profile=True
-
 """Cython implementation of QRE homotopy."""
 
 cimport cython
