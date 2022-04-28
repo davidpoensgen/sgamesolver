@@ -10,6 +10,13 @@ with open('README.md', 'r', encoding='utf-8') as readme:
 # https://docs.python.org/3/distutils/setupscript.html -> 2.3.5
 
 ext_modules = [
+    # Extension(
+    #     'sgamesolver.homotopy._shared_ct',
+    #     ['sgamesolver/homotopy/_shared_ct.pyx'],
+    #     extra_compile_args=['/openmp'],
+    #     extra_link_args=['/openmp'],
+    #     include_dirs=[np.get_include()]
+    # ),
     Extension(
         'sgamesolver.homotopy._ipm_ct',
         ['sgamesolver/homotopy/_ipm_ct.pyx'],
@@ -25,7 +32,7 @@ ext_modules = [
         ['sgamesolver/homotopy/_qre_ct.pyx'],
         extra_compile_args=['/openmp'],
         extra_link_args=['/openmp'],
-        include_dirs=[np.get_include()]
+        include_dirs=[np.get_include(), 'sgamesolver/homotopy']
     ),
     Extension(
         'sgamesolver.homotopy._logtracing_ct',

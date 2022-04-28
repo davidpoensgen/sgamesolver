@@ -6,6 +6,8 @@ import numpy as np
 cimport numpy as np
 np.import_array()
 
+# TODO: imports?
+# from ._shared_ct cimport u_tilde, u_tilde_sia, phi_siat, arrays_equal
 
 @cython.initializedcheck(False)
 @cython.nonecheck(False)
@@ -228,9 +230,8 @@ def J(np.ndarray[np.float64_t, ndim=1] y, np.ndarray[np.float64_t, ndim=1] u, np
                                                        * u_tilde_sia_ev[row_state, row_player, col_action])
                     else:
                         for row_action in range(nums_a[row_state, row_player]):
-                            out_[row_index, col_index] += (sigma[row_state, row_player, row_action]
+                            out_[row_index, col_index] += sigma[row_state, row_player, row_action] \
                                 * u_tilde_sia_partial_beta_ev[row_state, row_player, row_action, col_player, col_action]
-                                )
 
                     col_index += 1
 
@@ -275,7 +276,7 @@ cdef np.ndarray[np.float64_t, ndim=5] u_tilde_sia_partial_beta(np.ndarray[np.flo
     """
 
     cdef:
-        double[:,::1] u_tilde_reshaped = u_tilde_ravel.reshape(num_s,-1)
+        double[:,::1] u_tilde_reshaped = u_tilde_ravel.reshape((num_s, -1))
         np.ndarray[np.float64_t, ndim=5] out_np = np.zeros((num_s, num_p, num_a_max, num_p, num_a_max))
         double[:,:,:,:,::1] out_ = out_np
         int[:,::1] loop_profiles = np.zeros((num_s, num_p + 1), dtype=np.int32)

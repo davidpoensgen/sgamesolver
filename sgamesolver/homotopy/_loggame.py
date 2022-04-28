@@ -17,10 +17,10 @@ except ImportError:
 ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
 
-def LogGame(game: SGame, nu: Optional[np.ndarray] = None, implementation='auto'):
+def LogGame(game: SGame, nu: Optional[np.ndarray] = None, implementation='auto', **kwargs):
     """LogGame homotopy for stochastic games."""
     if implementation == 'cython' or (implementation == 'auto' and ct):
-        return LogGame_ct(game, nu)
+        return LogGame_ct(game, nu, **kwargs)
     else:
         if implementation == 'auto' and not ct:
             print('Defaulting to numpy implementation of LogGame, because cython version is not installed. Numpy '
@@ -33,8 +33,6 @@ class LogGame_base(LogStratHomotopy):
 
     def __init__(self, game: SGame, nu: Optional[np.ndarray] = None) -> None:
         super().__init__(game)
-        # legacy version of transition arrays: needed until homotopy functions are updated
-        self.game._make_transitions()
 
         self.tracking_parameters['normal'] = {
             'convergence_tol': 1e-7,
@@ -93,15 +91,19 @@ class LogGame_base(LogStratHomotopy):
 class LogGame_ct(LogGame_base):
     """Logarithmic game homotopy: Cython implementation"""
 
+    def __init__(self, game, nu, parallel=False):
+        super(LogGame_ct, self).__init__(game, nu)
+        self.parallel = parallel
+
     def H(self, y: np.ndarray) -> np.ndarray:
-        return _loggame_ct.H(y, self.game.payoffs, self.game.transitions, self.nu,
+        return _loggame_ct.H(y, self.game.u_ravel, self.game.phi_ravel, self.game.discount_factors, self.nu,
                              self.game.num_states, self.game.num_players, self.game.nums_actions,
-                             self.game.num_actions_max, self.game.num_actions_total)
+                             self.game.num_actions_max, self.game.num_actions_total, self.parallel)
 
     def J(self, y: np.ndarray) -> np.ndarray:
-        return _loggame_ct.J(y, self.game.payoffs, self.game.transitions, self.nu,
+        return _loggame_ct.J(y, self.game.u_ravel, self.game.phi_ravel, self.game.discount_factors, self.nu,
                              self.game.num_states, self.game.num_players, self.game.nums_actions,
-                             self.game.num_actions_max, self.game.num_actions_total)
+                             self.game.num_actions_max, self.game.num_actions_total, self.parallel)
 
 
 class LogGame_np(LogGame_base):
@@ -114,6 +116,8 @@ class LogGame_np(LogGame_base):
             - einsum_eqs
         """
         super().__init__(game, nu)
+        # legacy version of transition arrays: needed until homotopy functions are updated
+        self.game._make_transitions()
 
         num_s, num_p, nums_a = self.game.num_states, self.game.num_players, self.game.nums_actions
         num_a_max = self.game.num_actions_max

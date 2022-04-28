@@ -26,8 +26,6 @@ tracing_f_np.eta_fix = True
 tracing_f_np.solver_setup()
 tracing_f_np.solve()
 
-
-
 loggame = sgamesolver.homotopy.LogGame(game)
 loggame.solver_setup()
 loggame.solve()
