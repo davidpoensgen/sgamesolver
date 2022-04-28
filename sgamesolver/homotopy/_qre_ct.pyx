@@ -268,7 +268,7 @@ include "_shared_ct.pyx"
 @cython.nonecheck(False)
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cdef np.ndarray[np.float64_t, ndim=5] u_tilde_sia_partial_beta(double[::1] u_tilde_ravel,
+cdef np.ndarray[np.float64_t, ndim=5] u_tilde_sia_partial_beta(np.ndarray[np.float64_t] u_tilde_ravel,
                                                                double[:,:,::1] sigma,
                                                                int num_s, int num_p,
                                                                int [:,::1] nums_a, int num_a_max, bint parallel):
@@ -277,6 +277,7 @@ cdef np.ndarray[np.float64_t, ndim=5] u_tilde_sia_partial_beta(double[::1] u_til
     """
 
     cdef:
+        double[:,::1] u_tilde_reshaped = u_tilde_ravel.reshape(num_s,-1)
         np.ndarray[np.float64_t, ndim=5] out_np = np.zeros((num_s, num_p, num_a_max, num_p, num_a_max))
         double[:,:,:,:,::1] out_ = out_np
         int[:,::1] loop_profiles = np.zeros((num_s, num_p + 1), dtype=np.int32)
@@ -292,11 +293,11 @@ cdef np.ndarray[np.float64_t, ndim=5] u_tilde_sia_partial_beta(double[::1] u_til
 
     if parallel:
         for s in prange(num_s, schedule="static", nogil=True):
-            u_tilde_sia_partial_beta_inner(out_[s,:,:,:,:], u_tilde_ravel[s*u_strides[0]:(s+1)*u_strides[0]],
+            u_tilde_sia_partial_beta_inner(out_[s,:,:,:,:], u_tilde_reshaped[s,:],
                                            sigma[s,:,:], u_strides, num_p, nums_a[s,:], loop_profiles[s,:])
     else:
         for s in range(num_s):
-            u_tilde_sia_partial_beta_inner(out_[s,:,:,:,:], u_tilde_ravel[s*u_strides[0]:(s+1)*u_strides[0]],
+            u_tilde_sia_partial_beta_inner(out_[s,:,:,:,:], u_tilde_reshaped[s,:],
                                            sigma[s,:,:], u_strides, num_p, nums_a[s,:], loop_profiles[s,:])
 
     return out_np

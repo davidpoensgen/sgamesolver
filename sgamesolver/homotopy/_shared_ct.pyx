@@ -1,14 +1,16 @@
-# this file includes:
+# this file includes functions shared between qre_ct, logtracing_ct:
 # u_tilde
 # u_tilde_sia
 # phi_sia
+# arrays_equal
 
-# note: imports just not to confuse IDE - make sure to comment out before compilation
-import numpy as np
-cimport numpy as np
-import cython
-from cython.parallel cimport prange
 
+# note: imports just not to confuse IDE - cleaner to comment out before compilation
+# import numpy as np
+# cimport numpy as np
+# import cython
+# from cython.parallel cimport prange
+#
 
 @cython.initializedcheck(False)
 @cython.nonecheck(False)
@@ -24,7 +26,6 @@ cdef np.ndarray[np.float64_t, ndim=1] u_tilde(np.ndarray[np.float64_t, ndim=1] u
     cdef:
         double [:,:,::1] out_
         double [:,:,::1] phi_reshaped = phi_ravel.reshape(num_s, -1, num_s)
-        double [:,:,::1] u_reshaped =u_ravel.reshape(num_s, num_p, -1)
         double [:,::1] dV
 
         int[:,::1] loop_profiles = np.zeros((num_s, num_p + 1), dtype=np.int32)
@@ -38,6 +39,7 @@ cdef np.ndarray[np.float64_t, ndim=1] u_tilde(np.ndarray[np.float64_t, ndim=1] u
             u_strides[s] *= u_shape[n]
 
     dV = V * delta
+
     out_ = u_ravel.copy().reshape(num_s, num_p, -1)
 
     if parallel:
@@ -47,7 +49,7 @@ cdef np.ndarray[np.float64_t, ndim=1] u_tilde(np.ndarray[np.float64_t, ndim=1] u
     else:
         for s in range(num_s):
             u_tilde_inner(out_[s,:,:], phi_reshaped[s, :, :], dV, u_strides,
-                          num_s, num_p, nums_a[s, :], num_a_max, loop_profiles[s,: ])
+                          num_s, num_p, nums_a[s, :], num_a_max, loop_profiles[s,:])
 
     return np.asarray(out_).ravel()
 
@@ -159,14 +161,16 @@ cdef void u_tilde_sia_inner(double[:,::1] out_s, double[::1] u_tilde_s, double[:
 @cython.nonecheck(False)
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cdef np.ndarray[np.float64_t, ndim=4] phi_siat(double [::1] phi_ravel, double[:] delta,  double [:,:,::1] sigma,
-                                                int num_s, int num_p, int [:,::1] nums_a, int num_a_max, bint parallel):
+cdef np.ndarray[np.float64_t, ndim=4] phi_siat(np.ndarray[np.float64_t, ndim=1] phi_ravel, double[:] delta,
+                                               double [:,:,::1] sigma, int num_s, int num_p, int [:,::1] nums_a,
+                                               int num_a_max, bint parallel):
     """Transition probabilities phi_[s,i,a,s'] of player i using pure action a in state s,
     given other players use mixed strategy profile sigma[s,i,a].
     Corresponds to the derivative of u_tilde w.r.t. to sigma_sia
     """
 
     cdef:
+        double[:,::1] phi_reshaped = phi_ravel.reshape(num_s, -1)
         np.ndarray[np.float64_t, ndim = 4] out_np = np.zeros((num_s, num_p, num_a_max, num_s))
         double[:,:,:,::1] out_ = out_np
         int [:,::1] loop_profiles = np.zeros((num_s, num_p + 1), dtype=np.int32)
@@ -183,11 +187,11 @@ cdef np.ndarray[np.float64_t, ndim=4] phi_siat(double [::1] phi_ravel, double[:]
 
     if parallel:
         for s in prange(num_s, schedule="static", nogil=True):
-            phi_siat_inner(out_[s, :, :, :], phi_ravel[s * phi_strides[0]:(s + 1) * phi_strides[0]], sigma[s, :, :],
+            phi_siat_inner(out_[s, :, :, :], phi_reshaped[s,:], sigma[s, :, :],
                            phi_strides, num_s, num_p, nums_a[s, :], loop_profiles[s, :])
     else:
         for s in range(num_s):
-            phi_siat_inner(out_[s,:,:,:], phi_ravel[s*phi_strides[0]:(s+1)*phi_strides[0]], sigma[s,:,:],
+            phi_siat_inner(out_[s,:,:,:], phi_reshaped[s,:], sigma[s,:,:],
                            phi_strides, num_s, num_p, nums_a[s,:], loop_profiles[s,:])
 
     # multiply in delta for each player
@@ -252,3 +256,4 @@ cdef bint arrays_equal(double [::1] a, double [::1] b):
         if a[i] != b[i]:
             return False
     return True
+
