@@ -15,10 +15,10 @@ except ImportError:
 ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZacdefghijklmnortuvwxyz'
 
 
-def QRE(game: SGame, implementation='auto'):
+def QRE(game: SGame, implementation='auto', **kwargs):
     """QRE homotopy for stochastic games."""
     if implementation == 'cython' or (implementation == 'auto' and ct):
-        return QRE_ct(game)
+        return QRE_ct(game, **kwargs)
     else:
         if implementation == 'auto' and not ct:
             print('Defaulting to numpy implementation of QRE, because cython version is not installed. Numpy may '
@@ -87,6 +87,8 @@ class QRE_np(QRE_base):
             - einsum_eqs
         """
         super().__init__(game)
+        # legacy version of transition arrays: needed until homotopy functions are updated for _np as well
+        self.game._make_transitions()
 
         num_s, num_p, nums_a = self.game.num_states, self.game.num_players, self.game.nums_actions
         num_a_max = self.game.num_actions_max
@@ -306,9 +308,15 @@ class QRE_np(QRE_base):
 
 class QRE_ct(QRE_base):
     """QRE homotopy: Cython implementation"""
-    def __init__(self, game):
+    def __init__(self, game, **kwargs):
         super().__init__(game)
         self.cache = _qre_ct.QreCache()
+        self.parallel = False
+        if 'parallel' in kwargs:
+            self.parallel = kwargs['parallel']
+        if 'cache' in kwargs and not kwargs['cache']:
+            self.cache = None
+
 
     def H(self, y: np.ndarray) -> np.ndarray:
         return _qre_ct.H(y, self.game.u_ravel, self.game.phi_ravel, self.game.discount_factors,

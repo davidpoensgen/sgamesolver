@@ -3,7 +3,7 @@
 """Cython implementation of QRE homotopy."""
 
 cimport cython
-from cython.parallel cimport prange # TODO: parallel in this file
+from cython.parallel cimport prange
 import numpy as np
 cimport numpy as np
 np.import_array()
@@ -150,7 +150,8 @@ def J(np.ndarray[np.float64_t, ndim=1] y, np.ndarray[np.float64_t, ndim=1] u, np
         cache.u_tilde_sia_ev = u_tilde_sia(u_tilde_ev_ravel, sigma, num_s, num_p, nums_a, num_a_max, parallel)
         u_tilde_sia_ev = np.asarray(cache.u_tilde_sia_ev)
 
-    u_tilde_sia_partial_beta_ev = u_tilde_sia_partial_beta(u_tilde_ev_ravel, sigma, num_s, num_p, nums_a, num_a_max)
+    u_tilde_sia_partial_beta_ev = u_tilde_sia_partial_beta(u_tilde_ev_ravel, sigma,
+                                                           num_s, num_p, nums_a, num_a_max, parallel)
     u_tilde_sia_partial_V_ev = phi_siat(phi, delta, sigma, num_s, num_p, nums_a, num_a_max, parallel)
 
     # first block: rows with d_H_strat[s,i,a]
@@ -193,7 +194,6 @@ def J(np.ndarray[np.float64_t, ndim=1] y, np.ndarray[np.float64_t, ndim=1] u, np
                 col_index = num_a_tot
                 for col_state in range(num_s):
                     for col_player in range(num_p):
-                        #TODO changed this
                         if col_player == row_player and row_action != 0:
                             out_[row_index, col_index] = lambda_ * (
                                   u_tilde_sia_partial_V_ev[row_state, row_player, row_action, col_state]
@@ -240,7 +240,6 @@ def J(np.ndarray[np.float64_t, ndim=1] y, np.ndarray[np.float64_t, ndim=1] u, np
             col_index = num_a_tot
             for col_state in range(num_s):
                 for col_player in range(num_p):
-                    # TODO: changed this. dims fixed I think
                     if col_player == row_player:
                         if col_state == row_state:
                             out_[row_index, col_index] -= 1

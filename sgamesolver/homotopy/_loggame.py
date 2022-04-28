@@ -33,6 +33,8 @@ class LogGame_base(LogStratHomotopy):
 
     def __init__(self, game: SGame, nu: Optional[np.ndarray] = None) -> None:
         super().__init__(game)
+        # legacy version of transition arrays: needed until homotopy functions are updated
+        self.game._make_transitions()
 
         self.tracking_parameters['normal'] = {
             'convergence_tol': 1e-7,

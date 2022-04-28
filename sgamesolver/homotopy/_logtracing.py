@@ -193,6 +193,8 @@ class LogTracing_np(LogTracing_base):
             - einsum_eqs
         """
         super().__init__(game, rho, nu, eta, eta_fix)
+        # legacy version of transition arrays: needed until homotopy functions are updated
+        self.game._make_transitions()
 
         num_s, num_p, nums_a = self.game.num_states, self.game.num_players, self.game.nums_actions
         num_a_max = self.game.num_actions_max

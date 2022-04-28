@@ -84,17 +84,25 @@ class SGame:
                 for s1 in range(self.num_states):
                     transition_matrix[(s0,) + A + (s1,)] = transition_matrices[s0][A + (s1,)]
 
+        self.phi = transition_matrix  # this is the not-per-player version. TODO: clean up
+
+        self.u_ravel = self.payoffs.ravel()
+        self.phi_ravel = self.phi.ravel()
+
+        self.transitions = None  # type: Optional[np.ndarray]
+        # To support older versions of homotopies. See method make_transitions.
+
+    def _make_transitions(self) -> None:
+        """Method to support the transition from game.transitions (with indices [s,p,a0,a1,...S] and discount
+         factors multiplied in) to game.phi (indices [s,a0,a1,....], no discount factors).
+         Old versions of homotopies that require transitions should call this method during __init__()
+        """
         # generate array representing transitions, including discounting: delta * phi [s,p,A,s']
         # (player index due to potentially player-specific discount factors)
         self.transitions = np.zeros((self.num_states, self.num_players, *[self.num_actions_max] * self.num_players,
                                      self.num_states))
         for p in range(self.num_players):
-            self.transitions[:, p] = self.discount_factors[p] * transition_matrix
-
-        self.phi = transition_matrix  # this is the not-per-player version. TODO: clean up
-
-        self.u_ravel = self.payoffs.ravel()
-        self.phi_ravel = self.phi.ravel()
+            self.transitions[:, p] = self.discount_factors[p] * self.phi
 
     @classmethod
     def random_game(cls, num_states, num_players, num_actions, delta=0.95, seed=None):
