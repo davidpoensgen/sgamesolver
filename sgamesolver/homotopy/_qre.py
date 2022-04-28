@@ -311,7 +311,9 @@ class QRE_ct(QRE_base):
         self.cache = _qre_ct.QreCache()
 
     def H(self, y: np.ndarray) -> np.ndarray:
-        return _qre_ct.H(y, self.game.payoffs, self.game.transitions, self.game.nums_actions, self.cache)
+        return _qre_ct.H(y, self.game.u_ravel, self.game.phi_ravel, self.game.discount_factors,
+                         self.game.nums_actions, self.cache, False)  # TODO: parallel flag
 
     def J(self, y: np.ndarray) -> np.ndarray:
-        return _qre_ct.J(y, self.game.payoffs, self.game.transitions, self.game.nums_actions, self.cache)
+        return _qre_ct.J(y, self.game.u_ravel, self.game.phi_ravel, self.game.discount_factors,
+                         self.game.nums_actions, self.cache, False)

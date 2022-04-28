@@ -100,11 +100,11 @@ class LogTracing_base(LogStratHomotopy):
             for p in range(num_p):
                 self.u_rho[:, p] = np.einsum(self.einsum_eqs['u_a'][p],
                                              self.game.payoffs[:, p], *(rho_p_list[:p] + rho_p_list[(p + 1):]))
-                self.phi_rho[:, p] = np.einsum(self.einsum_eqs['phi_a'][p],
-                                               self.game.transitions[:, p], *(rho_p_list[:p] + rho_p_list[(p + 1):]))
+                self.phi_rho[:, p] = np.einsum(self.einsum_eqs['phi_a'][p], self.game.phi,
+                                               *(rho_p_list[:p] + rho_p_list[(p + 1):])) * self.game.discount_factors[p]
         else:
             self.u_rho = self.game.payoffs
-            self.phi_rho = self.game.transitions
+            self.phi_rho = np.expand_dims(self.game.phi, 1) * self.game.discount_factors[0]
 
     def solver_setup(self) -> None:
         self.y0 = self.find_y0()
@@ -172,12 +172,12 @@ class LogTracing_ct(LogTracing_base):
             self.cache = None
 
     def H(self, y: np.ndarray) -> np.ndarray:
-        return _logtracing_ct.H(y, self.game.payoffs, self.game.phi_uni, self.game.discount_factors,
+        return _logtracing_ct.H(y, self.game.u_ravel, self.game.phi_ravel, self.game.discount_factors,
                                 self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
                                 self.game.nums_actions, self.eta_fix, self.parallel, self.cache)
 
     def J(self, y: np.ndarray) -> np.ndarray:
-        return _logtracing_ct.J(y, self.game.payoffs, self.game.phi_uni, self.game.discount_factors,
+        return _logtracing_ct.J(y, self.game.u_ravel, self.game.phi_ravel, self.game.discount_factors,
                                 self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
                                 self.game.nums_actions, self.eta_fix, self.parallel, self.cache)
 

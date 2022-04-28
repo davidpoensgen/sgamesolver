@@ -91,7 +91,10 @@ class SGame:
         for p in range(self.num_players):
             self.transitions[:, p] = self.discount_factors[p] * transition_matrix
 
-        self.phi_uni = transition_matrix  # TODO: clean up
+        self.phi = transition_matrix  # this is the not-per-player version. TODO: clean up
+
+        self.u_ravel = self.payoffs.ravel()
+        self.phi_ravel = self.phi.ravel()
 
     @classmethod
     def random_game(cls, num_states, num_players, num_actions, delta=0.95, seed=None):
@@ -195,21 +198,22 @@ class SGame:
         sigma = np.nan_to_num(strategy_profile)
         sigma_list = [sigma[:, p, :] for p in range(self.num_players)]
 
-        # einsum eqs: u: 'spABC...,sA,sB,sC,...->sp' ; phi: 'spAB...t,sA,sB,sC,...->spt'
+        # einsum eqs: u: 'spABC...,sA,sB,sC,...->sp' ; phi: 'sAB...t,sA,sB,sC,...->st'
         einsum_eq_u = f'sp{ABC[0:self.num_players]},s{",s".join(ABC[p] for p in range(self.num_players))}->sp'
-        einsum_eq_phi = f'sp{ABC[0:self.num_players]}t,s{",s".join(ABC[p] for p in range(self.num_players))}->spt'
+        einsum_eq_phi = f's{ABC[0:self.num_players]}t,s{",s".join(ABC[p] for p in range(self.num_players))}->st'
 
         u = np.einsum(einsum_eq_u, self.payoffs, *sigma_list)
-        phi = np.einsum(einsum_eq_phi, self.transitions, *sigma_list)
+        phi = np.einsum(einsum_eq_phi, self.phi, *sigma_list)
 
         values = np.empty((self.num_states, self.num_players))
         try:
             for p in range(self.num_players):
-                A = np.eye(self.num_states) - phi[:, p, :]
+                A = np.eye(self.num_states) - phi * self.discount_factors[p]
                 values[:, p] = np.linalg.solve(A, u[:, p])
         except np.linalg.LinAlgError:
             raise "Failed to solve for state-player values: Transition matrix not invertible."
         return values
+
 
     @staticmethod
     def flatten_values(values: np.ndarray) -> np.ndarray:
@@ -227,8 +231,9 @@ class SGame:
         values = self.get_values(strategy_profile)
         sigma = np.nan_to_num(strategy_profile)
 
-        # u_tilde: payoffs of normal form games that include continuation values.
-        u_tilde = self.payoffs + np.einsum('sp...S,Sp->sp...', self.transitions, values)
+        # u_tilde: payoffs of normal form games including continuation values.
+        dV = values * self.discount_factors
+        u_tilde = self.payoffs + np.einsum('s...S,Sp->sp...', self.phi, dV)
 
         losses = np.empty((self.num_states, self.num_players))
 
