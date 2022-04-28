@@ -375,6 +375,7 @@ cdef np.ndarray[np.float64_t, ndim=3] u_tilde_deriv(np.ndarray[np.float64_t, ndi
                                                      np.ndarray[np.float64_t, ndim=4] phi_sia,
                                                      np.ndarray[np.float64_t, ndim=2] V):
     """Add continuation values V to derivatives u_sia (= ∂u/∂sigma)."""
+    # because the involved arrays are relatively tiny, there is no scope for optimization of this fct.
     # note that currently, phi_sia already contains discount factors delta.
     return u_sia + np.einsum('spaS,Sp->spa', phi_sia, V)
 
@@ -637,7 +638,7 @@ cdef void phi_siat_inner(double[:,:,::1] out_s, double[::1] phi_s, double[:,::1]
 @cython.nonecheck(False)
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cdef bint arrays_equal(double [:] a, double [:] b):
+cdef bint arrays_equal(double [::1] a, double [::1] b):
     """Check if two 1d-arrays are identical."""
     cdef int i
     if a.shape[0] != b.shape[0]:
