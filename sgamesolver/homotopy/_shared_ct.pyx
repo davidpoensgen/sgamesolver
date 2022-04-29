@@ -1,17 +1,26 @@
-# this file includes functions shared between qre_ct, logtracing_ct:
-# u_tilde
-# u_tilde_sia
-# phi_sia
-# arrays_equal
+# this file includes functions shared between qre_ct, logtracing_ct, loggame_ct:
+# u_tilde, u_tilde_sia, u_tilde_sijab, phi_sia, arrays_equal
 
-
-# note: imports just so IDE does not go crazy - please comment out before compilation
-# import numpy as np
-# cimport numpy as np
-# import cython
-# from cython.parallel cimport prange
-# np.import_array()
-
+# general remarks:
+# all these functions operate on u/phi in some form; because the number of players is not known,
+# this has to be done on raveled arrays.
+# The general structure is of the functions is very similar: the outer function prepares some variables,
+# in particular the output array. It then loops over all states, delegating the actual work to the inner function.
+# (This allows parallelization, but is actually faster than a single function even when not using prange.)
+# The inner functions essentially contain nested loops over the actions of each player (so that each action profile is
+# visited once). Because again, the number of players is not known in advance, this is done using the array
+# loop_profile, which just counts from [0,  ... 0, 0], [0, .., 0, 1] ... to [num_actions_p0, num_actions_p1, ....]
+# (The additional first element at index 0 is simply a 0/1 flag that signals termination when it switches to 1).
+# A flat index is used to access the raveled arrays. To help with updating it, the array u_strides (or phi_strides)
+# exists to help conversion from multi-index (e.g. state, player, a0, a1, ... aN) to flat index.
+# "strides": offsets of the respective indices in u_ravel, so that: flat_index = multi-index (dot) u_strides
+# technically, strides[-1] is 1; strides[-2] is 1*u.shape[-1]; strides[-3] is 1*u.shape[-1]*u.shape[-2] etc.
+# (note that the inner fcts generally operate on slices for a specific state, i.e. the leading state index is omitted)
+# calculation are generally ordered such that specific temporary values (e.g. the product of sigmas of all other
+# players under the current action profile) do not have to be re-calculated later on.
+# This is done as follows: for each action profile, calculations are done only for players with action 0; for the
+# respective player, an inner loop then goes over all actions. (This is behind the frequent use of
+# if loop_profile[p + 1] != 0: continue )
 
 @cython.initializedcheck(False)
 @cython.nonecheck(False)
@@ -22,11 +31,10 @@ cdef np.ndarray[np.float64_t, ndim=1] u_tilde(np.ndarray[np.float64_t, ndim=1] u
                                               np.ndarray[np.float64_t, ndim=1] delta,
                                               np.ndarray[np.float64_t, ndim=2] V,
                                               int num_s, int num_p, int [:,::1] nums_a, int num_a_max, bint parallel):
-    """Add continuation values V to utilities u."""
-    # note: here, phi_ravel is without delta / player index.
+    """Add continuation values V to utilities u: u_tilde = u + δϕV"""
     cdef:
         double [:,:,::1] out_
-        double [:,:,::1] phi_reshaped = phi_ravel.reshape(num_s, -1, num_s)
+        double [:,:,::1] phi_reshaped = phi_ravel.reshape((num_s, -1, num_s))
         double [:,::1] dV
 
         int[:,::1] loop_profiles = np.zeros((num_s, num_p + 1), dtype=np.int32)
@@ -41,7 +49,7 @@ cdef np.ndarray[np.float64_t, ndim=1] u_tilde(np.ndarray[np.float64_t, ndim=1] u
 
     dV = V * delta
 
-    out_ = u_ravel.copy().reshape(num_s, num_p, -1)
+    out_ = u_ravel.copy().reshape((num_s, num_p, -1))
 
     if parallel:
         for s in prange(num_s, schedule="static", nogil=True):
@@ -90,12 +98,13 @@ cdef np.ndarray[np.float64_t, ndim=3] u_tilde_sia(np.ndarray[np.float64_t, ndim=
                                                    double[:,:,::1] sigma,
                                                    int num_s, int num_p, int [:,::1] nums_a, int num_a_max,
                                                    bint parallel):
-    """Payoffs (including continuation values) of player i using pure action a in state s,
-    given other players play according to mixed strategy profile sigma[s,p,a].
+    """Derivatives of u_tilde_si(sigma) w.r.t. sigma_sia. 
+    Put differently, payoffs (including continuation values) of player i using pure action 
+    a in state s, given other players play according to mixed strategy profile sigma.
     """
 
     cdef:
-        double[:,::1] u_tilde_reshaped = u_tilde_ravel.reshape(num_s, -1)
+        double[:,::1] u_tilde_reshaped = u_tilde_ravel.reshape((num_s, -1))
         double[:,:,::1] out_ = np.zeros((num_s, num_p, num_a_max))
         int[:,::1] loop_profiles = np.zeros((num_s, num_p + 1), dtype=np.int32)
         int[::1] u_shape = np.array((num_s, num_p, *(num_a_max,) * num_p), dtype=np.int32)
@@ -126,7 +135,6 @@ cdef np.ndarray[np.float64_t, ndim=3] u_tilde_sia(np.ndarray[np.float64_t, ndim=
 @cython.wraparound(False)
 cdef void u_tilde_sia_inner(double[:,::1] out_s, double[::1] u_tilde_s, double[:,::1] sigma,
                             int[::1] u_strides,  int num_p, int[::1] nums_a, int[::1] loop_profile) nogil:
-    """Inner function (per state) of u_tilde_sia."""
     cdef:
         int p, a, n, flat_index
         double temp_prob
@@ -165,13 +173,13 @@ cdef void u_tilde_sia_inner(double[:,::1] out_s, double[::1] u_tilde_s, double[:
 cdef np.ndarray[np.float64_t, ndim=4] phi_siat(np.ndarray[np.float64_t, ndim=1] phi_ravel, double[:] delta,
                                                double [:,:,::1] sigma, int num_s, int num_p, int [:,::1] nums_a,
                                                int num_a_max, bint parallel):
-    """Transition probabilities phi_[s,i,a,s'] of player i using pure action a in state s,
-    given other players use mixed strategy profile sigma[s,i,a].
-    Corresponds to the derivative of u_tilde w.r.t. to sigma_sia
+    """Derivatives of phi(sigma) w.r.t. sigma_sia. Put differently,transition probabilities phi_[s,i,a,t]
+    from state s to state t t if player i uses pure action a in state s, while other players play according to mixed
+    strategy profile sigma.
     """
 
     cdef:
-        double[:,::1] phi_reshaped = phi_ravel.reshape(num_s, -1)
+        double[:,::1] phi_reshaped = phi_ravel.reshape((num_s, -1))
         np.ndarray[np.float64_t, ndim = 4] out_np = np.zeros((num_s, num_p, num_a_max, num_s))
         double[:,:,:,::1] out_ = out_np
         int [:,::1] loop_profiles = np.zeros((num_s, num_p + 1), dtype=np.int32)
@@ -252,12 +260,13 @@ cdef np.ndarray[np.float64_t, ndim=5] u_tilde_sijab(np.ndarray[np.float64_t, ndi
                                                      double [:,:,::1] sigma,
                                                      int num_s, int num_p, int [:,::1] nums_a,
                                                      int num_a_max, bint parallel):
-    """Payoffs u_tilde_[s,i,j',a,b] (including continuation values) of player i using pure action a in state s,
+    """Cross derivatives d² u_tilde / d sigma_sia d sigma_sjb.
+    Payoffs u_tilde_[s,i,j',a,b] (including continuation values) of player i using pure action a in state s,
     given player j uses pure action b and other players use mixed strategy profile sigma[s,i,a].
     """
 
     cdef:
-        double[:,::1] u_tilde_reshaped = u_tilde_ravel.reshape(num_s, -1)
+        double[:,::1] u_tilde_reshaped = u_tilde_ravel.reshape((num_s, -1))
         double [:,:,:,:,::1] out_ = np.zeros((num_s, num_p, num_p, num_a_max, num_a_max))
         int [:,::1] loop_profiles = np.zeros((num_s, num_p + 1), dtype=np.int32)
         int [::1] u_shape = np.array((num_s, num_p, *(num_a_max,) * num_p), dtype=np.int32)
@@ -288,7 +297,6 @@ cdef np.ndarray[np.float64_t, ndim=5] u_tilde_sijab(np.ndarray[np.float64_t, ndi
 @cython.wraparound(False)
 cdef void u_tilde_sijab_inner(double[:,:,:,::1] out_s, double[::1] u_tilde_s, double[:,::1] sigma,
                               int[::1] u_strides, int num_p, int[::1] nums_a,  int[::1] loop_profile) nogil:
-    """Inner function (per state) of u_tilde_sijab."""
     cdef:
         int p0, p1, a0, a1, n
         int flat_index, index_offset
@@ -296,7 +304,7 @@ cdef void u_tilde_sijab_inner(double[:,:,:,::1] out_s, double[::1] u_tilde_s, do
 
     # loop once over all action profiles.
     while loop_profile[0] == 0:
-        # values are updated only for pairs p0, p1 (with p0<p1) for which a0=a1=0. (p0=p1 not needed)
+        # values are updated only for pairs p0, p1 (with p0<p1) for which a0=a1=0. (case p0=p1 is 0 anyway)
         # looping over their actions a0, a1 is then done within.
         for p0 in range(num_p):
             if loop_profile[p0 + 1] != 0:
@@ -322,7 +330,7 @@ cdef void u_tilde_sijab_inner(double[:,:,:,::1] out_s, double[::1] u_tilde_s, do
                     for a1 in range(nums_a[p1]):
                         # update out-array for p0:
                         out_s[p0, p1, a0, a1] += u_tilde_s[flat_index] * temp_prob
-                        # same, but for p1: (reverse p0,p1, a0,a1, taking offset into account)
+                        # same, but for p1: (reverse p0,p1, a0,a1; take offset into account)
                         out_s[p1, p0, a1, a0] += u_tilde_s[flat_index + index_offset] * temp_prob
                         # increase index for next a1:
                         flat_index += u_strides[p1 + 2]

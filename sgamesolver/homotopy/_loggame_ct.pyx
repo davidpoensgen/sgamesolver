@@ -8,7 +8,7 @@ np.import_array()
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def H(np.ndarray[np.float64_t] y,  np.ndarray[np.float64_t] u, np.ndarray[np.float64_t] phi,
+def H(np.ndarray[np.float64_t] y, np.ndarray[np.float64_t] u, np.ndarray[np.float64_t] phi,
       np.ndarray[np.float64_t] delta, np.ndarray[np.float64_t, ndim=3] nu, int num_s, int num_p,
       np.ndarray[np.int32_t, ndim=2] nums_a, int num_a_max, int num_a_tot, bint parallel):
     """Homotopy function.
@@ -70,7 +70,7 @@ def H(np.ndarray[np.float64_t] y,  np.ndarray[np.float64_t] u, np.ndarray[np.flo
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def J(np.ndarray[np.float64_t, ndim=1] y,np.ndarray[np.float64_t] u, np.ndarray[np.float64_t] phi,
+def J(np.ndarray[np.float64_t, ndim=1] y, np.ndarray[np.float64_t] u, np.ndarray[np.float64_t] phi,
       np.ndarray[np.float64_t] delta, np.ndarray[np.float64_t, ndim=3] nu, int num_s, int num_p,
       np.ndarray[np.int32_t, ndim=2] nums_a, int num_a_max, int num_a_tot, bint parallel):
     """Jacobian matrix.

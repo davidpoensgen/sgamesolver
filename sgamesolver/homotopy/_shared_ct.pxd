@@ -26,3 +26,6 @@ cdef void phi_siat_inner(double[:,:,::1], double[::1], double[:,::1],
                        int[::1],  int, int, int[::1], int[::1])
 
 cdef bint arrays_equal(double [::1], double [::1])
+
+cdef np.ndarray[np.float64_t, ndim=5] u_tilde_sijab(np.ndarray[np.float64_t, ndim=1], double [:,:,::1],
+                                                    int, int, int [:,::1], int, bint):
