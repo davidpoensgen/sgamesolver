@@ -33,7 +33,7 @@ def H(np.ndarray[np.float64_t] y, np.ndarray[np.float64_t, ndim=1] u, np.ndarray
         np.ndarray[np.float64_t, ndim=3] sigma
         np.ndarray[np.float64_t, ndim=3] sigma_inv
         double t = y[num_a_tot + num_s * num_p]
-        np.ndarray[np.float64_t, ndim=2] V = y[num_a_tot: num_a_tot + num_s * num_p].reshape(num_s, num_p)
+        np.ndarray[np.float64_t, ndim=2] V = y[num_a_tot: num_a_tot + num_s * num_p].reshape((num_s, num_p))
 
         np.ndarray[np.float64_t, ndim=3] u_sigma
         np.ndarray[np.float64_t, ndim=4] phi_sigma
@@ -133,7 +133,7 @@ def J(np.ndarray[np.float64_t, ndim=1] y, np.ndarray[np.float64_t, ndim=1] u, np
         np.ndarray[np.float64_t, ndim=3] beta = np.ones((num_s, num_p, num_a_max))
         np.ndarray[np.float64_t, ndim=3] sigma
         np.ndarray[np.float64_t, ndim=3] sigma_inv
-        np.ndarray[np.float64_t, ndim=2] V = y[num_a_tot : num_a_tot + num_s*num_p].reshape(num_s, num_p)
+        np.ndarray[np.float64_t, ndim=2] V = y[num_a_tot : num_a_tot + num_s*num_p].reshape((num_s, num_p))
         double t = y[num_a_tot + num_s*num_p]
 
         np.ndarray[np.float64_t, ndim=3] u_sigma
@@ -309,7 +309,7 @@ include "_shared_ct.pyx"
 cdef np.ndarray[np.float64_t, ndim=3] u_tilde_deriv(np.ndarray[np.float64_t, ndim=3] u_sia,
                                                      np.ndarray[np.float64_t, ndim=4] phi_sia,
                                                      np.ndarray[np.float64_t, ndim=2] V):
-    """Add continuation values V to derivatives u_sia (= ∂u/∂sigma)."""
+    """Add continuation values V to derivatives u_sia (= ∂u/∂sigma_sia)."""
     # because the involved arrays are very tiny in comparison, there is no scope for optimization of this function
     # note that currently, phi_sia already contains discount factors delta
     return u_sia + np.einsum('spaS,Sp->spa', phi_sia, V)

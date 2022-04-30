@@ -14,7 +14,7 @@ def H(np.ndarray[np.float64_t] y, np.ndarray[np.float64_t] u, np.ndarray[np.floa
     """Homotopy function.
 
     H(y) = [  H_val[s,i,a]  ]
-           [  H_strat[s,i]      ]
+           [  H_strat[s,i]  ]
     with
     y = [ beta[s,i,a],  V[s,i],  t ]
     """

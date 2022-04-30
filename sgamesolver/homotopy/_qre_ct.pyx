@@ -31,7 +31,7 @@ def H(np.ndarray[np.float64_t, ndim=1] y, np.ndarray[np.float64_t, ndim=1] u, np
         np.ndarray[np.float64_t, ndim=1] out_ = np.zeros(num_a_tot + num_s*num_p)
         np.ndarray[np.float64_t, ndim=3] beta = np.zeros((num_s, num_p, num_a_max))
         np.ndarray[np.float64_t, ndim=3] sigma
-        np.ndarray[np.float64_t, ndim=2] V = y[num_a_tot : num_a_tot + num_s*num_p].reshape(num_s, num_p)
+        np.ndarray[np.float64_t, ndim=2] V = y[num_a_tot : num_a_tot + num_s*num_p].reshape((num_s, num_p))
         double lambda_ = y[num_a_tot + num_s*num_p]
 
         np.ndarray[np.float64_t, ndim=1] u_tilde_ev_ravel
@@ -112,7 +112,7 @@ def J(np.ndarray[np.float64_t, ndim=1] y, np.ndarray[np.float64_t, ndim=1] u, np
         np.ndarray[np.float64_t, ndim=2] out_ = np.zeros((num_a_tot + num_s*num_p, num_a_tot + num_s*num_p + 1))
         np.ndarray[np.float64_t, ndim=3] beta = np.zeros((num_s, num_p, num_a_max))
         np.ndarray[np.float64_t, ndim=3] sigma
-        np.ndarray[np.float64_t, ndim=2] V = y[num_a_tot : num_a_tot + num_s*num_p].reshape(num_s, num_p)
+        np.ndarray[np.float64_t, ndim=2] V = y[num_a_tot : num_a_tot + num_s*num_p].reshape((num_s, num_p))
         double lambda_ = y[num_a_tot + num_s*num_p]
 
         np.ndarray[np.float64_t, ndim=1] u_tilde_ev_ravel
