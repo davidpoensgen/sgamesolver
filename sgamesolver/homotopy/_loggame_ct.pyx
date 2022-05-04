@@ -1,10 +1,14 @@
 """Cython implementation of LogGame homotopy."""
+# cython: profile=True
+
 
 cimport cython
-from cython.parallel cimport prange
 import numpy as np
 cimport numpy as np
 np.import_array()
+
+from _shared_ct cimport u_tilde, u_tilde_sia, u_tilde_sijab, phi_siat
+
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -196,8 +200,4 @@ def J(np.ndarray[np.float64_t, ndim=1] y, np.ndarray[np.float64_t] u, np.ndarray
             col_index_init += nums_a[row_state, row_player]
 
     return out_
-
-
-# include function definitions for u_tilde, u_tilde_sia, u_tilde_sijab, phi_sia, arrays_equal
-include "_shared_ct.pyx"
 

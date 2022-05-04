@@ -1,5 +1,6 @@
 from setuptools import setup, Extension
 from Cython.Distutils import build_ext
+from Cython.Build import cythonize
 import numpy as np
 
 with open('README.md', 'r', encoding='utf-8') as readme:
@@ -10,13 +11,13 @@ with open('README.md', 'r', encoding='utf-8') as readme:
 # https://docs.python.org/3/distutils/setupscript.html -> 2.3.5
 
 ext_modules = [
-    # Extension(
-    #     'sgamesolver.homotopy._shared_ct',
-    #     ['sgamesolver/homotopy/_shared_ct.pyx'],
-    #     extra_compile_args=['/openmp'],
-    #     extra_link_args=['/openmp'],
-    #     include_dirs=[np.get_include()]
-    # ),
+    Extension(
+        'sgamesolver.homotopy._shared_ct',
+        ['sgamesolver/homotopy/_shared_ct.pyx'],
+        extra_compile_args=['/openmp', '-fopenmp'],
+        extra_link_args=['/openmp', '-fopenmp'],
+        include_dirs=[np.get_include()]
+    ),
     Extension(
         'sgamesolver.homotopy._ipm_ct',
         ['sgamesolver/homotopy/_ipm_ct.pyx'],
@@ -30,15 +31,15 @@ ext_modules = [
     Extension(
         'sgamesolver.homotopy._qre_ct',
         ['sgamesolver/homotopy/_qre_ct.pyx'],
-        extra_compile_args=['/openmp'],
-        extra_link_args=['/openmp'],
+        extra_compile_args=['/openmp', '-fopenmp'],
+        extra_link_args=['/openmp', '-fopenmp'],
         include_dirs=[np.get_include(), 'sgamesolver/homotopy']
     ),
     Extension(
         'sgamesolver.homotopy._logtracing_ct',
         ['sgamesolver/homotopy/_logtracing_ct.pyx'],
-        extra_compile_args=['/openmp'],
-        extra_link_args=['/openmp'],
+        extra_compile_args=['/openmp', '-fopenmp'],
+        extra_link_args=['/openmp', '-fopenmp'],
         include_dirs=[np.get_include()]
     ),
 ]
@@ -66,11 +67,11 @@ setup(
         'Topic :: Scientific/Engineering',
         'Topic :: Scientific/Engineering :: Mathematics'
     ],
-    keywords='game theory, stochastic games, homotopy method, computational economics',
+    keywords='game theory, stochastic games, stationary equilibrium, homotopy method, computational economics',
 
-    cmdclass={'build_ext': build_ext},
+    # cmdclass={'build_ext': build_ext},
     packages=['sgamesolver', 'sgamesolver.homotopy'],
-    ext_modules=ext_modules,
+    ext_modules=cythonize(ext_modules),
 
     python_requires='>=3.6',
     install_requires=['numpy', 'scipy', 'cython'],

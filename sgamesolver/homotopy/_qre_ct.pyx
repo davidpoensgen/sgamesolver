@@ -6,8 +6,7 @@ import numpy as np
 cimport numpy as np
 np.import_array()
 
-# TODO: imports?
-# from ._shared_ct cimport u_tilde, u_tilde_sia, phi_siat, arrays_equal
+from _shared_ct cimport u_tilde, u_tilde_sia, phi_siat, arrays_equal
 
 @cython.initializedcheck(False)
 @cython.nonecheck(False)
@@ -259,10 +258,6 @@ def J(np.ndarray[np.float64_t, ndim=1] y, np.ndarray[np.float64_t, ndim=1] u, np
     return out_
 
 
-# include function definitions for u_tilde, u_tilde_sia, phi_sia, arrays_equal
-include "_shared_ct.pyx"
-
-
 @cython.initializedcheck(False)
 @cython.nonecheck(False)
 @cython.boundscheck(False)
@@ -274,6 +269,7 @@ cdef np.ndarray[np.float64_t, ndim=5] u_tilde_sia_partial_beta(np.ndarray[np.flo
     """Derivatives of u_tilde[s,i,a] w.r.t. log strategies beta[i',a'].
     No index s' in beta because the corresponding derivative is zero.
     """
+    # see _shared_ct.pyx for comments on the general structure of these functions
 
     cdef:
         double[:,::1] u_tilde_reshaped = u_tilde_ravel.reshape((num_s, -1))

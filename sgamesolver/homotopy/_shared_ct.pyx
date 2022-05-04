@@ -1,26 +1,40 @@
-# this file includes functions shared between qre_ct, logtracing_ct, loggame_ct:
-# u_tilde, u_tilde_sia, u_tilde_sijab, phi_sia, arrays_equal
+"""Module containing the following subfunctions shared between the different homotopies:
+u_tilde, u_tilde_sia, u_tilde_sijab, phi_siat, arrays_equal
+"""
 
-# general remarks:
-# all these functions operate on u/phi in some form; because the number of players is not known,
-# this has to be done on raveled arrays.
-# The general structure is of the functions is very similar: the outer function prepares some variables,
-# in particular the output array. It then loops over all states, delegating the actual work to the inner function.
-# (This allows parallelization, but is actually faster than a single function even when not using prange.)
-# The inner functions essentially contain nested loops over the actions of each player (so that each action profile is
-# visited once). Because again, the number of players is not known in advance, this is done using the array
-# loop_profile, which just counts from [0,  ... 0, 0], [0, .., 0, 1] ... to [num_actions_p0, num_actions_p1, ....]
-# (The additional first element at index 0 is simply a 0/1 flag that signals termination when it switches to 1).
-# A flat index is used to access the raveled arrays. To help with updating it, the array u_strides (or phi_strides)
-# exists to help conversion from multi-index (e.g. state, player, a0, a1, ... aN) to flat index.
-# "strides": offsets of the respective indices in u_ravel, so that: flat_index = multi-index (dot) u_strides
-# technically, strides[-1] is 1; strides[-2] is 1*u.shape[-1]; strides[-3] is 1*u.shape[-1]*u.shape[-2] etc.
-# (note that the inner fcts generally operate on slices for a specific state, i.e. the leading state index is omitted)
-# calculation are generally ordered such that specific temporary values (e.g. the product of sigmas of all other
-# players under the current action profile) do not have to be re-calculated later on.
-# This is done as follows: for each action profile, calculations are done only for players with action 0; for the
-# respective player, an inner loop then goes over all actions. (This is behind the frequent use of
-# if loop_profile[p + 1] != 0: continue )
+# general remarks for these functions are structured:
+"""
+- all these functions operate on u/phi in some form
+- because the number of players (and thus their dimensions) is variable, this is done on raveled arrays
+
+- generally speaking, the outer function prepares some variables, and then delegates the actual work to the inner fct 
+- (this allows parallelization, but is actually also faster than a single function even when using a simple range)
+
+- the inner functions loop over all action profiles; because the number of players is variable (and thus the number of
+  nested loops this would take), this uses the array loop_profile instead of nested loops
+- loop_profile[1:] just counts action profiles from [0,  ... 0, 0], [0, .., 0, 1] ... 
+  to [num_actions_p0, num_actions_p1, ....] 
+- (loop_profile[p+1] contains the current action of p)
+- loop_profile[0] is just a flag that switches from 0 to 1 once this is finished
+
+- u/phi are indexed using a flat index. The array u_strides/phi_strides help convert from multi-index to flat:
+  e.g. from u[s,p,a0,a1,...,aN] to u[flat] using the relation: multi_index (dot) strides = flat_index.
+- technically, strides[-1] is 1; strides[-2] is 1*u.shape[-1]; strides[-3] is 1*u.shape[-1]*u.shape[-2] etc.
+- (the inner function typically operate on a per-state-slice, so that this index is dropped there)
+
+- calculations are ordered so that specific intermediate results do not have to be re-calculated later on.
+- in particular, for a given action_profile of all players except p, calculations for all actions of p are 
+  performed at once (allowing to re-use the sigma-product for all others)
+- this is implemented as follows: for any action profile, calculations are done for all players playing action 0; 
+  looping over their respective actions is then done in the inner loop. 
+- (thus the frequent if loop_profile[p + 1] != 0: continue)
+"""
+
+cimport cython
+from cython.parallel cimport prange
+import numpy as np
+cimport numpy as np
+np.import_array()
 
 @cython.initializedcheck(False)
 @cython.nonecheck(False)
@@ -31,7 +45,7 @@ cdef np.ndarray[np.float64_t, ndim=1] u_tilde(np.ndarray[np.float64_t, ndim=1] u
                                               np.ndarray[np.float64_t, ndim=1] delta,
                                               np.ndarray[np.float64_t, ndim=2] V,
                                               int num_s, int num_p, int [:,::1] nums_a, int num_a_max, bint parallel):
-    """Add continuation values V to utilities u: u_tilde = u + δϕV"""
+    """Add continuation values V to utilities u[s,p,a0,a1,...aN]: u_tilde = u + δϕV"""
     cdef:
         double [:,:,::1] out_
         double [:,:,::1] phi_reshaped = phi_ravel.reshape((num_s, -1, num_s))
@@ -57,7 +71,7 @@ cdef np.ndarray[np.float64_t, ndim=1] u_tilde(np.ndarray[np.float64_t, ndim=1] u
                           num_s, num_p, nums_a[s, :], num_a_max, loop_profiles[s, :])
     else:
         for s in range(num_s):
-            u_tilde_inner(out_[s,:,:], phi_reshaped[s, :, :], dV, u_strides,
+            u_tilde_inner(out_[s, :, :], phi_reshaped[s, :, :], dV, u_strides,
                           num_s, num_p, nums_a[s, :], num_a_max, loop_profiles[s,:])
 
     return np.asarray(out_).ravel()
@@ -83,7 +97,7 @@ cdef void u_tilde_inner(double[:,::1] out_s, double[:,::1] phi_s, double [:, ::1
             if loop_profile[num_p - n] == nums_a[num_p - n - 1]:
                 loop_profile[num_p - n - 1] += 1  # a of player (num_p-n) is increased
                 loop_profile[num_p - n] = 0 # action of player (num_p-n-1) is reset to 0
-                # we are possibly skipping (nums_a_max - nums_a(num_p-n-1)) actions of the latter.
+                # we are (possibly) skipping nums_a_max - nums_a[num_p-n-1] actions of the latter.
                 # player p has index p+2 in strides. Thus:
                 flat_index += u_strides[num_p - n + 1] * (num_a_max - nums_a[num_p-n-1])
             else:
@@ -174,7 +188,7 @@ cdef np.ndarray[np.float64_t, ndim=4] phi_siat(np.ndarray[np.float64_t, ndim=1] 
                                                double [:,:,::1] sigma, int num_s, int num_p, int [:,::1] nums_a,
                                                int num_a_max, bint parallel):
     """Derivatives of phi(sigma) w.r.t. sigma_sia. Put differently,transition probabilities phi_[s,i,a,t]
-    from state s to state t t if player i uses pure action a in state s, while other players play according to mixed
+    from state s to state t, if player i uses pure action a in state s, while other players play according to mixed
     strategy profile sigma.
     """
 
@@ -304,7 +318,7 @@ cdef void u_tilde_sijab_inner(double[:,:,:,::1] out_s, double[::1] u_tilde_s, do
 
     # loop once over all action profiles.
     while loop_profile[0] == 0:
-        # values are updated only for pairs p0, p1 (with p0<p1) for which a0=a1=0. (case p0=p1 is 0 anyway)
+        # values are updated only for pairs p0, p1 (with p0<p1) for which a0=a1=0. (the case p0=p1 yields 0 anyway)
         # looping over their actions a0, a1 is then done within.
         for p0 in range(num_p):
             if loop_profile[p0 + 1] != 0:
@@ -330,7 +344,7 @@ cdef void u_tilde_sijab_inner(double[:,:,:,::1] out_s, double[::1] u_tilde_s, do
                     for a1 in range(nums_a[p1]):
                         # update out-array for p0:
                         out_s[p0, p1, a0, a1] += u_tilde_s[flat_index] * temp_prob
-                        # same, but for p1: (reverse p0,p1, a0,a1; take offset into account)
+                        # same, but for p1: (reverse p0,p1; a0,a1; take offset into account)
                         out_s[p1, p0, a1, a0] += u_tilde_s[flat_index + index_offset] * temp_prob
                         # increase index for next a1:
                         flat_index += u_strides[p1 + 2]
@@ -360,5 +374,3 @@ cdef bint arrays_equal(double [::1] a, double [::1] b):
         if a[i] != b[i]:
             return False
     return True
-
-
