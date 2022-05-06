@@ -4,14 +4,15 @@ Specification - which homotopy, which game sizes, how many runs, which parameter
 are to be given in the excel files.
 
 Usage:
-1) To run a file (or multiple files):
+1) To run an existing file (or multiple files):
 python excel_timings.py filename0 [filename1 filename2 ....]
+-> filenames can include folders; can omit .xlsx extension.
 -> add flag -SD to shutdown once all files are done (on windows).
 
-2) To create xlsx-files to be run, just add flag -m:
+2) To create xlsx-files instead, just add flag -m:
 python excel_timings.py -m filename0 [filename1 filename2 ....]
-(make sure to adapt the resulting files before running)
--> Alternatively, copy an existing file, make desired changes, and delete all rows (except header) from table "runs".
+(make sure to adapt the new files and then run them as above)
+-> Alternatively, just copy an existing file, make any desired changes, and delete all rows (except header) from table "runs".
 """
 
 import sgamesolver
