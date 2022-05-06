@@ -1,5 +1,4 @@
 cimport cython
-from cython.parallel cimport prange
 import numpy as np
 cimport numpy as np
 np.import_array()

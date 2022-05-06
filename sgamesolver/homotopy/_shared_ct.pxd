@@ -1,5 +1,7 @@
 cimport numpy as np
 
+# headers for all functions which other modules will want to import
+
 cdef np.ndarray[np.float64_t, ndim=1] u_tilde(np.ndarray[np.float64_t, ndim=1] u_ravel,
                                               np.ndarray[np.float64_t, ndim=1] phi_ravel,
                                               np.ndarray[np.float64_t, ndim=1] delta,
