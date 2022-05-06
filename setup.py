@@ -19,6 +19,13 @@ ext_modules = [
         include_dirs=[np.get_include()]
     ),
     Extension(
+        'sgamesolver.homotopy._shared_ct2',
+        ['sgamesolver/homotopy/_shared_ct2.pyx'],
+        extra_compile_args=['/openmp', '-fopenmp'],
+        extra_link_args=['/openmp', '-fopenmp'],
+        include_dirs=[np.get_include()]
+    ),
+    Extension(
         'sgamesolver.homotopy._ipm_ct',
         ['sgamesolver/homotopy/_ipm_ct.pyx'],
         include_dirs=[np.get_include()]

@@ -40,11 +40,11 @@ np.import_array()
 @cython.nonecheck(False)
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cdef np.ndarray[np.float64_t, ndim=1] u_tilde(np.ndarray[np.float64_t, ndim=1] u_ravel,
+cpdef np.ndarray[np.float64_t, ndim=1] u_tilde(np.ndarray[np.float64_t, ndim=1] u_ravel,
                                               np.ndarray[np.float64_t, ndim=1] phi_ravel,
                                               np.ndarray[np.float64_t, ndim=1] delta,
                                               np.ndarray[np.float64_t, ndim=2] V,
-                                              int num_s, int num_p, int [:,::1] nums_a, int num_a_max, bint parallel):
+                                              int num_s, int num_p, int [:,::1] nums_a, int num_a_max, int parallel):
     """Add continuation values V to utilities u[s,p,a0,a1,...aN]: u_tilde = u + δϕV"""
     cdef:
         double [:,:,::1] out_
@@ -66,7 +66,7 @@ cdef np.ndarray[np.float64_t, ndim=1] u_tilde(np.ndarray[np.float64_t, ndim=1] u
     out_ = u_ravel.copy().reshape((num_s, num_p, -1))
 
     if parallel:
-        for s in prange(num_s, schedule="static", nogil=True):
+        for s in prange(num_s, num_threads=parallel, schedule="static", nogil=True):
             u_tilde_inner(out_[s, :, :], phi_reshaped[s, :, :], dV, u_strides,
                           num_s, num_p, nums_a[s, :], num_a_max, loop_profiles[s, :])
     else:
@@ -108,10 +108,10 @@ cdef void u_tilde_inner(double[:,::1] out_s, double[:,::1] phi_s, double [:, ::1
 @cython.nonecheck(False)
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cdef np.ndarray[np.float64_t, ndim=3] u_tilde_sia(np.ndarray[np.float64_t, ndim=1] u_tilde_ravel,
+cpdef np.ndarray[np.float64_t, ndim=3] u_tilde_sia(np.ndarray[np.float64_t, ndim=1] u_tilde_ravel,
                                                    double[:,:,::1] sigma,
                                                    int num_s, int num_p, int [:,::1] nums_a, int num_a_max,
-                                                   bint parallel):
+                                                   int parallel):
     """Derivatives of u_tilde_si(sigma) w.r.t. sigma_sia. 
     Put differently, payoffs (including continuation values) of player i using pure action 
     a in state s, given other players play according to mixed strategy profile sigma.
@@ -132,7 +132,7 @@ cdef np.ndarray[np.float64_t, ndim=3] u_tilde_sia(np.ndarray[np.float64_t, ndim=
             u_strides[s] *= u_shape[n]
 
     if parallel:
-        for s in prange(num_s, schedule="static", nogil=True):
+        for s in prange(num_s,num_threads=parallel,  schedule="static", nogil=True):
             u_tilde_sia_inner(out_[s, :, :], u_tilde_reshaped[s,:], sigma[s, :, :],
                               u_strides, num_p, nums_a[s, :], loop_profiles[s, :])
     else:
@@ -184,9 +184,9 @@ cdef void u_tilde_sia_inner(double[:,::1] out_s, double[::1] u_tilde_s, double[:
 @cython.nonecheck(False)
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cdef np.ndarray[np.float64_t, ndim=4] phi_siat(np.ndarray[np.float64_t, ndim=1] phi_ravel, double[:] delta,
+cpdef np.ndarray[np.float64_t, ndim=4] phi_siat(np.ndarray[np.float64_t, ndim=1] phi_ravel, double[:] delta,
                                                double [:,:,::1] sigma, int num_s, int num_p, int [:,::1] nums_a,
-                                               int num_a_max, bint parallel):
+                                               int num_a_max, int parallel):
     """Derivatives of phi(sigma) w.r.t. sigma_sia. Put differently, transition probabilities phi_[s,i,a,t]
     from state s to state t, if player i uses pure action a in state s, while other players play according to mixed
     strategy profile sigma.
@@ -209,7 +209,7 @@ cdef np.ndarray[np.float64_t, ndim=4] phi_siat(np.ndarray[np.float64_t, ndim=1] 
             phi_strides[s] *= phi_shape[n]
 
     if parallel:
-        for s in prange(num_s, schedule="static", nogil=True):
+        for s in prange(num_s, num_threads=parallel, schedule="static", nogil=True):
             phi_siat_inner(out_[s, :, :, :], phi_reshaped[s,:], sigma[s, :, :],
                            phi_strides, num_s, num_p, nums_a[s, :], loop_profiles[s, :])
     else:
@@ -270,10 +270,10 @@ cdef void phi_siat_inner(double[:,:,::1] out_s, double[::1] phi_s, double[:,::1]
 @cython.nonecheck(False)
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cdef np.ndarray[np.float64_t, ndim=5] u_tilde_sijab(np.ndarray[np.float64_t, ndim=1] u_tilde_ravel,
+cpdef np.ndarray[np.float64_t, ndim=5] u_tilde_sijab(np.ndarray[np.float64_t, ndim=1] u_tilde_ravel,
                                                      double [:,:,::1] sigma,
                                                      int num_s, int num_p, int [:,::1] nums_a,
-                                                     int num_a_max, bint parallel):
+                                                     int num_a_max, int parallel):
     """Cross derivatives d² u_tilde / d sigma_sia d sigma_sjb.
     Payoffs u_tilde_[s,i,j',a,b] (including continuation values) of player i using pure action a in state s,
     given player j uses pure action b and other players use mixed strategy profile sigma[s,i,a].
@@ -294,7 +294,7 @@ cdef np.ndarray[np.float64_t, ndim=5] u_tilde_sijab(np.ndarray[np.float64_t, ndi
             u_strides[s] *= u_shape[n]
 
     if parallel:
-        for s in prange(num_s, schedule="static", nogil=True):
+        for s in prange(num_s,num_threads=parallel,  schedule="static", nogil=True):
             u_tilde_sijab_inner(out_[s, :, :, :, :], u_tilde_reshaped[s,:], sigma[s, :, :],
                                 u_strides, num_p, nums_a[s, :], loop_profiles[s, :])
     else:
