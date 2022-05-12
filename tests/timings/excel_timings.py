@@ -12,8 +12,10 @@ python excel_timings.py filename0 [filename1 filename2 ....]
 2) To create xlsx-files instead, just add flag -m:
 python excel_timings.py -m filename0 [filename1 filename2 ....]
 (make sure to adapt the new files and then run them as above)
--> Alternatively, just copy an existing file, make any desired changes, and delete all rows (except header) from table "runs".
+-> Alternatively, just copy an existing file, make any desired changes,
+   and delete all rows (except header) from table "runs".
 """
+
 
 import sgamesolver
 import openpyxl
@@ -66,9 +68,9 @@ def make_file(filename):
     games.column_dimensions["G"].width = 32
 
     for S in [1, 2, 5, 10, 20]:
-        for I in [1, 2, 3, 4, 5]:
+        for P in [1, 2, 3, 4, 5]:
             for A in [2, 5, 10]:
-                games.append([S, I, A, 100])
+                games.append([S, P, A, 100])
 
     runs = wb.create_sheet("Runs")
     runs.append(
@@ -85,7 +87,7 @@ def make_file(filename):
                     "av time", "av time (s)", "std time (s)", "av steps", "std steps"])
 
     wb.save(filename=filename)
-    print(f'"{filename}" created.\n' 
+    print(f'"{filename}" created.\n'
           f'-> Remember to choose a homotopy and adjust parameters and run counts.')
     print('~' * 75)
 
@@ -126,10 +128,10 @@ def run_file(filename):
         if homotopy_string is not None:
             print(f'ERROR: Homotopy "{homotopy_string}" given in the excel file, does not exist.')
         else:
-            print(f'ERROR: No homotopy specified in the excel file.')
+            print('ERROR: No homotopy specified in the excel file.')
         print(f'Currently available homotopies are: {", ".join([h for h in HOMOTOPIES])}')
-        print(f'Please adapt the file and run again.')
-        print('~'*75)
+        print('Please adapt the file and run again.')
+        print('~' * 75)
         return
 
     homotopy_constructor = HOMOTOPIES[homotopy_string]
@@ -325,4 +327,3 @@ if __name__ == '__main__':
         if args.SD:
             import subprocess
             subprocess.run(["shutdown", "-s"])
-

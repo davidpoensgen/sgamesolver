@@ -16,7 +16,7 @@ payoff_matrix = np.array([[[5, 0],
 game = sgamesolver.SGame.one_shot_game(payoff_matrix=payoff_matrix)
 
 # choose homotopy: logarithmic tracing procedure
-homotopy = sgamesolver.homotopy.Tracing(game=game)
+homotopy = sgamesolver.homotopy.LogTracing(game=game)
 
 # solve
 homotopy.solver_setup()
