@@ -14,6 +14,7 @@ from sgamesolver.homcont import HomCont
 
 try:
     import sgamesolver.homotopy._logtracing_ct as _logtracing_ct
+
     ct = True
 except ImportError:
     ct = False
@@ -112,7 +113,7 @@ class LogTracing_base(LogStratHomotopy):
                               parameters=self.tracking_parameters['normal'],
                               distance_function=self.sigma_distance)
 
-    def find_y0(self, tol: float = 1e-12, max_iter: int = 10000, dev: bool = False) -> np.ndarray:
+    def find_y0(self, tol: float = 1e-12, max_iter: int = 10000) -> np.ndarray:
         """Value function iteration."""
 
         num_s, num_p, nums_a = self.game.num_states, self.game.num_players, self.game.nums_actions
@@ -122,85 +123,37 @@ class LogTracing_base(LogStratHomotopy):
         sigma = sigma_old.copy()
         V = V_old.copy()
 
-        # TODO: decide which version to keep
-        if dev:
+        for _ in range(max_iter):
+            c = self.u_rho + np.einsum('spaS,Sp->spa', self.phi_rho, V_old)
 
-            player_converged = np.zeros(num_p, dtype=bool)
-
-            for _ in range(max_iter):
-                c = self.u_rho + np.einsum('spaS,Sp->spa', self.phi_rho, V_old)
-
-                # computation for all agents separately
+            # computation for all agents separately
+            for s in range(num_s):
                 for p in range(num_p):
-                    if player_converged[p]:
-                        continue
+                    # solve system of multi-linear equations
+                    # - by first combining all equations to one big equation in sigma1
+                    # - and then solving the equation by Brent's method
+                    c_max_idx = np.argmax(c[s, p, 0:nums_a[s, p]])
 
-                    for s in range(num_s):
-                        # solve system of multi-linear equations
-                        # - by first combining all equations to one big equation in sigma1
-                        # - and then solving the equation by Brent's method
-                        c_max_idx = np.argmax(c[s, p, 0:nums_a[s, p]])
+                    numerator = self.nu[s, p, 0:nums_a[s, p]] / self.nu[s, p, c_max_idx]
+                    denominator = (c[s, p, c_max_idx] - c[s, p, 0:nums_a[s, p]]) / (self.eta * self.nu[s, p, c_max_idx])
 
-                        def f(sigma1):
-                            return - 1 + ((self.nu[s, p, 0:nums_a[s, p]] / self.nu[s, p, c_max_idx])
-                                          / ((c[s, p, c_max_idx] - c[s, p, 0:nums_a[s, p]])
-                                             / (self.eta * self.nu[s, p, c_max_idx]) + 1 / sigma1)).sum()
+                    def f(sigma1):
+                        return (numerator / (denominator + 1/sigma1)).sum() - 1
 
-                        sigma1 = brentq(f, 1 / nums_a[s, p], 1, xtol=1e-4, rtol=1e-4)
+                    sigma1 = brentq(f, 1e-12, 1, xtol=1e-4, rtol=1e-4)
 
-                        sigma[s, p, 0:nums_a[s, p]] = ((self.nu[s, p, 0:nums_a[s, p]] / self.nu[s, p, c_max_idx])
-                                                       / ((c[s, p, c_max_idx] - c[s, p, 0:nums_a[s, p]])
-                                                          / (self.eta * self.nu[s, p, c_max_idx]) + 1 / sigma1))
-                        V[s, p] = (c[s, p, c_max_idx] + ((self.eta * self.nu[s, p, c_max_idx]) / sigma1)
-                                   + self.eta * ((self.nu[s, p, 0:nums_a[s, p]]
-                                                 * (np.log(sigma[s, p, 0:nums_a[s, p]]) - 1)).sum()))
+                    sigma[s, p, 0:nums_a[s, p]] = numerator / (denominator + 1 / sigma1)
+                    V[s, p] = (c[s, p, c_max_idx] + ((self.eta * self.nu[s, p, c_max_idx]) / sigma1)
+                               + self.eta * ((self.nu[s, p, 0:nums_a[s, p]]
+                                              * (np.log(sigma[s, p, 0:nums_a[s, p]]) - 1)).sum()))
 
-                    if np.max(np.abs(V[:, p] - V_old[:, p])) < tol and np.allclose(sigma[:, p], sigma_old[:, p],
-                                                                                   rtol=0, atol=tol, equal_nan=True):
-                        player_converged[p] = True
-
-                if player_converged.all():
-                    break
-                else:
-                    V_old = V.copy()
-                    sigma_old = sigma.copy()
-            else:  # loop ended without break
-                warnings.warn('Value function iteration has not converged during computation of the starting point.')
-
-        else:
-
-            for k in range(max_iter):
-                c = self.u_rho + np.einsum('spaS,Sp->spa', self.phi_rho, V_old)
-
-                # computation for all agents separately
-                for s in range(num_s):
-                    for p in range(num_p):
-                        # solve system of multi-linear equations
-                        # - by first combining all equations to one big equation in sigma1
-                        # - and then solving the equation by Brent's method
-                        c_max_idx = np.argmax(c[s, p, 0:nums_a[s, p]])
-
-                        def f(sigma1):
-                            return - 1 + ((self.nu[s, p, 0:nums_a[s, p]] / self.nu[s, p, c_max_idx])
-                                          / ((c[s, p, c_max_idx] - c[s, p, 0:nums_a[s, p]])
-                                             / (self.eta * self.nu[s, p, c_max_idx]) + 1 / sigma1)).sum()
-
-                        sigma1 = brentq(f, 1e-24, 1)
-
-                        sigma[s, p, 0:nums_a[s, p]] = ((self.nu[s, p, 0:nums_a[s, p]] / self.nu[s, p, c_max_idx])
-                                                       / ((c[s, p, c_max_idx] - c[s, p, 0:nums_a[s, p]])
-                                                          / (self.eta * self.nu[s, p, c_max_idx]) + 1 / sigma1))
-                        V[s, p] = (c[s, p, c_max_idx] + ((self.eta * self.nu[s, p, c_max_idx]) / sigma1)
-                                   + self.eta * ((self.nu[s, p, 0:nums_a[s, p]]
-                                                 * (np.log(sigma[s, p, 0:nums_a[s, p]]) - 1)).sum()))
-
-                if np.max(np.abs(V - V_old)) < tol and np.allclose(sigma, sigma_old, rtol=0, atol=tol, equal_nan=True):
-                    break
-                else:
-                    V_old = V.copy()
-                    sigma_old = sigma.copy()
-            else:  # loop ended without break
-                warnings.warn('Value function iteration has not converged during computation of the starting point.')
+            if np.max(np.abs(V - V_old)) < tol and np.allclose(sigma, sigma_old, rtol=0, atol=tol, equal_nan=True):
+                break
+            else:
+                V_old = V.copy()
+                sigma_old = sigma.copy()
+        else:  # loop ended without break
+            warnings.warn('Value function iteration has not converged during computation of the starting point.')
 
         return self.sigma_V_t_to_y(sigma, V, 0.0)
 

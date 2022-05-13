@@ -129,9 +129,9 @@ def run_file(filename):
             print(f'ERROR: Homotopy "{homotopy_string}" given in the excel file, does not exist.')
         else:
             print('ERROR: No homotopy specified in the excel file.')
-        print(f'Currently available homotopies are: {", ".join([h for h in HOMOTOPIES])}')
-        print(f'Please adapt the file and run again.')
-        print('~' * 75)
+        print(f'Currently available homotopies are: {", ".join([h for h in HOMOTOPIES])}\n'
+              'Please adapt the file and run again.\n'
+              '~' * 75)
         return
 
     homotopy_constructor = HOMOTOPIES[homotopy_string]
@@ -223,7 +223,7 @@ def summarize_file(filename):
     wb = openpyxl.load_workbook(filename=filename)
 
     summary = wb["Summary"]
-    summary.delete_rows(2, 100)
+    summary.delete_rows(2, 200)
     games_pd = pd.read_excel(filename, sheet_name="Games", keep_default_na=False)
     runs_pd = pd.read_excel(filename, sheet_name="Runs")
 
@@ -283,50 +283,48 @@ if __name__ == '__main__':
     parser.add_argument('filenames', metavar='filename', nargs='+',
                         help='File(s) to be run (May include path; may omit file extension .xslx)')
     group = parser.add_mutually_exclusive_group()
-    group.add_argument('-m', action='store_true', help='Create the file(s) instead of running it')
-    group.add_argument('-s', action='store_true', help='Summarize the file(s) instead of running it')
+    group.add_argument('-m', action='store_true', help='Create the file(s) instead of running it.')
+    group.add_argument('-s', action='store_true', help='Summarize the file(s) instead of running it.')
     group.add_argument('-SD', action='store_true', help='Shutdown computer once all files have run.')
 
     args = parser.parse_args()
 
     if args.m:
-        for filename in args.filenames:
-            make_file(filename)
+        for file in args.filenames:
+            make_file(file)
         sys.exit()
 
     if args.s:
-        for filename in args.filenames:
-            if filename[-5:] != ".xlsx":
-                filename = filename + ".xlsx"
-            if not os.path.isfile(filename):
-                print(f'ERROR: "{filename}" not found.')
+        for file in args.filenames:
+            if file[-5:] != ".xlsx":
+                file = file + ".xlsx"
+            if not os.path.isfile(file):
+                print(f'ERROR: "{file}" not found.')
             else:
-                summarize_file(filename)
+                summarize_file(file)
         sys.exit()
 
     # first pass: check if all files can be found:
     missing_file = False
-    for filename in args.filenames:
-        if filename[-5:] != ".xlsx":
-            filename = filename + ".xlsx"
-        if not os.path.isfile(filename):
+    for file in args.filenames:
+        if file[-5:] != ".xlsx":
+            file = file + ".xlsx"
+        if not os.path.isfile(file):
             missing_file = True
-            print(f'ERROR: "{filename}" not found.')
+            print(f'ERROR: "{file}" not found.')
     if missing_file:
         sys.exit()
     # second pass: actually (attempt to) run all files.
     try:
-        for filename in args.filenames:
-            run_file(filename)
+        for file in args.filenames:
+            run_file(file)
         if args.SD:
             import subprocess
-
             subprocess.run(["shutdown", "-s"])
     except Exception:
-        # any exception the running code does not catch (besides keyboardinterrupt.)
+        # any exception the running code does not catch (besides KeyboardInterrupt.)
         # (e.g. illegal kwargs when setting up homotopies or similar)
         # this is to ensure shutdown goes through even if something unexpected happens.
         if args.SD:
             import subprocess
-
             subprocess.run(["shutdown", "-s"])
