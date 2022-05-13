@@ -1,4 +1,6 @@
 """Classes for stochastic game and corresponding homotopy."""
+
+
 from typing import Union, List, Tuple, Optional
 import numpy as np
 from .homcont import HomCont
@@ -221,7 +223,6 @@ class SGame:
         except np.linalg.LinAlgError:
             raise "Failed to solve for state-player values: Transition matrix not invertible."
         return values
-
 
     @staticmethod
     def flatten_values(values: np.ndarray) -> np.ndarray:

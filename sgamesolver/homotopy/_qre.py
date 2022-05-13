@@ -237,7 +237,7 @@ class QRE_np(QRE_base):
                     + np.einsum('spaSPA,SPA->spa', self.T_H[2], beta - lambda_ * Eu_tilde_a)
                     ).reshape(spa)
         # H_val
-        H[spa : spa+sp] = np.einsum('spSP,SP->sp', self.T_H[3], V - Eu_tilde).reshape(sp)
+        H[spa: spa+sp] = np.einsum('spSP,SP->sp', self.T_H[3], V - Eu_tilde).reshape(sp)
 
         return H[self.H_mask]
 
@@ -292,15 +292,15 @@ class QRE_np(QRE_base):
                            np.einsum('spatqb,tqbSPA->spaSPA', -self.T_H[2], dEu_tilde_a_dbeta)
                            ).reshape((spa, spa))
         # dH_strat_dV
-        J[0:spa, spa : spa+sp] = (lambda_ * np.einsum('spatqb,tqbSP->spaSP', -self.T_H[2], dEu_tilde_a_dV)
-                                  ).reshape((spa, sp))
+        J[0:spa, spa: spa+sp] = (lambda_ * np.einsum('spatqb,tqbSP->spaSP', -self.T_H[2], dEu_tilde_a_dV)
+                                 ).reshape((spa, sp))
         # dH_strat_dlambda
         J[0:spa, spa+sp] = np.einsum('spatqb,tqb->spa', -self.T_H[2], Eu_tilde_a).reshape(spa)
         # dH_val_dbeta
-        J[spa : spa+sp, 0:spa] = np.einsum('sptq,tqSPA->spSPA', -self.T_H[3], dEu_tilde_dbeta).reshape((sp, spa))
+        J[spa: spa+sp, 0:spa] = np.einsum('sptq,tqSPA->spSPA', -self.T_H[3], dEu_tilde_dbeta).reshape((sp, spa))
         # dH_val_dV
-        J[spa : spa+sp, spa : spa+sp] = (self.T_J[5] + np.einsum('sptq,tqSP->spSP', -self.T_H[3], dEu_tilde_dV)
-                                         ).reshape((sp, sp))
+        J[spa: spa+sp, spa: spa+sp] = (self.T_J[5] + np.einsum('sptq,tqSP->spSP', -self.T_H[3], dEu_tilde_dV)
+                                       ).reshape((sp, sp))
         # dH_val_dlambda = 0
 
         return J[self.J_mask]

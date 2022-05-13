@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from dsgamesolver.sgame import SGame
+from sgamesolver.sgame import SGame
 from tests.random_game import create_random_game
 
 
@@ -44,6 +44,7 @@ class TestSGame:
         assert np.allclose(sum(matrix.sum() for matrix in cls.payoff_matrices), cls.game.payoffs.sum())
 
     def test_transitions(cls):
+        cls.game._make_transitions()
         assert isinstance(cls.game.transitions, np.ndarray)
         assert not np.isnan(cls.game.transitions).any()
         # dimensions:
@@ -91,5 +92,23 @@ class TestSGame:
         assert np.allclose(values_unflattened, values)
 
     def test_equilibrium_check(cls):
-        # TODO
-        pass
+        random_strategy = cls.game.random_strategy()
+        assert np.max(np.abs(cls.game.check_equilibrium(random_strategy))) < 1
+
+
+# %% run
+
+
+if __name__ == '__main__':
+
+    test_sgame = TestSGame()
+
+    test_sgame.test_shape_of_game()
+    test_sgame.test_nums_actions()
+    test_sgame.test_payoffs()
+    test_sgame.test_transitions()
+    test_sgame.test_discount_factors()
+    test_sgame.test_symmetries()
+    test_sgame.test_strategies()
+    test_sgame.test_values()
+    test_sgame.test_equilibrium_check()

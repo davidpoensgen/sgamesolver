@@ -12,8 +12,10 @@ python excel_timings.py filename0 [filename1 filename2 ....]
 2) To create xlsx-files instead, just add flag -m:
 python excel_timings.py -m filename0 [filename1 filename2 ....]
 (make sure to adapt the new files and then run them as above)
--> Alternatively, just copy an existing file, make any desired changes, and delete all rows (except header) from table "runs".
+-> Alternatively, just copy an existing file, make any desired changes,
+   and delete all rows (except header) from table "runs".
 """
+
 
 import sgamesolver
 import openpyxl
@@ -122,11 +124,11 @@ def run_file(filename):
     spec = wb["Specification"]
     homotopy_string = spec['B1'].value
     if homotopy_string not in HOMOTOPIES:
-        print('~' * 75)
+        print('~'*75)
         if homotopy_string is not None:
             print(f'ERROR: Homotopy "{homotopy_string}" given in the excel file, does not exist.')
         else:
-            print(f'ERROR: No homotopy specified in the excel file.')
+            print('ERROR: No homotopy specified in the excel file.')
         print(f'Currently available homotopies are: {", ".join([h for h in HOMOTOPIES])}')
         print(f'Please adapt the file and run again.')
         print('~' * 75)
@@ -173,7 +175,7 @@ def run_file(filename):
                 homotopy.solver.verbose = 0
                 homotopy.solver.set_parameters(**{**solver_parameters_all, **solver_parameters})
             except KeyboardInterrupt:
-                print('\n' + '+!+' * 25)
+                print('\n'+'+!+' * 25)
                 print(f'{datetime.now().strftime("%H:%M:%S")} > '
                       f'KEYBOARD INTERRUPT > PLEASE WAIT WHILE SAVING {filename}.')
                 save_file()
@@ -188,7 +190,7 @@ def run_file(filename):
                 if (datetime.now() - time_saved).total_seconds() >= save_interval_seconds:
                     save_file()
             except KeyboardInterrupt:
-                print('\n' + '+!+' * 25)
+                print('\n'+'+!+' * 25)
                 print(f'{datetime.now().strftime("%H:%M:%S")} > '
                       f'KEYBOARD INTERRUPT > PLEASE WAIT WHILE SAVING {filename}.')
                 save_file()

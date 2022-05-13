@@ -2,6 +2,9 @@ python>=3.6
 numpy
 scipy
 cython
+# pandas        # optional
+# openpyxl      # optional
+# sympy         # optional
 # matplotlib    # optional
 # numdifftools  # optional
 # gxx_linux-64  # optional

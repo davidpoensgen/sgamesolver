@@ -239,7 +239,7 @@ class LogGame_np(LogGame_base):
                                + np.repeat((self.nu*(beta-1)).sum(axis=2)[:, :, np.newaxis], num_a_max, axis=2))
                     ).reshape(spa)
         # H_strat
-        H[spa : spa+sp] = (np.sum(sigma, axis=2) - np.ones((num_s, num_p))).reshape(sp)
+        H[spa: spa+sp] = (np.sum(sigma, axis=2) - np.ones((num_s, num_p))).reshape(sp)
 
         return H[self.H_mask]
 
@@ -294,15 +294,15 @@ class LogGame_np(LogGame_base):
                            + t * np.einsum('spaSPA,sPA,spPaA->spaSPA', self.T_J[2], sigma, Eu_tilde_ab)
                            ).reshape((spa, spa))
         # dH_val_dV
-        J[0:spa, spa : spa+sp] = (t * np.einsum('spaSP,spaS->spaSP', self.T_J[3], phi_a) - self.T_J[4]
-                                  ).reshape((spa, sp))
+        J[0:spa, spa: spa+sp] = (t * np.einsum('spaSP,spaS->spaSP', self.T_J[3], phi_a) - self.T_J[4]
+                                 ).reshape((spa, sp))
         # dH_val_dt
         J[0:spa, spa+sp] = (Eu_tilde_a
                             - (self.nu*sigma_inv + np.repeat((self.nu*(beta-1)).sum(axis=2)[:, :, np.newaxis],
                                                              num_a_max, axis=2))
                             ).reshape(spa)
         # dH_strat_dbeta
-        J[spa : spa+sp, 0:spa] = np.einsum('spSPA,SPA->spSPA', self.T_J[5], sigma).reshape((sp, spa))
+        J[spa: spa+sp, 0:spa] = np.einsum('spSPA,SPA->spSPA', self.T_J[5], sigma).reshape((sp, spa))
         # dH_strat_dV = 0
         # dH_strat_dt = 0
 

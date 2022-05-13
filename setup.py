@@ -1,10 +1,12 @@
 from setuptools import setup, Extension
-from Cython.Distutils import build_ext
+# from Cython.Distutils import build_ext
 from Cython.Build import cythonize
 import numpy as np
 
 with open('README.md', 'r', encoding='utf-8') as readme:
     long_description = readme.read()
+
+# TODO: openmp needed for MS compiler, but can lead to error under linux-gnu-cc
 
 # TODO: could later use optional for extensions - to continue installation if building exts fails.
 # Ideally, we'll wheel anyways.
@@ -14,8 +16,8 @@ ext_modules = [
     Extension(
         'sgamesolver.homotopy._shared_ct',
         ['sgamesolver/homotopy/_shared_ct.pyx'],
-        extra_compile_args=['/openmp', '-fopenmp'],
-        extra_link_args=['/openmp', '-fopenmp'],
+        # extra_compile_args=['/openmp', '-fopenmp'],
+        # extra_link_args=['/openmp', '-fopenmp'],
         include_dirs=[np.get_include()]
     ),
     Extension(
@@ -31,15 +33,15 @@ ext_modules = [
     Extension(
         'sgamesolver.homotopy._qre_ct',
         ['sgamesolver/homotopy/_qre_ct.pyx'],
-        extra_compile_args=['/openmp', '-fopenmp'],
-        extra_link_args=['/openmp', '-fopenmp'],
+        # extra_compile_args=['/openmp', '-fopenmp'],
+        # extra_link_args=['/openmp', '-fopenmp'],
         include_dirs=[np.get_include(), 'sgamesolver/homotopy']
     ),
     Extension(
         'sgamesolver.homotopy._logtracing_ct',
         ['sgamesolver/homotopy/_logtracing_ct.pyx'],
-        extra_compile_args=['/openmp', '-fopenmp'],
-        extra_link_args=['/openmp', '-fopenmp'],
+        # extra_compile_args=['/openmp', '-fopenmp'],
+        # extra_link_args=['/openmp', '-fopenmp'],
         include_dirs=[np.get_include()]
     ),
 ]

@@ -19,7 +19,7 @@ def create_random_game(
     if rng is None:
         rng = np.random.RandomState()
 
-    nums_actions = rng.random_integers(
+    nums_actions = rng.randint(
         low=num_actions_min,
         high=num_actions_max,
         size=(num_states, num_players),
