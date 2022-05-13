@@ -16,8 +16,8 @@ ext_modules = [
     Extension(
         'sgamesolver.homotopy._shared_ct',
         ['sgamesolver/homotopy/_shared_ct.pyx'],
-        # extra_compile_args=['/openmp', '-fopenmp'],
-        # extra_link_args=['/openmp', '-fopenmp'],
+        extra_compile_args=['/openmp', '-fopenmp'],
+        extra_link_args=['/openmp', '-fopenmp'],
         include_dirs=[np.get_include()]
     ),
     Extension(
@@ -33,15 +33,15 @@ ext_modules = [
     Extension(
         'sgamesolver.homotopy._qre_ct',
         ['sgamesolver/homotopy/_qre_ct.pyx'],
-        # extra_compile_args=['/openmp', '-fopenmp'],
-        # extra_link_args=['/openmp', '-fopenmp'],
+        extra_compile_args=['/openmp', '-fopenmp'],
+        extra_link_args=['/openmp', '-fopenmp'],
         include_dirs=[np.get_include(), 'sgamesolver/homotopy']
     ),
     Extension(
         'sgamesolver.homotopy._logtracing_ct',
         ['sgamesolver/homotopy/_logtracing_ct.pyx'],
-        # extra_compile_args=['/openmp', '-fopenmp'],
-        # extra_link_args=['/openmp', '-fopenmp'],
+        extra_compile_args=['/openmp', '-fopenmp'],
+        extra_link_args=['/openmp', '-fopenmp'],
         include_dirs=[np.get_include()]
     ),
 ]
