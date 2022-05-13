@@ -320,8 +320,8 @@ class QRE_ct(QRE_base):
 
     def H(self, y: np.ndarray) -> np.ndarray:
         return _qre_ct.H(y, self.game.u_ravel, self.game.phi_ravel, self.game.discount_factors,
-                         self.game.nums_actions, self.cache, False)  # TODO: parallel flag
+                         self.game.nums_actions, self.cache, self.parallel)
 
     def J(self, y: np.ndarray) -> np.ndarray:
         return _qre_ct.J(y, self.game.u_ravel, self.game.phi_ravel, self.game.discount_factors,
-                         self.game.nums_actions, self.cache, False)
+                         self.game.nums_actions, self.cache, self.parallel)

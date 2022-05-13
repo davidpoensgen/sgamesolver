@@ -303,8 +303,8 @@ def J(np.ndarray[np.float64_t, ndim=1] y, np.ndarray[np.float64_t, ndim=1] u, np
 @cython.boundscheck(False)
 @cython.wraparound(False)
 cdef np.ndarray[np.float64_t, ndim=3] u_tilde_deriv(np.ndarray[np.float64_t, ndim=3] u_sia,
-                                                     np.ndarray[np.float64_t, ndim=4] phi_sia,
-                                                     np.ndarray[np.float64_t, ndim=2] V):
+                                                    np.ndarray[np.float64_t, ndim=4] phi_sia,
+                                                    np.ndarray[np.float64_t, ndim=2] V):
     """Add continuation values V to derivatives u_sia (= ∂u/∂sigma_sia)."""
     # because the involved arrays are very tiny in comparison, there is no scope for optimization of this function
     # note that currently, phi_sia already contains discount factors delta

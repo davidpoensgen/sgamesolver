@@ -44,9 +44,6 @@ ext_modules = [
     ),
 ]
 
-for e in ext_modules:
-    e.cython_directives = {'language_level': "3"}
-
 setup(
     name='sgamesolver',
     version='0.1',
@@ -62,16 +59,18 @@ setup(
     author_email='steffen.eibelshaeuser@gmail.com, davidpoensgenecon@gmail.com',
     classifiers=[
         'Programming Language :: Python :: 3',
+        'Programming Language :: Cython',
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
         'Topic :: Scientific/Engineering',
-        'Topic :: Scientific/Engineering :: Mathematics'
+        'Topic :: Scientific/Engineering :: Mathematics',
+        'Intended Audience :: Science/Research',
     ],
     keywords='game theory, stochastic games, stationary equilibrium, homotopy method, computational economics',
 
     # cmdclass={'build_ext': build_ext},
     packages=['sgamesolver', 'sgamesolver.homotopy'],
-    ext_modules=cythonize(ext_modules),
+    ext_modules=cythonize(ext_modules, language_level="3"),
 
     python_requires='>=3.6',
     install_requires=['numpy', 'scipy', 'cython'],

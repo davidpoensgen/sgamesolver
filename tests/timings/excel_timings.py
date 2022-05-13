@@ -65,9 +65,9 @@ def make_file(filename):
     games.column_dimensions["F"].width = 32
     games.column_dimensions["G"].width = 32
 
-    for S in [1, 2, 5, 10, 20]:
-        for I in [1, 2, 3, 4, 5]:
-            for A in [2, 5, 10]:
+    for S in [1, 2, 5, 10, 20, 50, 100, 200, 400]:
+        for I in [2, 3, 4, 5]:
+            for A in [2, 4, 8]:
                 games.append([S, I, A, 100])
 
     runs = wb.create_sheet("Runs")
@@ -85,7 +85,7 @@ def make_file(filename):
                     "av time", "av time (s)", "std time (s)", "av steps", "std steps"])
 
     wb.save(filename=filename)
-    print(f'"{filename}" created.\n' 
+    print(f'"{filename}" created.\n'
           f'-> Remember to choose a homotopy and adjust parameters and run counts.')
     print('~' * 75)
 
@@ -97,7 +97,7 @@ def run_file(filename):
 
     def save_file():
         # make a backup copy before even attempting to save - safety first!
-        shutil.copy(filename, filename+".backup")
+        shutil.copy(filename, filename + ".backup")
         try:
             wb.save(filename=filename)
             nonlocal time_saved
@@ -122,14 +122,14 @@ def run_file(filename):
     spec = wb["Specification"]
     homotopy_string = spec['B1'].value
     if homotopy_string not in HOMOTOPIES:
-        print('~'*75)
+        print('~' * 75)
         if homotopy_string is not None:
             print(f'ERROR: Homotopy "{homotopy_string}" given in the excel file, does not exist.')
         else:
             print(f'ERROR: No homotopy specified in the excel file.')
         print(f'Currently available homotopies are: {", ".join([h for h in HOMOTOPIES])}')
         print(f'Please adapt the file and run again.')
-        print('~'*75)
+        print('~' * 75)
         return
 
     homotopy_constructor = HOMOTOPIES[homotopy_string]
@@ -173,7 +173,7 @@ def run_file(filename):
                 homotopy.solver.verbose = 0
                 homotopy.solver.set_parameters(**{**solver_parameters_all, **solver_parameters})
             except KeyboardInterrupt:
-                print('\n'+'+!+' * 25)
+                print('\n' + '+!+' * 25)
                 print(f'{datetime.now().strftime("%H:%M:%S")} > '
                       f'KEYBOARD INTERRUPT > PLEASE WAIT WHILE SAVING {filename}.')
                 save_file()
@@ -188,7 +188,7 @@ def run_file(filename):
                 if (datetime.now() - time_saved).total_seconds() >= save_interval_seconds:
                     save_file()
             except KeyboardInterrupt:
-                print('\n'+'+!+' * 25)
+                print('\n' + '+!+' * 25)
                 print(f'{datetime.now().strftime("%H:%M:%S")} > '
                       f'KEYBOARD INTERRUPT > PLEASE WAIT WHILE SAVING {filename}.')
                 save_file()
@@ -276,6 +276,7 @@ def str_to_dict(str_):
 
 if __name__ == '__main__':
     import sys
+
     parser = argparse.ArgumentParser(description='Run (or create, summarize) a timings file.')
     parser.add_argument('filenames', metavar='filename', nargs='+',
                         help='File(s) to be run (May include path; may omit file extension .xslx)')
@@ -317,6 +318,7 @@ if __name__ == '__main__':
             run_file(filename)
         if args.SD:
             import subprocess
+
             subprocess.run(["shutdown", "-s"])
     except Exception:
         # any exception the running code does not catch (besides keyboardinterrupt.)
@@ -324,5 +326,5 @@ if __name__ == '__main__':
         # this is to ensure shutdown goes through even if something unexpected happens.
         if args.SD:
             import subprocess
-            subprocess.run(["shutdown", "-s"])
 
+            subprocess.run(["shutdown", "-s"])

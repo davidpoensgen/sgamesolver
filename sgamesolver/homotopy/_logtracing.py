@@ -128,6 +128,8 @@ class LogTracing_base(LogStratHomotopy):
             # computation for all agents separately
             for s in range(num_s):
                 for p in range(num_p):
+                    # TODO: keeps iterating for players who have already converged
+                    # TODO: potentially faster if these are skipped
                     # solve system of multi-linear equations
                     # - by first combining all equations to one big equation in sigma1
                     # - and then solving the equation by Brent's method

@@ -619,7 +619,7 @@ class HomCont:
             else:
                 print(f'\nStep {self.step:5d}: Failure reason: {exception.message}')
                 print(f'Step {self.step:5d}: Continuation failed. ', end='')
-            print(f'Total time elapsed:{timedelta(seconds=int(time_sec))}')
+            print(f'Total time elapsed: {timedelta(seconds=int(time_sec))}')
             print('End homotopy continuation')
             print('=' * 50)
 

@@ -14,7 +14,7 @@ u_tilde, u_tilde_sia, u_tilde_sijab, phi_siat, arrays_equal
   nested loops this would take), this uses the array loop_profile instead of nested loops
 - loop_profile[1:] just counts action profiles from [0,  ... 0, 0], [0, .., 0, 1] ... 
   to [num_actions_p0, num_actions_p1, ....] 
-- (loop_profile[p+1] contains the current action of p)
+- (i.e., loop_profile[p+1] contains the current action of p)
 - loop_profile[0] is just a flag that switches from 0 to 1 once this is finished
 
 - u/phi are indexed using a flat index. The array u_strides/phi_strides help convert from multi-index to flat:
@@ -95,11 +95,11 @@ cdef void u_tilde_inner(double[:,::1] out_s, double[:,::1] phi_s, double [:, ::1
         flat_index += 1
         for n in range(num_p):
             if loop_profile[num_p - n] == nums_a[num_p - n - 1]:
-                loop_profile[num_p - n - 1] += 1  # a of player (num_p-n) is increased
+                loop_profile[num_p - n - 1] += 1  # action of player (num_p-n-2) is increased
                 loop_profile[num_p - n] = 0 # action of player (num_p-n-1) is reset to 0
                 # we are (possibly) skipping nums_a_max - nums_a[num_p-n-1] actions of the latter.
-                # player p has index p+2 in strides. Thus:
-                flat_index += u_strides[num_p - n + 1] * (num_a_max - nums_a[num_p-n-1])
+                # player x has index x+2 in strides. Thus:
+                flat_index += u_strides[num_p-n+1] * (num_a_max - nums_a[num_p-n-1])
             else:
                 break
 
@@ -109,9 +109,9 @@ cdef void u_tilde_inner(double[:,::1] out_s, double[:,::1] phi_s, double [:, ::1
 @cython.boundscheck(False)
 @cython.wraparound(False)
 cdef np.ndarray[np.float64_t, ndim=3] u_tilde_sia(np.ndarray[np.float64_t, ndim=1] u_tilde_ravel,
-                                                   double[:,:,::1] sigma,
-                                                   int num_s, int num_p, int [:,::1] nums_a, int num_a_max,
-                                                   bint parallel):
+                                                  double[:,:,::1] sigma,
+                                                  int num_s, int num_p, int [:,::1] nums_a, int num_a_max,
+                                                  bint parallel):
     """Derivatives of u_tilde_si(sigma) w.r.t. sigma_sia. 
     Put differently, payoffs (including continuation values) of player i using pure action 
     a in state s, given other players play according to mixed strategy profile sigma.
