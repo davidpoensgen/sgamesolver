@@ -14,7 +14,6 @@ from sgamesolver.homcont import HomCont
 
 try:
     import sgamesolver.homotopy._logtracing_ct as _logtracing_ct
-
     ct = True
 except ImportError:
     ct = False
@@ -138,9 +137,9 @@ class LogTracing_base(LogStratHomotopy):
                     denominator = (c[s, p, c_max_idx] - c[s, p, 0:nums_a[s, p]]) / (self.eta * self.nu[s, p, c_max_idx])
 
                     def f(sigma1):
-                        return (numerator / (denominator + 1/sigma1)).sum() - 1
+                        return (numerator / (denominator + 1 / sigma1)).sum() - 1
 
-                    sigma1 = brentq(f, 1e-12, 1, xtol=1e-4, rtol=1e-4)
+                    sigma1 = brentq(f, 1e-12, 1, xtol=2*tol)
 
                     sigma[s, p, 0:nums_a[s, p]] = numerator / (denominator + 1 / sigma1)
                     V[s, p] = (c[s, p, c_max_idx] + ((self.eta * self.nu[s, p, c_max_idx]) / sigma1)

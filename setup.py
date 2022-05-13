@@ -1,9 +1,10 @@
 from setuptools import setup, Extension
 from setuptools.command.install import install
+from setuptools.command.develop import develop
 try:
     from Cython.Distutils import build_ext
     from Cython.Build import cythonize
-    cython = True
+    cython = True  # flag tells setup() to cythonize Extensions
 except ImportError:
     from setuptools.command.build_ext import build_ext
     cythonize = None
@@ -12,42 +13,67 @@ import numpy as np
 
 with open('README.md', 'r', encoding='utf-8') as readme:
     long_description = readme.read()
+
+
 no_openmp = False
 no_cython = False
 
 
-class install_with_options(install):
+class OptionsMixin(object):
 
-    user_options = install.user_options + [
+    user_options = [
         ('no-cython', None, 'Skips installing the cython extensions completely.'),
         ('no-openmp', None, 'Installs cython extensions without openMP support (for parallel computing).'),
     ]
 
     def initialize_options(self):
-        install.initialize_options(self)
+        super().initialize_options()
         self.no_cython = False
         self.no_openmp = False
 
     def run(self):
         global no_cython
-        global no_openmp
         no_cython = self.no_cython
+        global no_openmp
         no_openmp = self.no_openmp
-        install.run(self)
+        super().run()
+
+
+class install_with_options(OptionsMixin, install):
+    user_options = OptionsMixin.user_options + getattr(install, 'user_options', [])
+
+
+class develop_with_options(OptionsMixin, develop):
+    user_options = OptionsMixin.user_options + getattr(develop, 'user_options', [])
 
 
 class build_ext_openmp(build_ext):
+
+    user_options = build_ext.user_options + [
+        ('no-openmp', None, 'Installs cython extensions without openMP support (for parallel computing).'),
+    ]
+
+    def initialize_options(self):
+        super().initialize_options()
+        self.no_openmp = False
+
     def build_extensions(self):
+        # no_cython: skip all extensions
         if no_cython:
+            print('~'*10 + ' not compiling any extensions ' + '~'*10)
             self.extensions = []
-        if not no_openmp:
+        # no_openmp: build extensions, but without openmp flags
+        # passed either via global (if install or develop were called, e.g. from pip) or as option to build_ext itself
+        elif (no_openmp or self.no_openmp):
+            print('~'*10 + ' compiling extensions without openmp ' + '~'*10)
+        elif not (no_openmp or self.no_openmp):
             openmp_extensions = [
                     'sgamesolver.homotopy._shared_ct',
                     'sgamesolver.homotopy._qre_ct',
                     'sgamesolver.homotopy._logtracing_ct',
                     ]
-            c = self.compiler.compiler_type
-            if c == 'msvc':
+            compiler = self.compiler.compiler_type
+            if compiler == 'msvc':
                 extra_compile_args = ['/openmp']
                 extra_link_args = ['/openmp']
             else:
@@ -110,11 +136,13 @@ setup(
         'Topic :: Scientific/Engineering :: Mathematics',
         'Intended Audience :: Science/Research',
     ],
-    keywords='game theory, stochastic games, stationary equilibrium, homotopy method, computational economics',
+    keywords='game theory, stochastic games, stationary equilibrium, Markov perfect equilibrium,'
+             ' homotopy method, computational economics',
 
     cmdclass={
         'build_ext': build_ext_openmp,
-        'install': install_with_options
+        'install': install_with_options,
+        'develop': develop_with_options,
     },
     packages=['sgamesolver', 'sgamesolver.homotopy'],
     ext_modules=cythonize(ext_modules, language_level="3") if cython else ext_modules,

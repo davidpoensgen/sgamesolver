@@ -159,13 +159,14 @@ class SGame:
         """Detect symmetries between agents."""
         pass
 
-    def random_strategy(self, zeros=False) -> np.ndarray:
+    def random_strategy(self, zeros=False, seed=None) -> np.ndarray:
         """Generate a random strategy profile. Padded with NaNs, or zeros under the respective option."""
+        rng = np.random.default_rng(seed=seed)
 
         strategy_profile = np.full((self.num_states, self.num_players, self.num_actions_max), 0.0 if zeros else np.NaN)
         for s in range(self.num_states):
             for p in range(self.num_players):
-                sigma = np.random.exponential(scale=1, size=self.nums_actions[s, p])
+                sigma = rng.exponential(scale=1, size=self.nums_actions[s, p])
                 strategy_profile[s, p, :self.nums_actions[s, p]] = sigma / sigma.sum()
         return strategy_profile
 
