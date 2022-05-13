@@ -69,4 +69,3 @@ def run_file(count=1000):
 
     timings.sort_values(['S', 'I', 'A', 'no'], inplace=True)
     timings.to_csv(f'{name}.csv', index_label='index')
-

@@ -317,7 +317,6 @@ class QRE_ct(QRE_base):
         if 'cache' in kwargs and not kwargs['cache']:
             self.cache = None
 
-
     def H(self, y: np.ndarray) -> np.ndarray:
         return _qre_ct.H(y, self.game.u_ravel, self.game.phi_ravel, self.game.discount_factors,
                          self.game.nums_actions, self.cache, self.parallel)
