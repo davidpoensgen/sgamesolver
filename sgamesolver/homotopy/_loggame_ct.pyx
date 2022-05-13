@@ -1,13 +1,13 @@
 """Cython implementation of LogGame homotopy."""
-# cython: profile=True
-
+# cython: profile=False
+# cython: language_level=3
 
 cimport cython
 import numpy as np
 cimport numpy as np
 np.import_array()
 
-from _shared_ct cimport u_tilde, u_tilde_sia, u_tilde_sijab, phi_siat
+from ._shared_ct cimport u_tilde, u_tilde_sia, u_tilde_sijab, phi_siat
 
 
 @cython.boundscheck(False)

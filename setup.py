@@ -1,23 +1,69 @@
 from setuptools import setup, Extension
-# from Cython.Distutils import build_ext
-from Cython.Build import cythonize
+from setuptools.command.install import install
+try:
+    from Cython.Distutils import build_ext
+    from Cython.Build import cythonize
+    cython = True
+except ImportError:
+    from setuptools.command.build_ext import build_ext
+    cythonize = None
+    cython = False
 import numpy as np
 
 with open('README.md', 'r', encoding='utf-8') as readme:
     long_description = readme.read()
+no_openmp = False
+no_cython = False
 
-# TODO: openmp needed for MS compiler, but can lead to error under linux-gnu-cc
 
-# TODO: could later use optional for extensions - to continue installation if building exts fails.
-# Ideally, we'll wheel anyways.
-# https://docs.python.org/3/distutils/setupscript.html -> 2.3.5
+class install_with_options(install):
+
+    user_options = install.user_options + [
+        ('no-cython', None, 'Skips installing the cython extensions completely.'),
+        ('no-openmp', None, 'Installs cython extensions without openMP support (for parallel computing).'),
+    ]
+
+    def initialize_options(self):
+        install.initialize_options(self)
+        self.no_cython = False
+        self.no_openmp = False
+
+    def run(self):
+        global no_cython
+        global no_openmp
+        no_cython = self.no_cython
+        no_openmp = self.no_openmp
+        install.run(self)
+
+
+class build_ext_openmp(build_ext):
+    def build_extensions(self):
+        if no_cython:
+            self.extensions = []
+        if not no_openmp:
+            openmp_extensions = [
+                    'sgamesolver.homotopy._shared_ct',
+                    'sgamesolver.homotopy._qre_ct',
+                    'sgamesolver.homotopy._logtracing_ct',
+                    ]
+            c = self.compiler.compiler_type
+            if c == 'msvc':
+                extra_compile_args = ['/openmp']
+                extra_link_args = ['/openmp']
+            else:
+                extra_compile_args = ['-fopenmp']
+                extra_link_args = ['-fopenmp']
+            for e in self.extensions:
+                if e.name in openmp_extensions:
+                    e.extra_compile_args += extra_compile_args
+                    e.extra_link_args += extra_link_args
+        build_ext.build_extensions(self)
+
 
 ext_modules = [
     Extension(
         'sgamesolver.homotopy._shared_ct',
         ['sgamesolver/homotopy/_shared_ct.pyx'],
-        extra_compile_args=['/openmp', '-fopenmp'],
-        extra_link_args=['/openmp', '-fopenmp'],
         include_dirs=[np.get_include()]
     ),
     Extension(
@@ -33,15 +79,11 @@ ext_modules = [
     Extension(
         'sgamesolver.homotopy._qre_ct',
         ['sgamesolver/homotopy/_qre_ct.pyx'],
-        extra_compile_args=['/openmp', '-fopenmp'],
-        extra_link_args=['/openmp', '-fopenmp'],
-        include_dirs=[np.get_include(), 'sgamesolver/homotopy']
+        include_dirs=[np.get_include()]
     ),
     Extension(
         'sgamesolver.homotopy._logtracing_ct',
         ['sgamesolver/homotopy/_logtracing_ct.pyx'],
-        extra_compile_args=['/openmp', '-fopenmp'],
-        extra_link_args=['/openmp', '-fopenmp'],
         include_dirs=[np.get_include()]
     ),
 ]
@@ -70,9 +112,12 @@ setup(
     ],
     keywords='game theory, stochastic games, stationary equilibrium, homotopy method, computational economics',
 
-    # cmdclass={'build_ext': build_ext},
+    cmdclass={
+        'build_ext': build_ext_openmp,
+        'install': install_with_options
+    },
     packages=['sgamesolver', 'sgamesolver.homotopy'],
-    ext_modules=cythonize(ext_modules, language_level="3"),
+    ext_modules=cythonize(ext_modules, language_level="3") if cython else ext_modules,
 
     python_requires='>=3.6',
     install_requires=['numpy', 'scipy', 'cython'],

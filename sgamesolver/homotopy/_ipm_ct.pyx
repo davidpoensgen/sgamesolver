@@ -1,4 +1,6 @@
 """Cython implementation of IPM homotopy."""
+# cython: profile=False
+# cython: language_level=3
 
 import cython
 import numpy as np
