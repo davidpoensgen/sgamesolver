@@ -1,6 +1,8 @@
 from setuptools import setup, Extension
 from setuptools.command.install import install
 from setuptools.command.develop import develop
+import numpy as np
+
 try:
     from Cython.Distutils import build_ext
     from Cython.Build import cythonize
@@ -9,21 +11,20 @@ except ImportError:
     from setuptools.command.build_ext import build_ext
     cythonize = None
     cython = False
-import numpy as np
+
 
 with open('README.md', 'r', encoding='utf-8') as readme:
     long_description = readme.read()
-
 
 no_openmp = False
 no_cython = False
 
 
-class OptionsMixin(object):
+class OptionsMixin:
 
     user_options = [
         ('no-cython', None, 'Skips installing the cython extensions completely.'),
-        ('no-openmp', None, 'Installs cython extensions without openMP support (for parallel computing).'),
+        ('no-openmp', None, 'Installs cython extensions without openMP (i.e. without support for parallel computing).'),
     ]
 
     def initialize_options(self):
@@ -50,7 +51,7 @@ class develop_with_options(OptionsMixin, develop):
 class build_ext_openmp(build_ext):
 
     user_options = build_ext.user_options + [
-        ('no-openmp', None, 'Installs cython extensions without openMP support (for parallel computing).'),
+        ('no-openmp', None, 'Installs cython extensions without openMP (i.e. without support for parallel computing).'),
     ]
 
     def initialize_options(self):
@@ -62,9 +63,9 @@ class build_ext_openmp(build_ext):
         if no_cython:
             print('~'*10 + ' not compiling any extensions ' + '~'*10)
             self.extensions = []
-        # no_openmp: build extensions, but without openmp flags
+        # no_openmp: build extensions, but without openmp compiler flags
         # passed either via global (if install or develop were called, e.g. from pip) or as option to build_ext itself
-        elif (no_openmp or self.no_openmp):
+        elif no_openmp or self.no_openmp:
             print('~'*10 + ' compiling extensions without openmp ' + '~'*10)
         elif not (no_openmp or self.no_openmp):
             openmp_extensions = [

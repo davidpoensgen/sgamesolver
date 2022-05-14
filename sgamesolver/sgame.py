@@ -189,6 +189,15 @@ class SGame:
                                                                     / np.sum(weights[s, p, :self.nums_actions[s, p]]))
         return strategy_profile
 
+    def random_weights(self, low: float = 0, high: float = 1, zeros=False, seed: Optional[int] = None) -> np.ndarray:
+        """Randomize a set of weights of the same shape as a strategy profile.
+        Distribution is uniform on the interval [low, high]."""
+        if low < 0:
+            raise ValueError("Lower bound for weights must be non-negative.")
+        rng = np.random.default_rng(seed)
+        nu_flat = rng.uniform(low, high, self.num_actions_total)
+        return self.unflatten_strategies(nu_flat, zeros=zeros)
+
     def flatten_strategies(self, strategies: np.ndarray) -> np.ndarray:
         """Convert a jagged array of shape (num_states, num_players, num_actions_max), e.g. strategy profile,
         to a flat array, removing all NaNs.
