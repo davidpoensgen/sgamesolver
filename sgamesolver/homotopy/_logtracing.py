@@ -3,7 +3,7 @@
 # TODO: check user-provided priors and weights?
 # TODO: maybe write custom optimization for find_y0 to avoid scipy import
 
-import warnings
+from warnings import warn
 from typing import Union, Optional
 
 import numpy as np
@@ -28,8 +28,9 @@ def LogTracing(game: SGame, rho: Union[str, np.ndarray] = "centroid", nu: Option
         return LogTracing_ct(game, rho, nu, eta, eta_fix, **kwargs)
     else:
         if implementation == 'auto' and not ct:
-            print('Defaulting to numpy implementation of LogTracing, because cython version is not installed. Numpy '
-                  'may be substantially slower. For help setting up the cython version, please consult the manual.')
+            warn('Defaulting to numpy implementation of LogTracing, because cython version is not installed. '
+                          'Numpy may be substantially slower. For help setting up the cython version, '
+                          'please consult the manual.')
         return LogTracing_np(game, rho, nu, eta, eta_fix)
 
 
@@ -152,7 +153,7 @@ class LogTracing_base(LogStratHomotopy):
                 V_old = V.copy()
                 sigma_old = sigma.copy()
         else:  # loop ended without break
-            warnings.warn('Value function iteration has not converged during computation of the starting point.')
+            warn('Value function iteration has not converged during computation of the starting point.')
 
         return self.sigma_V_t_to_y(sigma, V, 0.0)
 

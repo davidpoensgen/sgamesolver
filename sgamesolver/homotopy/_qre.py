@@ -1,6 +1,7 @@
 """(Markov logit) quantal response equilibrium (QRE) homotopy."""
 
 import numpy as np
+from warnings import warn
 
 from sgamesolver.sgame import SGame, LogStratHomotopy
 from sgamesolver.homcont import HomCont
@@ -21,8 +22,8 @@ def QRE(game: SGame, implementation='auto', **kwargs):
         return QRE_ct(game, **kwargs)
     else:
         if implementation == 'auto' and not ct:
-            print('Defaulting to numpy implementation of QRE, because cython version is not installed. Numpy may '
-                  'be substantially slower. For help setting up the cython version, please consult the manual.')
+            warn('Defaulting to numpy implementation of QRE, because cython version is not installed. Numpy may '
+                 'be substantially slower. For help setting up the cython version, please consult the manual.')
         return QRE_np(game)
 
 

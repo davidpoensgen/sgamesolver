@@ -1,7 +1,7 @@
 """Logarithmic game homotopy."""
 
 from typing import Optional
-
+from warnings import warn
 import numpy as np
 
 from sgamesolver.sgame import SGame, LogStratHomotopy
@@ -23,8 +23,8 @@ def LogGame(game: SGame, nu: Optional[np.ndarray] = None, implementation='auto',
         return LogGame_ct(game, nu, **kwargs)
     else:
         if implementation == 'auto' and not ct:
-            print('Defaulting to numpy implementation of LogGame, because cython version is not installed. Numpy '
-                  'may be substantially slower. For help setting up the cython version, please consult the manual.')
+            warn('Defaulting to numpy implementation of LogGame, because cython version is not installed. Numpy '
+                 'may be substantially slower. For help setting up the cython version, please consult the manual.')
         return LogGame_np(game, nu)
 
 

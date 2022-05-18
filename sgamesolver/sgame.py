@@ -218,7 +218,7 @@ class SGame:
         sigma = np.nan_to_num(strategy_profile)
         sigma_list = [sigma[:, p, :] for p in range(self.num_players)]
 
-        # einsum eqs: u: 'spABC...,sA,sB,sC,...->sp' ; phi: 'sAB...t,sA,sB,sC,...->st'
+        # einsum eqs: u: 'spABC...,sA,sB,sC,...->sp' ; phi: 'sABC...t,sA,sB,sC,...->st'
         einsum_eq_u = f'sp{ABC[0:self.num_players]},s{",s".join(ABC[p] for p in range(self.num_players))}->sp'
         einsum_eq_phi = f's{ABC[0:self.num_players]}t,s{",s".join(ABC[p] for p in range(self.num_players))}->st'
 
@@ -375,14 +375,12 @@ class SGameHomotopy:
         If an s_range, i.e. a tuple (s_min, s_max), is passed, only steps for which s_min < s < s_max will be plotted.
         Likewise, passing a step_range, i.e. (first_step, last_step) also allows to plot a subset of steps only."""
         if not self.solver or not self.solver.path:
-            print('No solver or no stored path.')
-            return
+            raise ValueError('No solver or no stored path.')
         try:
             import matplotlib.pyplot as plt
             import matplotlib.lines
-        except ModuleNotFoundError:
-            print('Missing the the python package matplotlib. Please install to plot.')
-            return
+        except ModuleNotFoundError as e:
+            raise ModuleNotFoundError('Package matplotlib is required for plotting.') from e
 
         path = self.solver.path
         if s_range is not None:
@@ -392,8 +390,7 @@ class SGameHomotopy:
         else:
             rows = np.arange(0, path.index)
         if len(rows) == 0:
-            print("No data for the given range.")
-            return
+            raise ValueError("No data for the given range.")
 
         if x_axis == "s":
             x_plot = path.s[rows]

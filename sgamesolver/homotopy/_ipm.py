@@ -4,7 +4,7 @@
 # TODO: write a distance function instead if desired (don't think that makes sense for IPM though?)
 
 from typing import Union, Optional, Tuple
-
+from warnings import warn
 import numpy as np
 
 from sgamesolver.sgame import SGame, SGameHomotopy
@@ -27,8 +27,8 @@ def IPM(game: SGame, initial_strategies: Union[str, np.ndarray] = 'centroid',
         return IPM_ct(game, initial_strategies, weights)
     else:
         if implementation == 'auto' and not ct:
-            print('Defaulting to sympy+numpy implementation of IPM, because cython version is not installed. This '
-                  'version is substantially slower. For help setting up the cython version, please consult the manual.')
+            warn('Defaulting to sympy+numpy implementation of IPM, because cython version is not installed. This '
+                 'version is substantially slower. For help setting up the cython version, please consult the manual.')
         return IPM_sp(game, initial_strategies, weights)
 
 

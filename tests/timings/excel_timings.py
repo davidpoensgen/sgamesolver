@@ -328,3 +328,5 @@ if __name__ == '__main__':
         if args.SD:
             import subprocess
             subprocess.run(["shutdown", "-s"])
+        else:
+            raise
