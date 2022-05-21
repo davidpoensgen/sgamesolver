@@ -15,7 +15,7 @@ class SGame:
     """A stochastic game."""
 
     def __init__(self, payoff_matrices: List[np.ndarray], transition_matrices: List[np.ndarray],
-                 discount_factors: Union[np.ndarray, float, int] = 0.0) -> None:
+                 discount_factors: Union[np.ndarray, float, int]) -> None:
         """Inputs:
 
         payoff_matrices:      list of array-like, one for each state: payoff_matrices[s][p,A]
@@ -94,6 +94,13 @@ class SGame:
         self.transitions = None  # type: Optional[np.ndarray]
         # To support older versions of homotopies. See method make_transitions.
 
+        digits = len(str(self.num_states))
+        self.state_labels = [f'state{s:0{digits}}' for s in range(self.num_states)]
+        digits = len(str(self.num_players))
+        self.player_labels = [f'player{s:0{digits}}' for s in range(self.num_players)]
+        digits = len(str(self.num_actions_max))
+        self.action_labels = [f'a{a:0{digits}}' for a in range(self.num_actions_max)]
+
     def _make_transitions(self) -> None:
         """Method to support the transition from game.transitions (with indices [s,p,a0,a1,...S] and discount
          factors multiplied in) to game.phi (indices [s,a0,a1,....], no discount factors).
@@ -149,11 +156,32 @@ class SGame:
 
     @classmethod
     def one_shot_game(cls, payoff_matrix: np.ndarray):
-        """Creates a one-shot (=single-state/simultaneous) game from a payoff array."""
+        """Create a one-shot (=single-state/simultaneous) game from a payoff array."""
         # phi: zeros with shape like u, but dropping first dimension (player)
         # and appending a len-1-dimension for to-state
         phi = np.zeros((*payoff_matrix.shape[1:], 1))
         return cls([payoff_matrix], [phi], 0)
+
+    @classmethod
+    def from_table(cls, table):
+        """Create a game from the tabular format.
+        Input can be either a pandas.DataFrame, or a string containing the path to an excel file (.xlsx, .xls), a
+        stata file (.dta), or a plain text file with comma separated values (.csv, .txt).
+        For reference on how the table should be formatted, please refer tot he online manual.
+
+        This method requires the package pandas to be installed.
+        """
+        from sgamesolver.utility.sgame_conversion import game_from_table
+        return game_from_table(table)
+
+    def to_table(self):
+        """Convert the game to the tabular format. Returns a pandas.DataFrame that can then be saved in the format
+        of choice. Note that this might take quite long for large games.
+
+        This method requires the package pandas to be installed.
+        """
+        from sgamesolver.utility.sgame_conversion import game_to_table
+        return game_to_table(self)
 
     def detect_symmetries(self) -> None:
         """Detect symmetries between agents."""
@@ -269,22 +297,44 @@ class SGame:
 class StrategyProfile:
     """Container for equilibria and other strategy profiles."""
 
-    def __init__(self, game, sigma, V, t=None):
+    def __init__(self, game: SGame, sigma, V=None, t=None):
         self.game = game
         self.strategies = sigma
-        self.values = V
+        if V is None:
+            self.values = game.get_values(sigma)
+        else:
+            self.values = V
         self.homotopy_parameter = t
 
-    def to_string(self, decimals=3) -> str:
+    def to_string(self, decimals=3, v_decimals=2, action_labels=True) -> str:
         """Renders the strategy profile and associated values as human-readable string."""
         string = ""
+        player_len = len(max(self.game.player_labels, key=len))
+        state_len = len(max(self.game.state_labels, key=len))
+        if action_labels:  # check label format by checking list depth:
+            if isinstance(self.game.action_labels[0], (str, int, float)):
+                nested = False
+            else:
+                nested = True
         for state in range(self.game.num_states):
-            string += f'+++++++ state{state} +++++++\n'
+            string += f'+++++++++{" " + self.game.state_labels[state] + " ":+^{state_len + 2}}+++++++++\n'
+            V_s = [f'{self.values[state, i]:.{v_decimals}f}' for i in range(self.game.num_players)]
+            V_width = len(max(V_s, key=len))
             for player in range(self.game.num_players):
-                V_si = self.values[state, player]
                 sigma_si = self.strategies[state, player, :self.game.nums_actions[state, player]]
-                string += f'player{player}: v={V_si:#5.2f}, ' \
-                          f's={np.array2string(sigma_si, formatter={"float_kind": lambda x: f"%.{decimals}f" % x})}\n'
+                row = f'{self.game.player_labels[player]: <{player_len+1}}: v={V_s[player]:>{V_width}}, ' \
+                      f'σ={np.array2string(sigma_si, formatter={"float_kind": lambda x: f"%.{decimals}f" % x})}\n'
+                if action_labels and (nested or player == 0):
+                    leading_space = " " * (len(row.split("σ=")[0]) + 3)
+                    action_width = decimals + 2
+                    if nested:
+                        labels = self.game.action_labels[state][player]
+                    else:
+                        labels = self.game.action_labels[:self.game.nums_actions[state].max()]
+                    label_string = " ".join([f'{a[:action_width]:^{action_width}}' for a in labels])
+                    string += leading_space + label_string + "\n"
+                string += row
+
         return string
 
     def to_list(self, decimals: int = None) -> list:

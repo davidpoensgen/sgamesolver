@@ -29,8 +29,8 @@ def LogTracing(game: SGame, rho: Union[str, np.ndarray] = "centroid", nu: Option
     else:
         if implementation == 'auto' and not ct:
             warn('Defaulting to numpy implementation of LogTracing, because cython version is not installed. '
-                          'Numpy may be substantially slower. For help setting up the cython version, '
-                          'please consult the manual.')
+                 'Numpy may be substantially slower. For help setting up the cython version, '
+                 'please consult the manual.')
         return LogTracing_np(game, rho, nu, eta, eta_fix)
 
 

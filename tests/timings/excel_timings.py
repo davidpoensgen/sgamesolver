@@ -1,4 +1,4 @@
-"""Script to run timings.
+"""Console script to run timings.
 
 Specification - which homotopy, which game sizes, how many runs, which parameters for games/homotopy/solver etc -
 are to be given in the excel files.
@@ -14,6 +14,9 @@ python excel_timings.py -m filename0 [filename1 filename2 ....]
 (make sure to adapt the new files and then run them as above)
 -> Alternatively, just copy an existing file, make any desired changes,
    and delete all rows (except header) from table "runs".
+
+3) To update the summary sheet of the specified files (instead of running them), use flag -s.
+(The summary is updated upon completion, but it might be necessary to do so manually after errors.)
 """
 
 
@@ -272,6 +275,7 @@ def str_to_dict(str_):
                     value = False
                 if value == "None":
                     value = None
+                # all other string are preserved
             out[key.strip()] = value
     return out
 

@@ -120,7 +120,6 @@ class HomCont:
                  t_target: float = np.inf,
                  max_steps: int = np.inf,
                  distance_function: callable = None,
-                 verbose: int = 1,
                  parameters: dict = None,
                  **kwargs):
 
@@ -142,9 +141,8 @@ class HomCont:
         else:
             self.distance = self.distance_function
 
-        self.verbose = verbose
-
         # set default parameters
+        self.verbose = 1
         self.convergence_tol = 1e-7
 
         self.ds_min = 1e-9
@@ -304,7 +302,7 @@ class HomCont:
 
         self.converged = False
 
-        # try-except block: sub-functions may exit the main loop by raising ContinuationFailed
+        # try-except block: sub-functions will exit the main loop by raising ContinuationFailed
         try:
             while not self.converged:
 
