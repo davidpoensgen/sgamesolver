@@ -6,11 +6,7 @@ from sgamesolver import SGame
 
 
 def game_from_table(table: Union[str, pd.DataFrame]) -> SGame:
-    """Create an SGame instance from the tabular format.
-    Input can be either a pandas.DataFrame, or a string containing the path to an excel file (.xlsx, .xls), a
-    stata file (.dta), or a plain text file with comma separated values (.csv, .txt).
-    For reference on how the table should be formatted, please refer tot he online manual.
-    """
+    """Convert files to DataFrame if needed, then parse the DataFrame to create an SGame."""
     if isinstance(table, pd.DataFrame):
         df = table
         row_offset = 0
@@ -179,8 +175,7 @@ def _dataframe_to_game(df: pd.DataFrame, row_offset=0):
 
 
 def game_to_table(game: SGame) -> pd.DataFrame:
-    """Converts an SGame instance to the a pandas.Dataframe.
-    Note that this might take quite long for large games."""
+    """Convert SGame to a DataFrame in the tabular format."""
     state_labels = game.state_labels
     player_labels = game.player_labels
     action_labels = game.action_labels

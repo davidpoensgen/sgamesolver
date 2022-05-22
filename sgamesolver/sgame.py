@@ -167,7 +167,7 @@ class SGame:
         """Create a game from the tabular format.
         Input can be either a pandas.DataFrame, or a string containing the path to an excel file (.xlsx, .xls), a
         stata file (.dta), or a plain text file with comma separated values (.csv, .txt).
-        For reference on how the table should be formatted, please refer tot he online manual.
+        For reference on how the table should be formatted, please refer to the online manual.
 
         This method requires the package pandas to be installed.
         """

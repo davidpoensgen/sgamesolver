@@ -226,7 +226,7 @@ def summarize_file(filename):
     wb = openpyxl.load_workbook(filename=filename)
 
     summary = wb["Summary"]
-    summary.delete_rows(2, 200)
+    summary.delete_rows(2, 500)
     games_pd = pd.read_excel(filename, sheet_name="Games", keep_default_na=False)
     runs_pd = pd.read_excel(filename, sheet_name="Runs")
 
@@ -253,6 +253,73 @@ def summarize_file(filename):
         ])
 
     wb.save(filename)
+    print(f'Summary of "{filename}" updated.')
+
+
+def latex_file(filename):
+    if filename[-5:] != '.xlsx':
+        filename = filename + '.xlsx'
+    summary_pd = pd.read_excel(filename, sheet_name='Summary')
+    S_counts = sorted(summary_pd['S'].unique().tolist())
+    I_counts = sorted(summary_pd['I'].unique().tolist())
+    A_counts = sorted(summary_pd['A'].unique().tolist())
+    # latex = '% add to preamble: \n% \\includepackage{booktabs} \n% \\includepackage{multirow}\n\n'
+    latex = '\\documentclass{article}\n\\usepackage{booktabs}\n\\usepackage{multirow}\n\n\\begin{document}\n'
+    latex += '\\begin{tabular}{r@{\hskip .4cm}r@{\hskip .6cm}' + 'r@{\hskip .15cm}l'*len(I_counts) + '}\n \\toprule \n'
+    latex += f'\multirow{{2}}{{*}}{{$|S|$}}  &\multirow{{2}}{{*}}{{$|A|$}} & ' \
+             f'\multicolumn{{{2*len(I_counts)}}}{{c}}{{$|I|$}} \\\\ \\cmidrule(lr){{3-{2+2*len(I_counts)}}} \n'
+    # [:-2] to remove the extra & following the last iteration
+    latex += ' & & ' + ''.join(f'\\multicolumn{{2}}{{c}}{{{I}}} & ' for I in I_counts)[:-2] + '\\\\ \\midrule \n '
+    latex += '\\\\[-4pt]  \n'
+    for S in S_counts:
+        for A in A_counts:
+            # if no entries for S/A combination exist, skip the complete line:
+            if not len(summary_pd.query(f'S=={S} & A=={A}')):
+                continue
+            if A == A_counts[0]:
+                latex += f'${S}\\phantom{{|}}$ & '
+            else:
+                latex += ' & '
+            latex += f'${A}\\phantom{{|}}$ & '
+            for I in I_counts:
+                pd_row = summary_pd.query(f'S=={S} & I=={I} & A=={A}')
+                if len(pd_row) > 1:
+                    raise ValueError(f'Summary contains multiple rows for S,I,A = {S},{I},{A}.')
+                # skip if no row found, or if no successful runs
+                elif len(pd_row) == 0 or pd_row.head(1)['successful'].item() == 0:
+                    latex += '&'
+                elif len(pd_row) == 1:
+                    avg_s = pd_row.head(1)['av time (s)'].item()
+                    std_s = pd_row.head(1)['std time (s)'].item()
+                    latex += f'{time_format(avg_s)} & \\footnotesize{{{time_format(std_s)}}}'
+                    # alternative representation - secs:
+                    # latex += f'{avg_s} & \\footnotesize{{{std_s}}}'
+                # last column will end in \\ rather than &:
+                if I != I_counts[-1]:
+                    latex += ' & '
+            latex += '\\\\ \n'
+        latex += '\\\\[-4pt] \n'
+    latex += '\\bottomrule \n'
+    latex += '\\end{tabular}\n'
+    latex += '\\end{document}'
+
+    tex_filename = filename[:-5] + '.tex'
+    with open(tex_filename, 'w') as tex_file:
+        tex_file.write(latex)
+        print(f'"{tex_filename}" created or updated.')
+
+
+def time_format(secs):
+    # format secs as m:ss / h:mm:ss
+    minutes, seconds = divmod(round(secs), 60)
+    hours, minutes = divmod(minutes, 60)
+    if hours:
+        string = f'{hours}:{minutes:02}:{seconds:02}'
+    elif minutes:
+        string = f'{minutes}:{seconds:02}'
+    else:
+        string = f'0:{seconds:02}'
+    return string
 
 
 def str_to_dict(str_):
@@ -289,7 +356,9 @@ if __name__ == '__main__':
     group = parser.add_mutually_exclusive_group()
     group.add_argument('-m', action='store_true', help='Create the file(s) instead of running it.')
     group.add_argument('-s', action='store_true', help='Summarize the file(s) instead of running it.')
-    group.add_argument('-SD', action='store_true', help='Shutdown computer once all files have run.')
+    group.add_argument('-l', action='store_true', help='Summarize the file(s) and create a latex table for each. '
+                                                       '(As .tex file; will overwrite without prompt.)')
+    group.add_argument('-SD', action='store_true', help='Ru and shutdown computer once all files have run.')
 
     args = parser.parse_args()
 
@@ -306,6 +375,17 @@ if __name__ == '__main__':
                 print(f'ERROR: "{file}" not found.')
             else:
                 summarize_file(file)
+        sys.exit()
+
+    if args.l:
+        for file in args.filenames:
+            if file[-5:] != ".xlsx":
+                file = file + ".xlsx"
+            if not os.path.isfile(file):
+                print(f'ERROR: "{file}" not found.')
+            else:
+                summarize_file(file)
+                latex_file(file)
         sys.exit()
 
     # first pass: check if all files can be found:
