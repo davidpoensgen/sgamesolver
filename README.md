@@ -1,3 +1,3 @@
-# dsGameSolver
+# sgamesolver
 
-**A homotopy-based solver for stochastic games**
+

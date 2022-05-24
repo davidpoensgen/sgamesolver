@@ -18,7 +18,7 @@ python excel_timings.py -m filename0 [filename1 filename2 ....]
 3) To update the summary sheet of the specified files (instead of running them), use flag -s.
 (The summary is updated upon completion, but it might be necessary to do so manually after errors.)
 """
-
+import numpy as np
 
 import sgamesolver
 import openpyxl
@@ -127,7 +127,7 @@ def run_file(filename):
     spec = wb["Specification"]
     homotopy_string = spec['B1'].value
     if homotopy_string not in HOMOTOPIES:
-        print('~'*75)
+        print('~' * 75)
         if homotopy_string is not None:
             print(f'ERROR: Homotopy "{homotopy_string}" given in the excel file, does not exist.')
         else:
@@ -178,7 +178,7 @@ def run_file(filename):
                 homotopy.solver.verbose = 0
                 homotopy.solver.set_parameters(**{**solver_parameters_all, **solver_parameters})
             except KeyboardInterrupt:
-                print('\n'+'+!+' * 25)
+                print('\n' + '+!+' * 25)
                 print(f'{datetime.now().strftime("%H:%M:%S")} > '
                       f'KEYBOARD INTERRUPT > PLEASE WAIT WHILE SAVING {filename}.')
                 save_file()
@@ -193,7 +193,7 @@ def run_file(filename):
                 if (datetime.now() - time_saved).total_seconds() >= save_interval_seconds:
                     save_file()
             except KeyboardInterrupt:
-                print('\n'+'+!+' * 25)
+                print('\n' + '+!+' * 25)
                 print(f'{datetime.now().strftime("%H:%M:%S")} > '
                       f'KEYBOARD INTERRUPT > PLEASE WAIT WHILE SAVING {filename}.')
                 save_file()
@@ -263,19 +263,19 @@ def latex_file(filename):
     S_counts = sorted(summary_pd['S'].unique().tolist())
     I_counts = sorted(summary_pd['I'].unique().tolist())
     A_counts = sorted(summary_pd['A'].unique().tolist())
-    # latex = '% add to preamble: \n% \\includepackage{booktabs} \n% \\includepackage{multirow}\n\n'
     latex = '\\documentclass{article}\n\\usepackage{booktabs}\n\\usepackage{multirow}\n\n\\begin{document}\n'
-    latex += '\\begin{tabular}{r@{\hskip .4cm}r@{\hskip .6cm}' + 'r@{\hskip .15cm}l'*len(I_counts) + '}\n \\toprule \n'
-    latex += f'\multirow{{2}}{{*}}{{$|S|$}}  &\multirow{{2}}{{*}}{{$|A|$}} & ' \
-             f'\multicolumn{{{2*len(I_counts)}}}{{c}}{{$|I|$}} \\\\ \\cmidrule(lr){{3-{2+2*len(I_counts)}}} \n'
-    # [:-2] to remove the extra & following the last iteration
-    latex += ' & & ' + ''.join(f'\\multicolumn{{2}}{{c}}{{{I}}} & ' for I in I_counts)[:-2] + '\\\\ \\midrule \n '
-    latex += '\\\\[-4pt]  \n'
+    latex += '\\begin{tabular}{r@{\\hskip .4cm}r@{\\hskip .6cm}' + 'r@{\\hskip .15cm}l' * len(
+        I_counts) + '}\n\\toprule\n'
+    latex += f'\\multirow{{2}}{{*}}{{$|S|$}} & \\multirow{{2}}{{*}}{{$|A|$}} & ' \
+             f'\\multicolumn{{{2 * len(I_counts)}}}{{c}}{{$|I|$}} \\\\ \\cmidrule(lr){{3-{2 + 2 * len(I_counts)}}} \n'
+    latex += ' & & ' + ' & '.join(f'\\multicolumn{{2}}{{c}}{{{I}}}' for I in I_counts) + '\\\\ \\midrule \n '
+    latex += '&' * (len(I_counts) * 2 + 1) + '\\\\[-4pt] \n'
     for S in S_counts:
         for A in A_counts:
             # if no entries for S/A combination exist, skip the complete line:
             if not len(summary_pd.query(f'S=={S} & A=={A}')):
                 continue
+            # |S| only on first line of each block. phantom just to make alignment look nicer :
             if A == A_counts[0]:
                 latex += f'${S}\\phantom{{|}}$ & '
             else:
@@ -285,7 +285,7 @@ def latex_file(filename):
                 pd_row = summary_pd.query(f'S=={S} & I=={I} & A=={A}')
                 if len(pd_row) > 1:
                     raise ValueError(f'Summary contains multiple rows for S,I,A = {S},{I},{A}.')
-                # skip if no row found, or if no successful runs
+                # skip cell if no row exists, or row exists but only failed runs (-> avg time not defined)
                 elif len(pd_row) == 0 or pd_row.head(1)['successful'].item() == 0:
                     latex += '&'
                 elif len(pd_row) == 1:
@@ -297,8 +297,11 @@ def latex_file(filename):
                 # last column will end in \\ rather than &:
                 if I != I_counts[-1]:
                     latex += ' & '
-            latex += '\\\\ \n'
-        latex += '\\\\[-4pt] \n'
+            # end S-A-row:
+            latex += ' \\\\ \n'
+        # end S-block:
+        latex += '&' * (len(I_counts) * 2 + 1) + '\\\\[-4pt] \n'
+    # end table and document:
     latex += '\\bottomrule \n'
     latex += '\\end{tabular}\n'
     latex += '\\end{document}'
@@ -306,11 +309,14 @@ def latex_file(filename):
     tex_filename = filename[:-5] + '.tex'
     with open(tex_filename, 'w') as tex_file:
         tex_file.write(latex)
-        print(f'"{tex_filename}" created or updated.')
+        print(f'Latex file "{tex_filename}" created or updated.')
 
 
 def time_format(secs):
-    # format secs as m:ss / h:mm:ss
+    """Format secs as m:ss / h:mm:ss"""
+    # rarely, secs might be np.nan (e.g. std dev. after a single run) - in this case, just return "-"
+    if np.isnan(secs):
+        return "--"
     minutes, seconds = divmod(round(secs), 60)
     hours, minutes = divmod(minutes, 60)
     if hours:
@@ -352,7 +358,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Run (or create, summarize) a timings file.')
     parser.add_argument('filenames', metavar='filename', nargs='+',
-                        help='File(s) to be run (May include path; may omit file extension .xslx)')
+                        help='File(s) to be run (may include path; may omit file extension .xslx)')
     group = parser.add_mutually_exclusive_group()
     group.add_argument('-m', action='store_true', help='Create the file(s) instead of running it.')
     group.add_argument('-s', action='store_true', help='Summarize the file(s) instead of running it.')
@@ -404,13 +410,15 @@ if __name__ == '__main__':
             run_file(file)
         if args.SD:
             import subprocess
+
             subprocess.run(["shutdown", "-s"])
     except Exception:
-        # any exception the running code does not catch (besides KeyboardInterrupt.)
+        # any exception the running code does not catch (besides KeyboardInterrupt).
         # (e.g. illegal kwargs when setting up homotopies or similar)
         # this is to ensure shutdown goes through even if something unexpected happens.
         if args.SD:
             import subprocess
+
             subprocess.run(["shutdown", "-s"])
         else:
             raise

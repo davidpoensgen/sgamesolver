@@ -114,7 +114,7 @@ class SGame:
             self.transitions[:, p] = self.discount_factors[p] * self.phi
 
     @classmethod
-    def random_game(cls, num_states, num_players, num_actions, delta=0.95, seed=None):
+    def random_game(cls, num_states, num_players, num_actions, delta=0.95, seed=None) -> 'SGame':
         """Creates an SGame of given size, with random payoff- and transition arrays.
         num_actions can be specified in the following ways:
         - integer: all agents have this same fixed number of actions
@@ -155,7 +155,7 @@ class SGame:
         return cls(u, phi, delta)
 
     @classmethod
-    def one_shot_game(cls, payoff_matrix: np.ndarray):
+    def one_shot_game(cls, payoff_matrix: np.ndarray) -> 'SGame':
         """Create a one-shot (=single-state/simultaneous) game from a payoff array."""
         # phi: zeros with shape like u, but dropping first dimension (player)
         # and appending a len-1-dimension for to-state
@@ -163,7 +163,7 @@ class SGame:
         return cls([payoff_matrix], [phi], 0)
 
     @classmethod
-    def from_table(cls, table):
+    def from_table(cls, table) -> 'SGame':
         """Create a game from the tabular format.
         Input can be either a pandas.DataFrame, or a string containing the path to an excel file (.xlsx, .xls), a
         stata file (.dta), or a plain text file with comma separated values (.csv, .txt).
@@ -218,10 +218,8 @@ class SGame:
         return strategy_profile
 
     def random_weights(self, low: float = 0, high: float = 1, zeros=False, seed: Optional[int] = None) -> np.ndarray:
-        """Randomize a set of weights of the same shape as a strategy profile.
+        """Generate a randomized set of weights of the same shape as a strategy profile (i.e. one weight per action).
         Distribution is uniform on the interval [low, high]."""
-        if low < 0:
-            raise ValueError("Lower bound for weights must be non-negative.")
         rng = np.random.default_rng(seed)
         nu_flat = rng.uniform(low, high, self.num_actions_total)
         return self.unflatten_strategies(nu_flat, zeros=zeros)
