@@ -66,7 +66,6 @@ homotopy = sgamesolver.homotopy.QRE(game=game)
 # solve
 # TODO: LogTracing fails
 # TODO: QRE takes ~15 minutes
-"""
 homotopy.solver_setup()
 homotopy.solve()
 
@@ -95,4 +94,3 @@ ax2.set_ylabel(r'present value of utility $V(k_{t})$')
 ax2.plot(K, values)
 ax2.grid()
 plt.show()
-"""
