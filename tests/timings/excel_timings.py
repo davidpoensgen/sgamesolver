@@ -228,6 +228,8 @@ def summarize_file(filename):
     summary = wb["Summary"]
     summary.delete_rows(2, 500)
     games_pd = pd.read_excel(filename, sheet_name="Games", keep_default_na=False)
+    # only unique S-I-A-combinations are needed:
+    games_pd.drop_duplicates(subset=['S', 'I', 'A'], keep='first', inplace=True)
     runs_pd = pd.read_excel(filename, sheet_name="Runs")
 
     for idx, game_spec in games_pd.iterrows():
@@ -264,8 +266,8 @@ def latex_file(filename):
     I_counts = sorted(summary_pd['I'].unique().tolist())
     A_counts = sorted(summary_pd['A'].unique().tolist())
     latex = '\\documentclass{article}\n\\usepackage{booktabs}\n\\usepackage{multirow}\n\n\\begin{document}\n'
-    latex += '\\begin{tabular}{r@{\\hskip .4cm}r@{\\hskip .6cm}' + 'r@{\\hskip .15cm}l' * len(
-        I_counts) + '}\n\\toprule\n'
+    latex += '\\begin{tabular}{r@{\\hskip .4cm}r@{\\hskip .6cm}' \
+             + 'r@{\\hskip .15cm}l' * len(I_counts) + '}\n\\toprule\n'
     latex += f'\\multirow{{2}}{{*}}{{$|S|$}} & \\multirow{{2}}{{*}}{{$|A|$}} & ' \
              f'\\multicolumn{{{2 * len(I_counts)}}}{{c}}{{$|I|$}} \\\\ \\cmidrule(lr){{3-{2 + 2 * len(I_counts)}}} \n'
     latex += ' & & ' + ' & '.join(f'\\multicolumn{{2}}{{c}}{{{I}}}' for I in I_counts) + '\\\\ \\midrule \n '
@@ -292,7 +294,7 @@ def latex_file(filename):
                     avg_s = pd_row.head(1)['av time (s)'].item()
                     std_s = pd_row.head(1)['std time (s)'].item()
                     latex += f'{time_format(avg_s)} & \\footnotesize{{{time_format(std_s)}}}'
-                    # alternative representation - secs:
+                    # alternative representation - secs w/ 2 decimals::
                     # latex += f'{avg_s} & \\footnotesize{{{std_s}}}'
                 # last column will end in \\ rather than &:
                 if I != I_counts[-1]:
@@ -314,7 +316,7 @@ def latex_file(filename):
 
 def time_format(secs):
     """Format secs as m:ss / h:mm:ss"""
-    # rarely, secs might be np.nan (e.g. std dev. after a single run) - in this case, just return "-"
+    # rarely, secs might be np.nan (e.g. std dev. after a single run) - in this case, just return a dash
     if np.isnan(secs):
         return "--"
     minutes, seconds = divmod(round(secs), 60)
@@ -364,7 +366,7 @@ if __name__ == '__main__':
     group.add_argument('-s', action='store_true', help='Summarize the file(s) instead of running it.')
     group.add_argument('-l', action='store_true', help='Summarize the file(s) and create a latex table for each. '
                                                        '(As .tex file; will overwrite without prompt.)')
-    group.add_argument('-SD', action='store_true', help='Ru and shutdown computer once all files have run.')
+    group.add_argument('-SD', action='store_true', help='Run and shutdown computer once all files are done.')
 
     args = parser.parse_args()
 

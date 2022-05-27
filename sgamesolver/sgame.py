@@ -21,7 +21,6 @@ class SGame:
         payoff_matrices:      list of array-like, one for each state: payoff_matrices[s][p,A]
 
         transition_matrices:  list of array-like, one for each from_state: transition_matrices[s][A,s']
-                              or None (-> separated repeated games)
 
         discount_factors:     array-like: discount_factors[p]
                               or numeric (-> common discount factor)
