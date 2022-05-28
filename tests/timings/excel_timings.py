@@ -71,9 +71,9 @@ def make_file(filename):
     games.column_dimensions["G"].width = 32
 
     for S in [1, 2, 5, 10, 20, 50, 100, 200, 400]:
-        for I in [2, 3, 4, 5]:
+        for P in [2, 3, 4, 5]:
             for A in [2, 4, 8]:
-                games.append([S, I, A, 100])
+                games.append([S, P, A, 100])
 
     runs = wb.create_sheet("Runs")
     runs.append(
@@ -265,11 +265,11 @@ def latex_file(filename):
     A_counts = sorted(summary_pd['A'].unique().tolist())
     # latex = '% add to preamble: \n% \\includepackage{booktabs} \n% \\includepackage{multirow}\n\n'
     latex = '\\documentclass{article}\n\\usepackage{booktabs}\n\\usepackage{multirow}\n\n\\begin{document}\n'
-    latex += '\\begin{tabular}{r@{\hskip .4cm}r@{\hskip .6cm}' + 'r@{\hskip .15cm}l'*len(I_counts) + '}\n \\toprule \n'
-    latex += f'\multirow{{2}}{{*}}{{$|S|$}}  &\multirow{{2}}{{*}}{{$|A|$}} & ' \
-             f'\multicolumn{{{2*len(I_counts)}}}{{c}}{{$|I|$}} \\\\ \\cmidrule(lr){{3-{2+2*len(I_counts)}}} \n'
+    latex += r'\\begin{tabular}{r@{\hskip .4cm}r@{\hskip .6cm}' + 'r@{\hskip .15cm}l'*len(I_counts) + '}\n \\toprule \n'
+    latex += rf'\multirow{{2}}{{*}}{{$|S|$}}  &\multirow{{2}}{{*}}{{$|A|$}} & ' \
+             rf'\multicolumn{{{2*len(I_counts)}}}{{c}}{{$|I|$}} \\\\ \\cmidrule(lr){{3-{2+2*len(I_counts)}}} \n'
     # [:-2] to remove the extra & following the last iteration
-    latex += ' & & ' + ''.join(f'\\multicolumn{{2}}{{c}}{{{I}}} & ' for I in I_counts)[:-2] + '\\\\ \\midrule \n '
+    latex += ' & & ' + ''.join(f'\\multicolumn{{2}}{{c}}{{{P}}} & ' for P in I_counts)[:-2] + '\\\\ \\midrule \n '
     latex += '\\\\[-4pt]  \n'
     for S in S_counts:
         for A in A_counts:
@@ -281,10 +281,10 @@ def latex_file(filename):
             else:
                 latex += ' & '
             latex += f'${A}\\phantom{{|}}$ & '
-            for I in I_counts:
-                pd_row = summary_pd.query(f'S=={S} & I=={I} & A=={A}')
+            for P in I_counts:
+                pd_row = summary_pd.query(f'S=={S} & I=={P} & A=={A}')
                 if len(pd_row) > 1:
-                    raise ValueError(f'Summary contains multiple rows for S,I,A = {S},{I},{A}.')
+                    raise ValueError(f'Summary contains multiple rows for S,I,A = {S},{P},{A}.')
                 # skip if no row found, or if no successful runs
                 elif len(pd_row) == 0 or pd_row.head(1)['successful'].item() == 0:
                     latex += '&'
@@ -295,7 +295,7 @@ def latex_file(filename):
                     # alternative representation - secs:
                     # latex += f'{avg_s} & \\footnotesize{{{std_s}}}'
                 # last column will end in \\ rather than &:
-                if I != I_counts[-1]:
+                if P != I_counts[-1]:
                     latex += ' & '
             latex += '\\\\ \n'
         latex += '\\\\[-4pt] \n'
