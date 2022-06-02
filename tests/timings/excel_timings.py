@@ -247,7 +247,7 @@ def summarize_file(filename):
             all_runs.shape[0],
             successful_runs.shape[0],
             round(successful_runs.shape[0] / all_runs.shape[0] * 100, 1),
-            str(timedelta(seconds=int(successful_runs["time (s)"].mean()))),
+            str(timedelta(seconds=round(successful_runs["time (s)"].mean()))),
             round(successful_runs["time (s)"].mean(), 2),
             round(successful_runs["time (s)"].std(), 2),
             round(successful_runs["steps"].mean(), 1),
@@ -267,17 +267,20 @@ def latex_file(filename):
     A_counts = sorted(summary_pd['A'].unique().tolist())
     latex = '\\documentclass{article}\n\\usepackage{booktabs}\n\\usepackage{multirow}\n\n\\begin{document}\n'
     latex += '\\begin{tabular}{r@{\\hskip .4cm}r@{\\hskip .6cm}' \
-             + 'r@{\\hskip .15cm}l' * len(I_counts) + '}\n\\toprule\n'
+             + 'r@{\\hskip .15cm}l@{\hskip .1cm}' * len(I_counts) + '}\n\\toprule\n'
     latex += f'\\multirow{{2}}{{*}}{{$|S|$}} & \\multirow{{2}}{{*}}{{$|A|$}} & ' \
              f'\\multicolumn{{{2 * len(I_counts)}}}{{c}}{{$|I|$}} \\\\ \\cmidrule(lr){{3-{2 + 2 * len(I_counts)}}} \n'
     latex += ' & & ' + ' & '.join(f'\\multicolumn{{2}}{{c}}{{{I}}}' for I in I_counts) + '\\\\ \\midrule \n '
-    latex += '&' * (len(I_counts) * 2 + 1) + '\\\\[-4pt] \n'
+    # row of \hphantoms -> equal spacing of columns
+    latex += ' & & ' + ' & '.join('\\hphantom{1:00:00} & \\hphantom{\\footnotesize{1:00:00}}' for _ in I_counts) \
+             + '\\\\[-4pt] \n '
     for S in S_counts:
         for A in A_counts:
             # if no entries for S/A combination exist, skip the complete line:
             if not len(summary_pd.query(f'S=={S} & A=={A}')):
                 continue
-            # |S| only on first line of each block. phantom just to make alignment look nicer :
+            # |S| only on first line of each block. phantom just to make alignment look nicer:
+            # TODO: this is a bit unclean, assumes same A_counts for each S
             if A == A_counts[0]:
                 latex += f'${S}\\phantom{{|}}$ & '
             else:
