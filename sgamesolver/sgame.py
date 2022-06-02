@@ -5,7 +5,6 @@ from typing import Union, List, Tuple, Optional
 import numpy as np
 import pandas as pd
 from .homcont import HomContSolver
-from sgamesolver.utility.sgame_conversion import game_to_table, game_from_table
 
 ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
@@ -170,12 +169,14 @@ class SGame:
         stata file (.dta), or a plain text file with comma separated values (.csv, .txt).
         For reference on how the table should be formatted, please refer to the online manual.
         """
+        from sgamesolver.utility.sgame_conversion import game_from_table
         return game_from_table(table)
 
     def to_table(self) -> pd.DataFrame:
         """Convert the game to the tabular format. Returns a pandas.DataFrame that can then be saved in the format
         of choice. Note that this might take quite long for large games.
         """
+        from sgamesolver.utility.sgame_conversion import game_to_table
         return game_to_table(self)
 
     def detect_symmetries(self) -> None:

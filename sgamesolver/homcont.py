@@ -37,7 +37,7 @@ class HomContSolver:
     Convergence criteria
     -----------
     t_target : float, optional
-    convergence_tol: float, optional
+    convergence_tol: float
     distance_function: callable, optional
 
         The solver allows 2 possible modes to determine convergence:
@@ -530,7 +530,7 @@ class HomContSolver:
         inputs = {**params, **kwargs}
         for key, value in inputs.items():
             if not hasattr(self, key):
-                print(f'Warning: "{key}" is not a valid parameter.')
+                raise ValueError(f'"{key}" is not a valid parameter.')
             setattr(self, key, value)
         if 'ds_initial' in inputs:
             self.ds = self.ds_initial
