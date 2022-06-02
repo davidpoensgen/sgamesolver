@@ -2,10 +2,7 @@
 
 
 import numpy as np
-
-from sgamesolver.sgame import SGame
-from sgamesolver.homotopy._logtracing import LogTracing, LogTracing_np, LogTracing_ct
-from tests.random_game import create_random_game
+import sgamesolver
 
 
 # %% test log tracing homotopy
@@ -13,37 +10,40 @@ from tests.random_game import create_random_game
 
 class TestLogTracing:
 
-    game = SGame(*create_random_game())
+    game = sgamesolver.SGame.random_game(num_states=3, num_players=3, num_actions=3)
     y_rand = np.random.random(game.num_actions_total + game.num_states * game.num_players + 1)
 
-    hom = LogTracing(game)
-    hom_np = LogTracing_np(game)
-    hom_ct = LogTracing_ct(game)
+    hom = sgamesolver.homotopy.LogTracing(game)
+    hom_np = sgamesolver.homotopy._logtracing.LogTracing_np(game)
+    hom_ct = sgamesolver.homotopy._logtracing.LogTracing_ct(game)
 
     hom.solver_setup()
 
-    def test_H_np_equal_ct(cls):
-        assert np.allclose(cls.hom_ct.H(cls.y_rand), cls.hom_np.H(cls.y_rand))
+    def test_H_np_equal_ct(self):
+        assert np.allclose(self.hom_ct.H(self.y_rand), self.hom_np.H(self.y_rand))
 
-    def test_J_np_equal_ct(cls):
-        assert np.allclose(cls.hom_ct.J(cls.y_rand), cls.hom_np.J(cls.y_rand))
+    def test_J_np_equal_ct(self):
+        assert np.allclose(self.hom_ct.J(self.y_rand), self.hom_np.J(self.y_rand))
 
-    def test_H_zero_at_starting_point(cls):
-        H_y0 = cls.hom.H(cls.hom.y0)
-        assert np.max(np.abs(H_y0)) < cls.hom.tracking_parameters['normal']['corrector_tol']
+    def test_H_zero_at_starting_point(self):
+        H_y0 = self.hom.H(self.hom.y0)
+        assert np.max(np.abs(H_y0)) < self.hom.tracking_parameters['normal']['corrector_tol']
 
-    def test_detJ_nonzero_at_starting_point(cls):
-        detJ_y0 = np.linalg.det(cls.hom.J(cls.hom.y0)[:, :-1])
-        assert np.abs(detJ_y0) > cls.hom.tracking_parameters['normal']['corrector_tol']
+    def test_detJ_nonzero_at_starting_point(self):
+        detJ_y0 = np.linalg.det(self.hom.J(self.hom.y0)[:, :-1])
+        assert np.abs(detJ_y0) > self.hom.tracking_parameters['normal']['corrector_tol']
 
-    def test_solve(cls):
-        cls.hom.solver.verbose = 0
-        sol = cls.hom.solver.start()
+    def test_solve(self):
+        self.hom.solver.verbose = 0
+        sol = self.hom.solver.start()
         assert sol['success']
         assert not sol['failure reason']
-        assert np.max(np.abs(cls.hom.H(sol['y']))) < cls.hom_np.tracking_parameters['normal']['corrector_tol']
-        sigma, V, t = cls.hom.y_to_sigma_V_t(sol['y'])
-        assert np.max(cls.game.check_equilibrium(sigma)) < cls.hom.tracking_parameters['normal']['convergence_tol']
+        assert np.max(np.abs(self.hom.H(sol['y']))) < self.hom_np.tracking_parameters['normal']['corrector_tol']
+        sigma, V, t = self.hom.y_to_sigma_V_t(sol['y'])
+        t_tol = self.hom.tracking_parameters['normal']['convergence_tol']
+        assert 1 - t < t_tol
+        # equilibriumness should be in same order of magnitude as convergence tolerance
+        assert np.max(self.game.check_equilibrium(sigma)) < 10 * t_tol
 
 
 # %% run
@@ -51,36 +51,10 @@ class TestLogTracing:
 
 if __name__ == '__main__':
 
-    test_log_tracing = TestLogTracing()
-    test_log_tracing.test_H_np_equal_ct()
-    test_log_tracing.test_J_np_equal_ct()
-    test_log_tracing.test_H_zero_at_starting_point()
-    test_log_tracing.test_detJ_nonzero_at_starting_point()
-    test_log_tracing.test_solve()
+    test_class = TestLogTracing()
 
-    # run large game:
-
-    num_s = 5
-    num_p = 5
-    num_a = 5
-    delta = 0.95
-    rng = np.random.RandomState(42)
-
-    game = SGame(*create_random_game(num_s, num_p, num_a, num_a, delta, delta, rng=rng))
-
-    hom = LogTracing_ct(game)
-
-    # hom.find_y0(dev=True)
-    # print('done')
-
-    """
-    %timeit hom.find_y0(dev=True)
-    %timeit hom.find_y0()
-    """
-
-    hom.solver_setup()
-    hom.solver.max_steps = 1e6
-    hom.solver.verbose = 2
-
-    sol = hom.solver.start()
-    print(sol)
+    method_names = [method for method in dir(test_class)
+                    if callable(getattr(test_class, method))
+                    if not method.startswith('__')]
+    for method in method_names:
+        getattr(test_class, method)()

@@ -24,6 +24,6 @@ homotopy.solve()
 
 print(homotopy.equilibrium)
 # +++++++++ state0 +++++++++
-#                       a0    a1  
+#                       a0    a1
 # player0 : v=1.00, σ=[0.000 1.000]
 # player1 : v=1.00, σ=[0.000 1.000]

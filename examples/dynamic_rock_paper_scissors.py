@@ -17,26 +17,26 @@ import sgamesolver
 #   2: player1 has played Scissors in the previous round and player0 has not
 
 payoff_matrices = [  # state0:
-                   np.array([[[ 0, -1,  1],
-                              [ 1,  0, -1],
+                   np.array([[[0,  -1,  1],
+                              [1,   0, -1],
                               [-1,  1,  0]],
-                             [[ 0,  1, -1],
+                             [[0,   1, -1],
                               [-1,  0,  1],
-                              [ 1, -1,  0]]]),
+                              [1,  -1,  0]]]),
                      # state1:
-                   np.array([[[ 0, -1,  1],
-                              [ 1,  0, -1],
+                   np.array([[[0,  -1,  1],
+                              [1,   0, -1],
                               [-1,  1,  1]],    # player0 wins tie on Scissors
-                             [[ 0,  1, -1],
+                             [[0,   1, -1],
                               [-1,  0,  1],
-                              [ 1, -1, -1]]]),  # player1 loses tie on Scissors
+                              [1,  -1, -1]]]),  # player1 loses tie on Scissors
                      # state2:
-                   np.array([[[ 0, -1,  1],
-                              [ 1,  0, -1],
+                   np.array([[[0,  -1,  1],
+                              [1,  0, -1],
                               [-1,  1, -1]],    # player0 loses tie on Scissors
-                             [[ 0,  1, -1],
+                             [[0,   1, -1],
                               [-1,  0,  1],
-                              [ 1, -1,  1]]])]  # player1 wins tie on Scissors
+                              [1,  -1,  1]]])]  # player1 wins tie on Scissors
 
 # transitions identical for each state
 transition_matrices = [np.array([[[1, 0, 0],

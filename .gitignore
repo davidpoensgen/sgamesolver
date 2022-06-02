@@ -12,7 +12,5 @@ docs/build/
 docs/_build/
 
 .pytest_cache/
-.spyproject/
-.vscode/
 
 *.csv

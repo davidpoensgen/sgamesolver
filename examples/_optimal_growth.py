@@ -12,13 +12,16 @@ beta = 0.95   # discount factor
 gamma = 2     # relative risk aversion
 delta = 0     # capital depreciation
 
+
 # utility function
 def u(c):
     return (c**(1-gamma)) / (1-gamma)
 
+
 # production function
 def f(k):
     return ((1-beta)/(alpha*beta)) * k**alpha
+
 
 # state space K[a] (capital stock)
 k_min, k_max, k_step = 0.4, 1.6, 0.1
@@ -66,7 +69,6 @@ homotopy = sgamesolver.homotopy.QRE(game=game)
 # solve
 # TODO: LogTracing fails
 # TODO: QRE takes ~15 minutes
-"""
 homotopy.solver_setup()
 homotopy.solve()
 
@@ -95,4 +97,3 @@ ax2.set_ylabel(r'present value of utility $V(k_{t})$')
 ax2.plot(K, values)
 ax2.grid()
 plt.show()
-"""
