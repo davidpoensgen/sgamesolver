@@ -5,7 +5,7 @@ from warnings import warn
 import numpy as np
 
 from sgamesolver.sgame import SGame, LogStratHomotopy
-from sgamesolver.homcont import HomCont
+from sgamesolver.homcont import HomContSolver
 
 try:
     import sgamesolver.homotopy._loggame_ct as _loggame_ct
@@ -71,9 +71,9 @@ class LogGame_base(LogStratHomotopy):
 
     def solver_setup(self) -> None:
         self.y0 = self.find_y0()
-        self.solver = HomCont(self.H, self.y0, self.J, t_target=1.0,
-                              parameters=self.tracking_parameters['normal'],
-                              distance_function=self.sigma_distance)
+        self.solver = HomContSolver(self.H, self.y0, self.J, t_target=1.0,
+                                    parameters=self.tracking_parameters['normal'],
+                                    distance_function=self.sigma_distance)
 
     def find_y0(self) -> np.ndarray:
         sigma = self.game.weighted_centroid_strategy(self.nu)

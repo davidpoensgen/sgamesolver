@@ -5,7 +5,7 @@ import os
 import json
 
 
-class HomCont:
+class HomContSolver:
     """Class to perform homotopy continuation to solve a nonlinear system of equations: F(x) = H(x, t_target) = 0.
 
     Given:  1) System of equations H(x,t) = 0 with homotopy parameter t.
@@ -119,7 +119,6 @@ class HomCont:
                  J: callable = None,
                  t_target: float = np.inf,
                  max_steps: int = np.inf,
-                 distance_function: callable = None,
                  parameters: dict = None,
                  **kwargs):
 
@@ -136,10 +135,7 @@ class HomCont:
 
         self.t_target = t_target
         self.max_steps = max_steps
-        if distance_function is not None:
-            self.distance = distance_function
-        else:
-            self.distance = self.distance_function
+        self.distance_function = self.simple_distance
 
         # set default parameters
         self.verbose = 1
@@ -366,7 +362,7 @@ class HomCont:
         """Perform corrector iteration.
 
         Method is quasi-Newton by default: Jacobian pseudo-inverse is computed once at predictor point,
-        not anew at each Newton iteration. (Set HomCont.quasi_newton = False for full Newton steps instead.)
+        not anew at each Newton iteration. (Set HomContSolver.quasi_newton = False for full Newton steps instead.)
         """
         self.corrector_success = False
         self.corrector_fail_distance = False
@@ -462,7 +458,7 @@ class HomCont:
         # Case b): t_target is infinite
         elif np.isinf(self.t_target):
             if self.ds >= self.ds_max:
-                if self.distance(self.y_corr, self.y) < self.convergence_tol:
+                if self.distance_function(self.y_corr, self.y) < self.convergence_tol:
                     self.converged = True
 
     def adapt_stepsize(self):
@@ -593,7 +589,7 @@ class HomCont:
             self.sign = -1
 
     @staticmethod
-    def distance_function(y_new, y_old):
+    def simple_distance(y_new, y_old):
         """Calculate maximum difference in y[:-1], normalized by difference in t.
         Possible convergence criterion.
         """
@@ -688,7 +684,7 @@ class HomCont:
                 return
 
         with open(filename, 'w') as file:
-            state = {'description': f'HomCont state saved on {time.ctime()}.',
+            state = {'description': f'HomContSolver state saved on {time.ctime()}.',
                      'step': self.step,
                      's': self.s,
                      'sign': self.sign,
@@ -762,7 +758,7 @@ def angle(vector1, vector2):
 class HomPath:
     """Container to store path data for the specified solver instance."""
 
-    def __init__(self, solver: HomCont, max_steps: int = 1000):
+    def __init__(self, solver: HomContSolver, max_steps: int = 1000):
         self.max_steps = max_steps
         self.solver = solver
 
@@ -896,7 +892,7 @@ class HomPath:
 
 class DebugLog:
     """Log collecting data on corrector steps for parameter tuning and debugging."""
-    def __init__(self, solver: HomCont):
+    def __init__(self, solver: HomContSolver):
         self.solver = solver
         self.index = 0
         self.data = np.zeros((9, 1000), order='f')

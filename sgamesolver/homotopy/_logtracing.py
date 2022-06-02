@@ -10,7 +10,7 @@ import numpy as np
 from scipy.optimize import brentq
 
 from sgamesolver.sgame import SGame, LogStratHomotopy
-from sgamesolver.homcont import HomCont
+from sgamesolver.homcont import HomContSolver
 
 try:
     import sgamesolver.homotopy._logtracing_ct as _logtracing_ct
@@ -109,9 +109,9 @@ class LogTracing_base(LogStratHomotopy):
 
     def solver_setup(self) -> None:
         self.y0 = self.find_y0()
-        self.solver = HomCont(self.H, self.y0, self.J, t_target=1.0,
-                              parameters=self.tracking_parameters['normal'],
-                              distance_function=self.sigma_distance)
+        self.solver = HomContSolver(self.H, self.y0, self.J, t_target=1.0,
+                                    parameters=self.tracking_parameters['normal'],
+                                    distance_function=self.sigma_distance)
 
     def find_y0(self, tol: float = 1e-12, max_iter: int = 10000) -> np.ndarray:
         """Value function iteration."""

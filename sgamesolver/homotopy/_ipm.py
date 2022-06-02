@@ -8,7 +8,7 @@ from warnings import warn
 import numpy as np
 
 from sgamesolver.sgame import SGame, SGameHomotopy
-from sgamesolver.homcont import HomCont
+from sgamesolver.homcont import HomContSolver
 
 try:
     import sgamesolver.homotopy._ipm_ct as _ipm_ct
@@ -91,8 +91,8 @@ class IPM_base(SGameHomotopy):
     def solver_setup(self) -> None:
         self.y0 = self.find_y0()
         # Note: homotopy parameter t goes from 1 to 0
-        self.solver = HomCont(self.H, self.y0, self.J, t_target=0.0,
-                              parameters=self.tracking_parameters['normal'])
+        self.solver = HomContSolver(self.H, self.y0, self.J, t_target=0.0,
+                                    parameters=self.tracking_parameters['normal'])
 
     def find_y0(self) -> np.ndarray:
         V = np.ones((self.game.num_states, self.game.num_players))

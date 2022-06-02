@@ -3,7 +3,9 @@
 
 from typing import Union, List, Tuple, Optional
 import numpy as np
-from .homcont import HomCont
+import pandas as pd
+from .homcont import HomContSolver
+from sgamesolver.utility.sgame_conversion import game_to_table, game_from_table
 
 ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
@@ -162,24 +164,18 @@ class SGame:
         return cls([payoff_matrix], [phi], 0)
 
     @classmethod
-    def from_table(cls, table) -> 'SGame':
+    def from_table(cls, table: Union[pd.DataFrame, str]) -> 'SGame':
         """Create a game from the tabular format.
         Input can be either a pandas.DataFrame, or a string containing the path to an excel file (.xlsx, .xls), a
         stata file (.dta), or a plain text file with comma separated values (.csv, .txt).
         For reference on how the table should be formatted, please refer to the online manual.
-
-        This method requires the package pandas to be installed.
         """
-        from sgamesolver.utility.sgame_conversion import game_from_table
         return game_from_table(table)
 
-    def to_table(self):
+    def to_table(self) -> pd.DataFrame:
         """Convert the game to the tabular format. Returns a pandas.DataFrame that can then be saved in the format
         of choice. Note that this might take quite long for large games.
-
-        This method requires the package pandas to be installed.
         """
-        from sgamesolver.utility.sgame_conversion import game_to_table
         return game_to_table(self)
 
     def detect_symmetries(self) -> None:
@@ -354,7 +350,7 @@ class SGameHomotopy:
         self.game = game
         self.y0 = None
         self.tracking_parameters = {}
-        self.solver = None  # type: Optional[HomCont]
+        self.solver = None  # type: Optional[HomContSolver]
         self.equilibrium = None  # type: Optional[StrategyProfile]
 
     def solver_setup(self) -> None:

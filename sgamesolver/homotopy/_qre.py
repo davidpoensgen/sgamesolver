@@ -4,7 +4,7 @@ import numpy as np
 from warnings import warn
 
 from sgamesolver.sgame import SGame, LogStratHomotopy
-from sgamesolver.homcont import HomCont
+from sgamesolver.homcont import HomContSolver
 
 try:
     import sgamesolver.homotopy._qre_ct as _qre_ct
@@ -68,9 +68,9 @@ class QRE_base(LogStratHomotopy):
 
     def solver_setup(self, target_lambda: float = np.inf) -> None:
         self.y0 = self.find_y0()
-        self.solver = HomCont(self.H, self.y0, self.J, t_target=target_lambda,
-                              parameters=self.tracking_parameters['normal'],
-                              distance_function=self.sigma_distance)
+        self.solver = HomContSolver(self.H, self.y0, self.J, t_target=target_lambda,
+                                    parameters=self.tracking_parameters['normal'],
+                                    distance_function=self.sigma_distance)
 
     def find_y0(self) -> np.ndarray:
         sigma = self.game.centroid_strategy()
