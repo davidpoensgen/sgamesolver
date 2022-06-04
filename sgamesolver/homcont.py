@@ -110,7 +110,7 @@ class HomContSolver:
             Defaults to 0.5.
         bifurcation_angle_min : float
             Minimum angle (in degrees) between two consecutive predictor tangents to be considered a bifurcation,
-            defaults to 177.5. If a bifurcations is crossed, path orientation is swapped.
+            defaults to 177.5. If a bifurcation is crossed, path orientation is swapped.
     """
 
     def __init__(self,
@@ -175,10 +175,13 @@ class HomContSolver:
         self.corrector_fail_steps = False
         self.corrector_step = 0
         self.consecutive_successes = 0
-        self.det_ratio = 1
 
         self.quasi_newton = True
+
+        # below: sgement jumping test due to Choi et al.
+        # Slows down solver considerably and should be considered experimental.
         self.test_segment_jumping = False
+        self.det_ratio = 1
 
         self.H_pred = None
         self.y_corr = None

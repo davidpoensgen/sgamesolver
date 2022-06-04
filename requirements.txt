@@ -3,7 +3,6 @@ numpy
 scipy
 cython
 pandas
-# pandas        # optional
 # openpyxl      # optional
 # sympy         # optional
 # matplotlib    # optional
