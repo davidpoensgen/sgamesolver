@@ -1,8 +1,9 @@
-import numpy as np
 import time
 from datetime import timedelta
 import os
 import json
+
+import numpy as np
 
 
 class HomContSolver:
@@ -336,7 +337,7 @@ class HomContSolver:
 
                 self.adapt_stepsize()
 
-                # important to store path after adapt_stepsize:
+                # path must be updated after adapt_stepsize:
                 # this way, returning to previous step and re-starting the solver will produce consistent results
                 if self.store_path and self.corrector_success:
                     self.path.update()
@@ -800,11 +801,7 @@ class HomPath:
         If a list or array of y_indices is given, only these are plotted.
         To plot a range of indices, you can pass a range, e.g. y_indices = range(10, 20).
         """
-        try:
-            import matplotlib.pyplot as plt
-        except ModuleNotFoundError:
-            print('Missing the python package matplotlib. Please install to plot.')
-            return
+        import matplotlib.pyplot as plt
 
         if self.index > max_plotted:
             sample_freq = int(np.ceil(max_plotted/self.index))

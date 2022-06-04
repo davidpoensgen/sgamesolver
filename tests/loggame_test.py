@@ -1,6 +1,4 @@
 """Test implementation of logarithmic game homotopy."""
-
-
 import numpy as np
 import sgamesolver
 

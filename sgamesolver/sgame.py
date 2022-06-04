@@ -1,15 +1,12 @@
 """Classes for stochastic game and corresponding homotopy."""
-
-
 from typing import Union, List, Tuple, Optional
+
 import numpy as np
 import pandas as pd
+
 from .homcont import HomContSolver
 
 ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-
-
-# %% game class
 
 
 class SGame:
@@ -179,10 +176,6 @@ class SGame:
         """
         from sgamesolver.utility.sgame_conversion import game_to_table
         return game_to_table(self)
-
-    def detect_symmetries(self) -> None:
-        """Detect symmetries between agents."""
-        pass
 
     def random_strategy(self, zeros=False, seed=None) -> np.ndarray:
         """Generate a random strategy profile. Padded with NaNs, or zeros under the respective option."""
@@ -398,14 +391,6 @@ class SGameHomotopy:
         """Jacobian of homotopy function evaluated at y."""
         pass
 
-    def H_reduced(self, y: np.ndarray) -> np.ndarray:
-        """H evaluated at y, reduced by exploiting symmetries."""
-        pass
-
-    def J_reduced(self, y: np.ndarray) -> np.ndarray:
-        """J evaluated at y, reduced by exploiting symmetries."""
-        pass
-
     def sigma_V_t_to_y(self, sigma: np.ndarray, V: np.ndarray, t: Union[float, int]) -> np.ndarray:
         """Generate vector y from arrays representing strategies sigma, values V, and homotopy parameter t.
         """
@@ -428,11 +413,8 @@ class SGameHomotopy:
         Likewise, passing a step_range, i.e. (first_step, last_step) also allows to plot a subset of steps only."""
         if not self.solver or not self.solver.path:
             raise ValueError('No solver or no stored path.')
-        try:
-            import matplotlib.pyplot as plt
-            import matplotlib.lines
-        except ModuleNotFoundError as e:
-            raise ModuleNotFoundError('Package matplotlib is required for plotting.') from e
+        import matplotlib.pyplot as plt
+        import matplotlib.lines
 
         path = self.solver.path
         if s_range is not None:
@@ -497,7 +479,7 @@ class LogStratHomotopy(SGameHomotopy):
     (where y contains beta := log(sigma), rather than sigma).
     """
 
-    def sigma_V_t_to_y(self, sigma: np.ndarray, V: np.ndarray, t: Union[float, int]) -> np.ndarray:
+    def sigma_V_t_to_y(self, sigma: np.ndarray, V: np.ndarray, t: float) -> np.ndarray:
         """Translate arrays representing strategies sigma, values V and homotopy parameter t to a vector y.
         (Version for homotopies operating on logarithmized strategies.)
         """
@@ -514,7 +496,7 @@ class LogStratHomotopy(SGameHomotopy):
         t = y[-1]
         return sigma, V, t
 
-    def sigma_distance(self, y_new, y_old):
+    def sigma_distance(self, y_new: np.ndarray, y_old: np.ndarray) -> float:
         """Calculates the distance in strategies (sigma) between y_old and y_new,
         in the maximum norm, normalized by distance in homotopy parameter t. Used as convergence criterion."""
         sigma_difference = np.exp(y_new[:self.game.num_actions_total]) - np.exp(y_old[:self.game.num_actions_total])

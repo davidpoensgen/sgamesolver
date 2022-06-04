@@ -151,5 +151,11 @@ setup(
     python_requires='>=3.6',
     install_requires=['numpy', 'scipy', 'cython'],
 
+    entry_points={
+        'console_scripts': [
+            'sgamesolver-timings = sgamesolver.utility.excel_timings:main',
+        ],
+    },
+
     zip_safe=False,
 )

@@ -21,11 +21,15 @@ python excel_timings.py -m filename0 [filename1 filename2 ....]
 import numpy as np
 
 import sgamesolver
-import openpyxl
+try:
+    import openpyxl
+except ModuleNotFoundError:
+    raise ModuleNotFoundError('sgamesolver-timings requires package openpyxl.')
 import pandas as pd
 from datetime import datetime, timedelta
 from socket import gethostname
 import os
+import sys
 import argparse
 import shutil
 
@@ -78,12 +82,13 @@ def make_file(filename):
     runs = wb.create_sheet("Runs")
     runs.append(
         ["S", "I", "A", "number", "seed", "success", "steps", "time (s)",
-         "failure reason", "exception", "date", "machine"])
+         "failure reason", "exception", "date", "machine", "sgamesolver version"])
     runs.column_dimensions["H"].width = 15
     runs.column_dimensions["I"].width = 20
     runs.column_dimensions["J"].width = 20
     runs.column_dimensions["K"].width = 20
     runs.column_dimensions["L"].width = 20
+    runs.column_dimensions["M"].width = 20
 
     summary = wb.create_sheet("Summary")
     summary.append(["S", "I", "A", "total runs", "successful", "success %",
@@ -147,6 +152,7 @@ def run_file(filename):
     runs_pd = pd.read_excel(filename, sheet_name="Runs")
 
     machine = gethostname()
+    version = sgamesolver.__version__
     print('~' * 75)
     print(f'{datetime.now().strftime("%H:%M:%S")} > Starting to run {filename}.')
     print('~' * 75)
@@ -188,7 +194,8 @@ def run_file(filename):
             try:
                 result = homotopy.solver.start()
             except Exception as exception:
-                runs.append([S, I, A, number, seed, False, homotopy.solver.step, "", "", str(exception), date, machine])
+                runs.append([S, I, A, number, seed, False, homotopy.solver.step, "", "",
+                             str(exception), date, machine, version])
                 print("Exception: ", str(exception))
                 if (datetime.now() - time_saved).total_seconds() >= save_interval_seconds:
                     save_file()
@@ -201,7 +208,7 @@ def run_file(filename):
                 raise
             else:
                 runs.append([S, I, A, number, seed, result["success"], result["steps"],
-                             result["time"], result['failure reason'] or "", "", date, machine])
+                             result["time"], result['failure reason'] or "", "", date, machine, version])
                 if result["success"]:
                     success_count += 1
                     print(f"> {result['time']:.1f}s, {result['steps']} steps")
@@ -266,7 +273,7 @@ def latex_file(filename):
     I_counts = sorted(summary_pd['I'].unique().tolist())
     latex = '\\documentclass{article}\n\\usepackage{booktabs}\n\\usepackage{multirow}\n\n\\begin{document}\n'
     latex += '\\begin{tabular}{r@{\\hskip .4cm}r@{\\hskip .6cm}' \
-             + 'r@{\\hskip .15cm}l@{\hskip .1cm}' * len(I_counts) + '}\n\\toprule\n'
+             + 'r@{\\hskip .15cm}l@{\\hskip .1cm}' * len(I_counts) + '}\n\\toprule\n'
     latex += f'\\multirow{{2}}{{*}}{{$|S|$}} & \\multirow{{2}}{{*}}{{$|A|$}} & ' \
              f'\\multicolumn{{{2 * len(I_counts)}}}{{c}}{{$|I|$}} \\\\ \\cmidrule(lr){{3-{2 + 2 * len(I_counts)}}} \n'
     latex += ' & & ' + ' & '.join(f'\\multicolumn{{2}}{{c}}{{{I}}}' for I in I_counts) + '\\\\ \\midrule \n '
@@ -355,8 +362,8 @@ def str_to_dict(str_):
     return out
 
 
-if __name__ == '__main__':
-    import sys
+def main():
+    # to be set as console_script entry point.
 
     parser = argparse.ArgumentParser(description='Run (or create, summarize) a timings file.')
     parser.add_argument('filenames', metavar='filename', nargs='+',
@@ -424,3 +431,7 @@ if __name__ == '__main__':
             subprocess.run(["shutdown", "-s"])
         else:
             raise
+
+
+if __name__ == '__main__':
+    main()
