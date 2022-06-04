@@ -70,7 +70,7 @@ class QRE_base(LogStratHomotopy):
         self.y0 = self.find_y0()
         self.solver = HomContSolver(self.H, self.y0, self.J, t_target=target_lambda,
                                     parameters=self.tracking_parameters['normal'],
-                                    distance_function=self.sigma_distance)
+                                    distance_function=self.sigma_distance, observer=self)
 
     def find_y0(self) -> np.ndarray:
         sigma = self.game.centroid_strategy()

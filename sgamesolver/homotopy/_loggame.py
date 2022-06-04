@@ -73,7 +73,7 @@ class LogGame_base(LogStratHomotopy):
         self.y0 = self.find_y0()
         self.solver = HomContSolver(self.H, self.y0, self.J, t_target=1.0,
                                     parameters=self.tracking_parameters['normal'],
-                                    distance_function=self.sigma_distance)
+                                    distance_function=self.sigma_distance, observer=self)
 
     def find_y0(self) -> np.ndarray:
         sigma = self.game.weighted_centroid_strategy(self.nu)

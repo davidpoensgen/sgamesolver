@@ -111,7 +111,7 @@ class LogTracing_base(LogStratHomotopy):
         self.y0 = self.find_y0()
         self.solver = HomContSolver(self.H, self.y0, self.J, t_target=1.0,
                                     parameters=self.tracking_parameters['normal'],
-                                    distance_function=self.sigma_distance)
+                                    distance_function=self.sigma_distance, observer=self)
 
     def find_y0(self, tol: float = 1e-12, max_iter: int = 10000) -> np.ndarray:
         """Value function iteration."""

@@ -369,14 +369,19 @@ class SGameHomotopy:
         if not self.solver:
             print('Please run .solver_setup() first to set up the solver.')
             return
-        solution = self.solver.start()
-        if solution['success']:
-            sigma, V, t = self.y_to_sigma_V_t(solution['y'])
+        self.solver.start()
+
+    def notify(self, result):
+        """Takes continuation result from HomContSolver and stores as new equilibrium if applicable."""
+        if result['success']:
+            sigma, V, t = self.y_to_sigma_V_t(result['y'])
             self.equilibrium = StrategyProfile(self.game, sigma, V, t)
-            print('An equilibrium was found via homotopy continuation.')
+            if self.solver.verbose:
+                print('An equilibrium was found via homotopy continuation.')
         else:
-            print('The solver failed to find an equilibrium. Please refer to the manual'
-                  ' for suggestions how to proceed.')  # TODO: link manual perhaps?
+            if self.solver.verbose:
+                print('The solver failed to find an equilibrium. Please refer to the manual'
+                      ' for suggestions how to proceed.')  # TODO: link manual perhaps?
 
     def find_y0(self) -> np.ndarray:
         """Calculate starting point y0."""

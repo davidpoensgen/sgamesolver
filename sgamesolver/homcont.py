@@ -207,6 +207,8 @@ class HomContSolver:
         self.path = None  # type: HomPath
         self.store_cond = False
 
+        self.observer = None  # will be notified of continuation results
+
         # overwrite defaults with user-provided parameters if present
         self.set_parameters(parameters, **kwargs)
 
@@ -620,14 +622,18 @@ class HomContSolver:
             print('End homotopy continuation')
             print('=' * 50)
 
-        return {'success': success,
-                'y': self.y,
-                's': self.s,
-                'steps': self.step,
-                'sign': self.sign,
-                'time': time_sec,
-                'failure reason': failure_reason,
-                }
+        result = {'success': success,
+                  'y': self.y,
+                  's': self.s,
+                  'steps': self.step,
+                  'sign': self.sign,
+                  'time': time_sec,
+                  'failure reason': failure_reason,
+                  }
+
+        self.observer.notify(result)
+
+        return result
 
     def _report_step(self):
         arrow = '\u2193' if self.t_direction == -1 else '\u2191'
