@@ -1,5 +1,0 @@
-Start homotopy continuation
-Step 123737: t = 1.000,  s = 1.020e+04,  ds = 12.44,  cond(J) = 2.246e+11
-Step 123737: Continuation successful. Total time elapsed:6 days, 20:20:15
-{'success': True, 'y': array([-11.45595739,  -1.33426965,  -3.93205617, ...,  10.32755792,  10.32075461,   0.99999994]), 's': 10202.062105604187, 'steps': 123737, 'sign': 1, 'time': 591615.0944296, 'failure reason': False}
-
