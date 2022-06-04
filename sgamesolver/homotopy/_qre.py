@@ -186,17 +186,15 @@ class QRE_np(QRE_base):
                     5: T_J_5}
 
         # equations to be used by einsum
-        # TODO: isn't sigma_prod_with_p the same as sigma_prod, just repeated?
         self.einsum_eqs = {
-            'sigma_prod': f's{",s".join(ABC[0:num_p])}->s{ABC[0:num_p]}',
-            'sigma_prod_with_p': [f's{",s".join(ABC[0:num_p])}->s{ABC[0:num_p]}' for p in range(num_p)],
-            'Eu_tilde_a_H': [f's{ABC[0:num_p]},s{",s".join(ABC[p_] for p_ in range(num_p) if p_ != p)}->s{ABC[p]}'
+            'sigma_prod': f's{",s".join(ABC[:num_p])}->s{ABC[:num_p]}',
+            'Eu_tilde_a_H': [f's{ABC[:num_p]},s{",s".join(ABC[p_] for p_ in range(num_p) if p_ != p)}->s{ABC[p]}'
                              for p in range(num_p)],
-            'Eu_tilde_a_J': [f's{ABC[0:num_p]},s{ABC[0:num_p]}->s{ABC[p]}' for p in range(num_p)],
-            'dEu_tilde_a_dbeta': [f's{ABC[0:num_p]},s{ABC[:p]}{ABC[p + 1:num_p]}tqb->s{ABC[p]}tqb'
+            'Eu_tilde_a_J': [f's{ABC[:num_p]},s{ABC[:num_p]}->s{ABC[p]}' for p in range(num_p)],
+            'dEu_tilde_a_dbeta': [f's{ABC[:num_p]},s{ABC[:p]}{ABC[p + 1:num_p]}tqb->s{ABC[p]}tqb'
                                   for p in range(num_p)],
-            'dEu_tilde_a_dV': [f's{ABC[0:num_p]}tp,s{ABC[0:num_p]}->s{ABC[p]}tp' for p in range(num_p)],
-            'dEu_tilde_dbeta': f'sp{ABC[0:num_p]},sp{ABC[0:num_p]}tqb->sptqb',
+            'dEu_tilde_a_dV': [f's{ABC[:num_p]}tp,s{ABC[:num_p]}->s{ABC[p]}tp' for p in range(num_p)],
+            'dEu_tilde_dbeta': f'sp{ABC[:num_p]},sp{ABC[:num_p]}tqb->sptqb',
         }
 
     def H(self, y: np.ndarray) -> np.ndarray:
@@ -256,7 +254,7 @@ class QRE_np(QRE_base):
         sigma_prod_with_p = np.empty((num_s, num_p, *[num_a_max] * num_p))
         for p in range(num_p):
             sigma_p_list_with_p = sigma_p_list[:p] + [np.ones_like(sigma[:, p, :])] + sigma_p_list[(p + 1):]
-            sigma_prod_with_p[:, p] = np.einsum(self.einsum_eqs['sigma_prod_with_p'][p], *sigma_p_list_with_p)
+            sigma_prod_with_p[:, p] = np.einsum(self.einsum_eqs['sigma_prod'], *sigma_p_list_with_p)
 
         if num_p > 1:
             Eu_tilde_a = np.empty((num_s, num_p, num_a_max))

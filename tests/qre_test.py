@@ -31,18 +31,18 @@ class TestQRE:
 
     def test_detJ_nonzero_at_starting_point(self):
         detJ_y0 = np.linalg.det(self.hom.J(self.hom.y0)[:, :-1])
-        assert np.abs(detJ_y0) > self.hom.tracking_parameters['normal']['corrector_tol']
+        assert np.abs(detJ_y0) > self.hom.default_parameters['corrector_tol']
 
     def test_solve(self):
         self.hom.solver.verbose = 0
         sol = self.hom.solver.start()
         assert sol['success']
         assert not sol['failure reason']
-        assert np.max(np.abs(self.hom.H(sol['y']))) < self.hom.tracking_parameters['normal']['corrector_tol']
+        assert np.max(np.abs(self.hom.H(sol['y']))) < self.hom.default_parameters['corrector_tol']
         sigma, V, t = self.hom.y_to_sigma_V_t(sol['y'])
         # relative (not absolute) convergence criterion for QRE!
         # still, equilibriumness should be in somewhat similar order of magnitude as convergence tolerance
-        rel_convergence_tol = self.hom.tracking_parameters['normal']['convergence_tol']
+        rel_convergence_tol = self.hom.default_parameters['convergence_tol']
         assert np.max(self.game.check_equilibrium(sigma)) < rel_convergence_tol ** 0.5
 
 

@@ -1,6 +1,7 @@
 ﻿"""Perform systematic timings of each homotopy to evaluate performance."""
 
-
+# TODO: changed homotopy.tracking_parameters['normal'] to homotopy.default_parameters and similarly
+# 'robust' to robust_parameters; not updating this file as I assume its outdated anyways
 from __future__ import annotations
 
 import os

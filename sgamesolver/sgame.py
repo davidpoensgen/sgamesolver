@@ -79,7 +79,7 @@ class SGame:
                 for s1 in range(self.num_states):
                     transition_matrix[(s0,) + A + (s1,)] = transition_matrices[s0][A + (s1,)]
 
-        self.phi = transition_matrix  # this is the not-per-player version. TODO: clean up
+        self.phi = transition_matrix
 
         self.u_ravel = self.u.ravel()
         self.phi_ravel = self.phi.ravel()
@@ -349,8 +349,6 @@ class SGameHomotopy:
         """Any steps in preparation to start solver:
         - set priors, weights etc. if needed
         - set starting point y0
-        - prepare symmetry helpers
-            + (make sure priors and other parameters are in accordance with symmetries)
         - set up homCont to solve the game
         """
         pass
