@@ -121,9 +121,10 @@ setup(
     description='A homotopy-based solver for stochastic games',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url='https://github.com/seibelsh/sgamesolver',
+    url='https://github.com/davidpoensgen/sgamesolver',
     project_urls={
-        'Bug Tracker': 'TO-BE-PUT-HERE-2',
+        'Bug Tracker': 'https://github.com/davidpoensgen/sgamesolver/issues',
+        'Documentation': 'https://sgamesolver.readthedocs.io/en/latest/',
         'Please cite this paper': 'TO-BE-PUT-HERE-3'
     },
     author='Steffen Eibelshäuser, David Poensgen',
@@ -149,7 +150,13 @@ setup(
     ext_modules=cythonize(ext_modules, language_level="3") if cython else ext_modules,
 
     python_requires='>=3.6',
-    install_requires=['numpy', 'scipy', 'cython'],
+    install_requires=[
+        'numpy',
+        'scipy',
+        'cython',
+        'pandas',
+        'matplotlib'
+    ],
 
     entry_points={
         'console_scripts': [
