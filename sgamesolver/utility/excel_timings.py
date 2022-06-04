@@ -4,8 +4,9 @@ Specification - which homotopy, which game sizes, how many runs, which parameter
 are to be given in the excel files.
 
 Usage:
-1) To run an existing file (or multiple files):
-python excel_timings.py filename0 [filename1 filename2 ....]
+1) To run an existing file (or multiple files), run from a command prompt:
+sgamesolver-timings filename0 [filename1 filename2 ....]    (from any directory; sgamesolver needs to be installed)
+python excel_timings.py filename0 [filename1 ....]      (from a directory containing this file; no installation needed)
 -> filenames can include folders; can omit .xlsx extension.
 -> add flag -SD to shutdown once all files are done (on windows).
 
@@ -17,6 +18,8 @@ python excel_timings.py -m filename0 [filename1 filename2 ....]
 
 3) To update the summary sheet of the specified files (instead of running them), use flag -s.
 (The summary is updated upon completion, but it might be necessary to do so manually after errors.)
+
+4) To create a .tex file with a formatted table, use flag -l. (Also updates the summary.)
 """
 try:
     import openpyxl
@@ -356,7 +359,7 @@ def str_to_dict(str_):
                     value = True
                 elif value == "False":
                     value = False
-                if value == "None":
+                elif value == "None":
                     value = None
                 # all other string are preserved
             out[key.strip()] = value
