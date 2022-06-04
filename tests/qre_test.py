@@ -10,7 +10,7 @@ import sgamesolver
 
 class TestQRE:
 
-    game = sgamesolver.SGame.random_game(num_states=3, num_players=3, num_actions=3)
+    game = sgamesolver.SGame.random_game(num_states=3, num_players=5, num_actions=(1, 10), delta=(0.6, 0.95), seed=23)
     y_rand = np.random.random(game.num_actions_total + game.num_states * game.num_players + 1)
 
     hom = sgamesolver.homotopy.QRE(game)
@@ -27,7 +27,7 @@ class TestQRE:
 
     def test_H_zero_at_starting_point(self):
         H_y0 = self.hom.H(self.hom.y0)
-        assert np.max(np.abs(H_y0)) < self.hom.tracking_parameters['normal']['corrector_tol']
+        assert np.max(np.abs(H_y0)) < self.hom.default_parameters['corrector_tol']
 
     def test_detJ_nonzero_at_starting_point(self):
         detJ_y0 = np.linalg.det(self.hom.J(self.hom.y0)[:, :-1])

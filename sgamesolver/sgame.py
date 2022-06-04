@@ -71,6 +71,7 @@ class SGame:
             self.discount_factors = np.array(discount_factors, dtype=np.float64)
         else:
             self.discount_factors = discount_factors * np.ones(self.num_players)
+        self.delta = self.discount_factors
 
         # scale potentially useful for adjusting tracking parameters
         self.payoff_min = self.payoffs[self.payoff_mask].min()
@@ -350,9 +351,11 @@ class SGameHomotopy:
     def __init__(self, game: SGame) -> None:
         self.game = game
         self.y0 = None
-        self.tracking_parameters = {}
         self.solver = None  # type: Optional[HomContSolver]
         self.equilibrium = None  # type: Optional[StrategyProfile]
+
+    default_parameters = {}
+    robust_parameters = {}
 
     def solver_setup(self) -> None:
         """Any steps in preparation to start solver:

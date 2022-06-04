@@ -23,16 +23,21 @@ class HomContSolver:
     -----------
     H : callable
         Homotopy function: R^(N+1) -> R^N
+    J : callable
+        Jacobian matrix of H: R^(N+1) -> R^N x R^(N+1)
+        (Note: If you have H but not J, a numerical approximation of J can be obtained using the package numdifftools:
+        import numdifftools
+        J = numdifftools.Jacobian(H)
+        after which J can be used as a numerical approximation for the Jacobian of H.
+        Note however that this is likely orders of magnitude slower than a hardcoded Jacobian.)
+
     y0 : np.ndarray
         The starting point for homotopy continuation.
         Must be 1D array.
         Must (approximately) solve the system H(y0) = 0.
         The homotopy parameter t is stored in the last entry.
         The variables of interest x are stored in the other entries.
-    J : callable, optional
-        Jacobian matrix of H: R^(N+1) -> R^N x R^(N+1)
-        If not provided by user, a finite difference approximation is used (requires package numdifftools; likely
-        orders of magnitude slower).
+
 
     Convergence criteria
     -----------
@@ -115,22 +120,15 @@ class HomContSolver:
 
     def __init__(self,
                  H: callable,
+                 J: callable,
                  y0: np.ndarray,
-                 J: callable = None,
                  t_target: float = np.inf,
                  max_steps: int = np.inf,
                  parameters: dict = None,
                  **kwargs):
 
         self.H_func = H
-        if J is not None:
-            self.J_func = J
-        else:
-            try:
-                import numdifftools
-                self.J_func = numdifftools.Jacobian(H)
-            except ModuleNotFoundError:
-                raise ModuleNotFoundError('If J is not provided by user, package numdifftools is required.')
+        self.J_func = J
         self.y = y0.squeeze()
 
         self.t_target = t_target
@@ -178,8 +176,8 @@ class HomContSolver:
 
         self.quasi_newton = True
 
-        # below: sgement jumping test due to Choi et al.
-        # Slows down solver considerably and should be considered experimental.
+        # below: segment jumping test due to Choi et al.
+        # slows down solver considerably and should be considered experimental.
         self.test_segment_jumping = False
         self.det_ratio = 1
 

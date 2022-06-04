@@ -44,7 +44,21 @@ class IPM_base(SGameHomotopy):
         # legacy version of transition arrays: needed until homotopy functions are updated
         self.game._make_transitions()
 
-        self.tracking_parameters['normal'] = {
+        if isinstance(initial_strategies, str) and initial_strategies == "centroid":
+            self.sigma_0 = self.game.centroid_strategy(zeros=True)
+        elif isinstance(initial_strategies, str) and initial_strategies == "random":
+            self.sigma_0 = self.game.random_strategy(zeros=True)
+        else:
+            self.sigma_0 = np.array(initial_strategies)
+
+        self.sigma_0_flat = self.game.flatten_strategies(self.sigma_0)
+
+        if weights is None:
+            self.nu = np.ones((self.game.num_states, self.game.num_players, self.game.num_actions_max))
+        else:
+            self.nu = weights
+
+    default_parameters = {
             'convergence_tol': 1e-7,
             'corrector_tol': 1e-7,
             'ds_initial': 0.1,
@@ -59,7 +73,7 @@ class IPM_base(SGameHomotopy):
             'bifurcation_angle_min': 175,
         }
 
-        self.tracking_parameters['robust'] = {
+    robust_parameters = {
             'convergence_tol': 1e-7,
             'corrector_tol': 1e-8,
             'ds_initial': 0.1,
@@ -74,25 +88,11 @@ class IPM_base(SGameHomotopy):
             'bifurcation_angle_min': 175,
         }
 
-        if initial_strategies == "centroid":
-            self.sigma_0 = self.game.centroid_strategy(zeros=True)
-        elif initial_strategies == "random":
-            self.sigma_0 = self.game.random_strategy(zeros=True)
-        else:
-            self.sigma_0 = np.array(initial_strategies)
-
-        self.sigma_0_flat = self.game.flatten_strategies(self.sigma_0)
-
-        if weights is None:
-            self.nu = np.ones((self.game.num_states, self.game.num_players, self.game.num_actions_max))
-        else:
-            self.nu = weights
-
     def solver_setup(self) -> None:
         self.y0 = self.find_y0()
         # Note: homotopy parameter t goes from 1 to 0
-        self.solver = HomContSolver(self.H, self.y0, self.J, t_target=0.0,
-                                    parameters=self.tracking_parameters['normal'], observer=self)
+        self.solver = HomContSolver(self.H, self.J, self.y0, t_target=0.0,
+                                    parameters=self.default_parameters, observer=self)
 
     def find_y0(self) -> np.ndarray:
         V = np.ones((self.game.num_states, self.game.num_players))

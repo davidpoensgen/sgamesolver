@@ -3,8 +3,5 @@ numpy
 scipy
 cython
 pandas
-# openpyxl      # optional
-# sympy         # optional
-# matplotlib    # optional
-# numdifftools  # optional
-# gxx_linux-64  # optional
+matplotlib
+# openpyxl  # optional

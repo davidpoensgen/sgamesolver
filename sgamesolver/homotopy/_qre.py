@@ -33,43 +33,40 @@ def QRE(game: SGame, implementation='auto', **kwargs):
 class QRE_base(LogStratHomotopy):
     """QRE homotopy: base class"""
 
-    def __init__(self, game: SGame) -> None:
-        super().__init__(game)
+    default_parameters = {
+        'convergence_tol': 1e-7,
+        'corrector_tol': 1e-7,
+        'ds_initial': 0.01,
+        'ds_inflation_factor': 1.2,
+        'ds_deflation_factor': 0.5,
+        'ds_min': 1e-9,
+        'ds_max': 1000,
+        'corrector_steps_max': 20,
+        'corrector_distance_max': 0.3,
+        'corrector_ratio_max': 0.3,
+        'detJ_change_max': 1.3,
+        'bifurcation_angle_min': 175,
+    }
 
-        self.tracking_parameters['normal'] = {
-            'convergence_tol': 1e-7,
-            'corrector_tol': 1e-7,
-            'ds_initial': 0.01,
-            'ds_inflation_factor': 1.2,
-            'ds_deflation_factor': 0.5,
-            'ds_min': 1e-9,
-            'ds_max': 1000,
-            'corrector_steps_max': 20,
-            'corrector_distance_max': 0.3,
-            'corrector_ratio_max': 0.3,
-            'detJ_change_max': 1.3,
-            'bifurcation_angle_min': 175,
-        }
-
-        self.tracking_parameters['robust'] = {
-            'convergence_tol': 1e-7,
-            'corrector_tol': 1e-8,
-            'ds_initial': 0.01,
-            'ds_inflation_factor': 1.1,
-            'ds_deflation_factor': 0.5,
-            'ds_min': 1e-9,
-            'ds_max': 1000,
-            'corrector_steps_max': 30,
-            'corrector_distance_max': 0.1,
-            'corrector_ratio_max': 0.1,
-            'detJ_change_max': 1.1,
-            'bifurcation_angle_min': 175,
-        }
+    robust_parameters = {
+        'convergence_tol': 1e-7,
+        'corrector_tol': 1e-8,
+        'ds_initial': 0.01,
+        'ds_inflation_factor': 1.1,
+        'ds_deflation_factor': 0.5,
+        'ds_min': 1e-9,
+        'ds_max': 1000,
+        'corrector_steps_max': 30,
+        'corrector_distance_max': 0.1,
+        'corrector_ratio_max': 0.1,
+        'detJ_change_max': 1.1,
+        'bifurcation_angle_min': 175,
+    }
 
     def solver_setup(self, target_lambda: float = np.inf) -> None:
         self.y0 = self.find_y0()
-        self.solver = HomContSolver(self.H, self.y0, self.J, t_target=target_lambda,
-                                    parameters=self.tracking_parameters['normal'],
+        self.solver = HomContSolver(self.H, self.J, self.y0, t_target=target_lambda,
+                                    parameters=self.default_parameters,
                                     distance_function=self.sigma_distance, observer=self)
 
     def find_y0(self) -> np.ndarray:
