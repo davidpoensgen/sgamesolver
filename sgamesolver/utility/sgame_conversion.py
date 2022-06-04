@@ -190,11 +190,11 @@ def game_to_table(game: SGame) -> pd.DataFrame:
     phi_cols = [f'phi_{s}' for s in state_labels]
     df = pd.DataFrame(columns=['state'] + a_cols + u_cols + phi_cols)
     # delta-row:
-    df.loc[0] = ['delta'] + len(a_cols) * [""] + game.discount_factors.tolist() + len(phi_cols) * [np.nan]
+    df.loc[0] = ['delta'] + len(a_cols) * [""] + game.delta.tolist() + len(phi_cols) * [np.nan]
 
     for s in range(game.num_states):
         for index, action_profile in zip(np.ndindex(*game.nums_actions[s]), itertools.product(*action_labels[s])):
-            u = game.payoffs[(s, slice(None)) + index].tolist()
+            u = game.u[(s, slice(None)) + index].tolist()
             phi = game.phi[(s,) + index + (slice(None),)].tolist()
             df.loc[len(df)] = [state_labels[s]] + list(action_profile) + u + phi
 

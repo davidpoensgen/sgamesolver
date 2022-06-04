@@ -1,7 +1,7 @@
 """Logarithmic game homotopy."""
-
 from typing import Optional
 from warnings import warn
+
 import numpy as np
 
 from sgamesolver.sgame import SGame, LogStratHomotopy
@@ -96,12 +96,12 @@ class LogGame_ct(LogGame_base):
         self.parallel = parallel
 
     def H(self, y: np.ndarray) -> np.ndarray:
-        return _loggame_ct.H(y, self.game.u_ravel, self.game.phi_ravel, self.game.discount_factors, self.nu,
+        return _loggame_ct.H(y, self.game.u_ravel, self.game.phi_ravel, self.game.delta, self.nu,
                              self.game.num_states, self.game.num_players, self.game.nums_actions,
                              self.game.num_actions_max, self.game.num_actions_total, self.parallel)
 
     def J(self, y: np.ndarray) -> np.ndarray:
-        return _loggame_ct.J(y, self.game.u_ravel, self.game.phi_ravel, self.game.discount_factors, self.nu,
+        return _loggame_ct.J(y, self.game.u_ravel, self.game.phi_ravel, self.game.delta, self.nu,
                              self.game.num_states, self.game.num_players, self.game.nums_actions,
                              self.game.num_actions_max, self.game.num_actions_total, self.parallel)
 
@@ -215,7 +215,7 @@ class LogGame_np(LogGame_base):
 
         sigma_p_list = [sigma[:, p, :] for p in range(num_p)]
 
-        u_tilde = self.game.payoffs + np.einsum('sp...S,Sp->sp...', self.game.transitions, V)
+        u_tilde = self.game.u + np.einsum('sp...S,Sp->sp...', self.game.transitions, V)
 
         # TODO: sigma_prod_with_p ?
 
@@ -259,7 +259,7 @@ class LogGame_np(LogGame_base):
 
         sigma_p_list = [sigma[:, p, :] for p in range(num_p)]
 
-        u_tilde = self.game.payoffs + np.einsum('sp...S,Sp->sp...', self.game.transitions, V)
+        u_tilde = self.game.u + np.einsum('sp...S,Sp->sp...', self.game.transitions, V)
 
         if num_p > 1:
             Eu_tilde_a = np.empty((num_s, num_p, num_a_max))

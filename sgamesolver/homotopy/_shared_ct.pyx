@@ -115,7 +115,7 @@ cdef np.ndarray[np.float64_t, ndim=3] u_tilde_sia(np.ndarray[np.float64_t, ndim=
                                                   int num_s, int num_p, int [:,::1] nums_a, int num_a_max,
                                                   bint parallel):
     """Derivatives of u_tilde_si(sigma) w.r.t. sigma_sia. 
-    Put differently, payoffs (including continuation values) of player i using pure action 
+    Put differently, u (including continuation values) of player i using pure action 
     a in state s, given other players play according to mixed strategy profile sigma.
     """
 

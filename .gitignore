@@ -12,5 +12,3 @@ docs/build/
 docs/_build/
 
 .pytest_cache/
-
-*.csv

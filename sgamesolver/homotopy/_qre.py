@@ -1,7 +1,7 @@
 """(Markov logit) quantal response equilibrium (QRE) homotopy."""
+from warnings import warn
 
 import numpy as np
-from warnings import warn
 
 from sgamesolver.sgame import SGame, LogStratHomotopy
 from sgamesolver.homcont import HomContSolver
@@ -212,7 +212,7 @@ class QRE_np(QRE_base):
 
         sigma_p_list = [sigma[:, p, :] for p in range(num_p)]
 
-        u_tilde = self.game.payoffs + np.einsum('sp...S,Sp->sp...', self.game.transitions, V)
+        u_tilde = self.game.u + np.einsum('sp...S,Sp->sp...', self.game.transitions, V)
 
         if num_p > 1:
             Eu_tilde_a = np.empty((num_s, num_p, num_a_max))
@@ -249,7 +249,7 @@ class QRE_np(QRE_base):
         # building blocks of J
 
         sigma_p_list = [sigma[:, p, :] for p in range(num_p)]
-        u_tilde = self.game.payoffs + np.einsum('sp...S,Sp->sp...', self.game.transitions, V)
+        u_tilde = self.game.u + np.einsum('sp...S,Sp->sp...', self.game.transitions, V)
 
         sigma_prod = np.einsum(self.einsum_eqs['sigma_prod'], *sigma_p_list)
 
@@ -316,9 +316,9 @@ class QRE_ct(QRE_base):
             self.cache = None
 
     def H(self, y: np.ndarray) -> np.ndarray:
-        return _qre_ct.H(y, self.game.u_ravel, self.game.phi_ravel, self.game.discount_factors,
+        return _qre_ct.H(y, self.game.u_ravel, self.game.phi_ravel, self.game.delta,
                          self.game.nums_actions, self.cache, self.parallel)
 
     def J(self, y: np.ndarray) -> np.ndarray:
-        return _qre_ct.J(y, self.game.u_ravel, self.game.phi_ravel, self.game.discount_factors,
+        return _qre_ct.J(y, self.game.u_ravel, self.game.phi_ravel, self.game.delta,
                          self.game.nums_actions, self.cache, self.parallel)

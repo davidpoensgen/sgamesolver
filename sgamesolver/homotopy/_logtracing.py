@@ -1,8 +1,4 @@
 """(Logarithmic stochastic) tracing homotopy."""
-
-# TODO: check user-provided priors and weights?
-# TODO: maybe write custom optimization for find_y0 to avoid scipy import
-
 from warnings import warn
 from typing import Union, Optional
 
@@ -56,7 +52,7 @@ class LogTracing_base(LogStratHomotopy):
         self.eta = eta
         self.eta_fix = eta_fix
 
-        # prepare payoffs and transition given other players follow prior
+        # prepare u and transition given other players follow prior
         num_s, num_p, num_a_max = self.game.num_states, self.game.num_players, self.game.num_actions_max
         rho_p_list = [self.rho[:, p, :] for p in range(num_p)]
         self.einsum_eqs = {
@@ -70,12 +66,12 @@ class LogTracing_base(LogStratHomotopy):
             self.phi_rho = np.zeros((num_s, num_p, num_a_max, num_s))
             for p in range(num_p):
                 self.u_rho[:, p] = np.einsum(self.einsum_eqs['u_a'][p],
-                                             self.game.payoffs[:, p], *(rho_p_list[:p] + rho_p_list[(p + 1):]))
+                                             self.game.u[:, p], *(rho_p_list[:p] + rho_p_list[(p + 1):]))
                 self.phi_rho[:, p] = np.einsum(self.einsum_eqs['phi_a'][p], self.game.phi,
-                                               *(rho_p_list[:p] + rho_p_list[(p + 1):])) * self.game.discount_factors[p]
+                                               *(rho_p_list[:p] + rho_p_list[(p + 1):])) * self.game.delta[p]
         else:
-            self.u_rho = self.game.payoffs
-            self.phi_rho = np.expand_dims(self.game.phi, 1) * self.game.discount_factors[0]
+            self.u_rho = self.game.u
+            self.phi_rho = np.expand_dims(self.game.phi, 1) * self.game.delta[0]
 
     default_parameters = {
         'convergence_tol': 1e-7,
@@ -172,12 +168,12 @@ class LogTracing_ct(LogTracing_base):
             self.cache = None
 
     def H(self, y: np.ndarray) -> np.ndarray:
-        return _logtracing_ct.H(y, self.game.u_ravel, self.game.phi_ravel, self.game.discount_factors,
+        return _logtracing_ct.H(y, self.game.u_ravel, self.game.phi_ravel, self.game.delta,
                                 self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
                                 self.game.nums_actions, self.eta_fix, self.parallel, self.cache)
 
     def J(self, y: np.ndarray) -> np.ndarray:
-        return _logtracing_ct.J(y, self.game.u_ravel, self.game.phi_ravel, self.game.discount_factors,
+        return _logtracing_ct.J(y, self.game.u_ravel, self.game.phi_ravel, self.game.delta,
                                 self.rho, self.nu, self.eta, self.u_rho, self.phi_rho,
                                 self.game.nums_actions, self.eta_fix, self.parallel, self.cache)
 
@@ -298,12 +294,12 @@ class LogTracing_np(LogTracing_base):
             u_sigma = np.empty((num_s, num_p, num_a_max))
             phi_sigma = np.empty((num_s, num_p, num_a_max, num_s))
             for p in range(num_p):
-                u_sigma[:, p] = np.einsum(self.einsum_eqs['u_a'][p], self.game.payoffs[:, p],
+                u_sigma[:, p] = np.einsum(self.einsum_eqs['u_a'][p], self.game.u[:, p],
                                           *(sigma_p_list[:p] + sigma_p_list[(p + 1):]))
                 phi_sigma[:, p] = np.einsum(self.einsum_eqs['phi_a'][p], self.game.transitions[:, p],
                                             *(sigma_p_list[:p] + sigma_p_list[(p + 1):]))
         else:
-            u_sigma = self.game.payoffs
+            u_sigma = self.game.u
             phi_sigma = self.game.transitions
 
         u_bar = t * u_sigma + (1 - t) * self.u_rho
@@ -354,14 +350,14 @@ class LogTracing_np(LogTracing_base):
 
         sigma_p_list = [sigma[:, p, :] for p in range(num_p)]
 
-        u_tilde = self.game.payoffs + np.einsum('sp...S,Sp->sp...', self.game.transitions, V)
+        u_tilde = self.game.u + np.einsum('sp...S,Sp->sp...', self.game.transitions, V)
 
         if num_p > 1:
             u_sigma = np.empty((num_s, num_p, num_a_max))
             phi_sigma = np.empty((num_s, num_p, num_a_max, num_s))
             Eu_tilde_ab = np.empty((num_s, num_p, num_p, num_a_max, num_a_max))
             for p in range(num_p):
-                u_sigma[:, p] = np.einsum(self.einsum_eqs['u_a'][p], self.game.payoffs[:, p],
+                u_sigma[:, p] = np.einsum(self.einsum_eqs['u_a'][p], self.game.u[:, p],
                                           *(sigma_p_list[:p] + sigma_p_list[(p + 1):]))
                 phi_sigma[:, p] = np.einsum(self.einsum_eqs['phi_a'][p], self.game.transitions[:, p],
                                             *(sigma_p_list[:p] + sigma_p_list[(p + 1):]))
@@ -372,7 +368,7 @@ class LogTracing_np(LogTracing_base):
                         Eu_tilde_pq = np.repeat(np.expand_dims(Eu_tilde_pq, axis=-1), num_a_max, axis=-1)
                     Eu_tilde_ab[:, p, q] = Eu_tilde_pq
         else:
-            u_sigma = self.game.payoffs
+            u_sigma = self.game.u
             phi_sigma = self.game.transitions
             Eu_tilde_ab = np.repeat(u_tilde[:, :, np.newaxis, :, np.newaxis], num_a_max, axis=4)
 

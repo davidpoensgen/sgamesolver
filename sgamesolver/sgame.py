@@ -48,31 +48,26 @@ class SGame:
             for p in range(self.num_players):
                 self.action_mask[s, p, 0:self.nums_actions[s, p]] = 1
 
-        # payoff_mask allows to normalize and de-normalize payoffs
-        self.payoff_mask = np.zeros((self.num_states, self.num_players, *[self.num_actions_max] * self.num_players),
-                                    dtype=bool)
+        # u_mask allows to normalize and de-normalize u
+        self.u_mask = np.zeros((self.num_states, self.num_players, *[self.num_actions_max] * self.num_players),
+                               dtype=bool)
         for s in range(self.num_states):
             for p in range(self.num_players):
                 for A in np.ndindex(*self.nums_actions[s]):
-                    self.payoff_mask[(s, p) + A] = 1
+                    self.u_mask[(s, p) + A] = 1
 
-        # generate array representing payoffs [s,p,A]
-        self.payoffs = np.zeros((self.num_states, self.num_players, *[self.num_actions_max] * self.num_players))
+        # generate array representing u [s,p,A]
+        self.u = np.zeros((self.num_states, self.num_players, *[self.num_actions_max] * self.num_players))
         for s in range(self.num_states):
             for p in range(self.num_players):
                 for A in np.ndindex(*self.nums_actions[s]):
-                    self.payoffs[(s, p) + A] = payoff_matrices[s][(p,) + A]
+                    self.u[(s, p) + A] = payoff_matrices[s][(p,) + A]
 
         # generate array representing discount factors [p]
         if isinstance(discount_factors, (list, tuple, np.ndarray)):
-            self.discount_factors = np.array(discount_factors, dtype=np.float64)
+            self.delta = np.array(discount_factors, dtype=np.float64)
         else:
-            self.discount_factors = discount_factors * np.ones(self.num_players)
-        self.delta = self.discount_factors
-
-        # scale potentially useful for adjusting tracking parameters
-        self.payoff_min = self.payoffs[self.payoff_mask].min()
-        self.payoff_max = self.payoffs[self.payoff_mask].max()
+            self.delta = discount_factors * np.ones(self.num_players)
 
         # bring transition_matrices to list of np.ndarray, one array for each state
         transition_matrices = [np.array(transition_matrices[s], dtype=np.float64) for s in range(self.num_states)]
@@ -86,7 +81,7 @@ class SGame:
 
         self.phi = transition_matrix  # this is the not-per-player version. TODO: clean up
 
-        self.u_ravel = self.payoffs.ravel()
+        self.u_ravel = self.u.ravel()
         self.phi_ravel = self.phi.ravel()
 
         self.transitions = None  # type: Optional[np.ndarray]
@@ -109,7 +104,7 @@ class SGame:
         self.transitions = np.zeros((self.num_states, self.num_players, *[self.num_actions_max] * self.num_players,
                                      self.num_states))
         for p in range(self.num_players):
-            self.transitions[:, p] = self.discount_factors[p] * self.phi
+            self.transitions[:, p] = self.delta[p] * self.phi
 
     @classmethod
     def random_game(cls, num_states, num_players, num_actions, delta=0.95, seed=None) -> 'SGame':
@@ -238,13 +233,13 @@ class SGame:
         einsum_eq_u = f'sp{ABC[0:self.num_players]},s{",s".join(ABC[p] for p in range(self.num_players))}->sp'
         einsum_eq_phi = f's{ABC[0:self.num_players]}t,s{",s".join(ABC[p] for p in range(self.num_players))}->st'
 
-        u = np.einsum(einsum_eq_u, self.payoffs, *sigma_list)
+        u = np.einsum(einsum_eq_u, self.u, *sigma_list)
         phi = np.einsum(einsum_eq_phi, self.phi, *sigma_list)
 
         values = np.empty((self.num_states, self.num_players))
         try:
             for p in range(self.num_players):
-                A = np.eye(self.num_states) - phi * self.discount_factors[p]
+                A = np.eye(self.num_states) - phi * self.delta[p]
                 values[:, p] = np.linalg.solve(A, u[:, p])
         except np.linalg.LinAlgError:
             raise "Failed to solve for state-player values: Transition matrix not invertible."
@@ -266,9 +261,9 @@ class SGame:
         values = self.get_values(strategy_profile)
         sigma = np.nan_to_num(strategy_profile)
 
-        # u_tilde: payoffs of normal form games including continuation values.
-        dV = values * self.discount_factors
-        u_tilde = self.payoffs + np.einsum('s...S,Sp->sp...', self.phi, dV)
+        # u_tilde: u of normal form games including continuation values.
+        dV = values * self.delta
+        u_tilde = self.u + np.einsum('s...S,Sp->sp...', self.phi, dV)
 
         losses = np.empty((self.num_states, self.num_players))
 

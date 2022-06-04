@@ -12,7 +12,6 @@ from sgamesolver.homcont import HomContSolver
 
 try:
     import sgamesolver.homotopy._ipm_ct as _ipm_ct
-
     ct = True
 except ImportError:
     ct = False
@@ -129,12 +128,12 @@ class IPM_ct(IPM_base):
         super().__init__(game, initial_strategies, weights)
 
     def H(self, y: np.ndarray) -> np.ndarray:
-        return _ipm_ct.H(y, self.game.payoffs, self.game.transitions, self.sigma_0, self.nu,
+        return _ipm_ct.H(y, self.game.u, self.game.transitions, self.sigma_0, self.nu,
                          self.game.num_states, self.game.num_players, self.game.nums_actions,
                          self.game.num_actions_max, self.game.num_actions_total)
 
     def J(self, y: np.ndarray) -> np.ndarray:
-        return _ipm_ct.J(y, self.game.payoffs, self.game.transitions, self.sigma_0, self.nu,
+        return _ipm_ct.J(y, self.game.u, self.game.transitions, self.sigma_0, self.nu,
                          self.game.num_states, self.game.num_players, self.game.nums_actions,
                          self.game.num_actions_max, self.game.num_actions_total)
 
@@ -187,12 +186,12 @@ class IPM_sp(IPM_base):
         sigma = 0.25 * (z + (z ** 2 + 4 * t * self.sigma_0 ** 0.5) ** 0.5) ** 2
         lambda_ = 0.25 * (-z + (z ** 2 + 4 * t * self.sigma_0 ** 0.5) ** 0.5) ** 2
 
-        # payoffs including continuation values
+        # u including continuation values
 
         # u_tilde[spA]
-        u_tilde = np.zeros(self.game.payoffs.shape, dtype='object')
-        u_tilde += self.game.payoffs
-        for index, _ in np.ndenumerate(self.game.payoffs):
+        u_tilde = np.zeros(self.game.u.shape, dtype='object')
+        u_tilde += self.game.u
+        for index, _ in np.ndenumerate(self.game.u):
             for to_state in range(num_s):
                 u_tilde[index] += (self.game.transitions[(*index, to_state)] * V[to_state]).sum()
 

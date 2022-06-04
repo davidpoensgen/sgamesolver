@@ -29,10 +29,10 @@ class TestSGame:
         assert (self.game.nums_actions == self.num_actions).all()
 
     def test_payoffs(self):
-        assert isinstance(self.game.payoffs, np.ndarray)
-        assert not np.isnan(self.game.payoffs).any()
-        assert self.game.payoffs.shape[:2] == (self.num_states, self.num_players)
-        assert (np.array(self.game.payoffs.shape[2:]) == self.num_actions).all()
+        assert isinstance(self.game.u, np.ndarray)
+        assert not np.isnan(self.game.u).any()
+        assert self.game.u.shape[:2] == (self.num_states, self.num_players)
+        assert (np.array(self.game.u.shape[2:]) == self.num_actions).all()
 
     def test_transitions(self):
         self.game._make_transitions()
@@ -47,11 +47,11 @@ class TestSGame:
         assert self.game.transitions.max() <= 1.0
 
     def test_discount_factors(self):
-        assert isinstance(self.game.discount_factors, np.ndarray)
-        assert not np.isnan(self.game.payoffs).any()
-        assert self.game.discount_factors.shape == (self.num_players,)
-        assert self.game.discount_factors.min() >= 0.0
-        assert self.game.discount_factors.max() <= 1.0
+        assert isinstance(self.game.delta, np.ndarray)
+        assert not np.isnan(self.game.u).any()
+        assert self.game.delta.shape == (self.num_players,)
+        assert self.game.delta.min() >= 0.0
+        assert self.game.delta.max() <= 1.0
 
     def test_symmetries(self):
         # TODO
@@ -85,9 +85,9 @@ class TestSGame:
     def test_table_conversion(self):
         game_table = self.game.to_table()
         reloaded_game = sgamesolver.SGame.from_table(table=game_table)
-        assert np.allclose(reloaded_game.payoffs, self.game.payoffs, equal_nan=True)
+        assert np.allclose(reloaded_game.u, self.game.u, equal_nan=True)
         assert np.allclose(reloaded_game.phi, self.game.phi, equal_nan=True)
-        assert np.allclose(reloaded_game.discount_factors, self.game.discount_factors)
+        assert np.allclose(reloaded_game.delta, self.game.delta)
 
 
 # %% run

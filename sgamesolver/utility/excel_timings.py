@@ -18,20 +18,21 @@ python excel_timings.py -m filename0 [filename1 filename2 ....]
 3) To update the summary sheet of the specified files (instead of running them), use flag -s.
 (The summary is updated upon completion, but it might be necessary to do so manually after errors.)
 """
-import numpy as np
-
-import sgamesolver
 try:
     import openpyxl
 except ModuleNotFoundError:
     raise ModuleNotFoundError('sgamesolver-timings requires package openpyxl.')
-import pandas as pd
 from datetime import datetime, timedelta
 from socket import gethostname
 import os
 import sys
 import argparse
 import shutil
+
+import pandas as pd
+import numpy as np
+
+import sgamesolver
 
 HOMOTOPIES = {
     "QRE": sgamesolver.homotopy.QRE,
@@ -178,7 +179,7 @@ def run_file(filename):
 
                 game = sgamesolver.SGame.random_game(S, I, A, seed=seed, **game_parameters)
 
-                # if the same parameter is specified both in _parameters and parameters_all, the former will override.
+                # if the same parameter is specified both in parameters and parameters_all, the former will override.
                 homotopy = homotopy_constructor(game, **{**homotopy_parameters_all, **homotopy_parameters})
                 homotopy.solver_setup()
                 homotopy.solver.verbose = 0
