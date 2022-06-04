@@ -34,6 +34,8 @@ qre = sgamesolver.homotopy.QRE(game)
 
 qre.solver_setup()
 qre.solve()
+
+print(qre.equilibrium)
 ````
 
 
@@ -83,7 +85,7 @@ An equilibrium was found via homotopy continuation.
 ... success!
 Ideally, the solver will be able to find a solution without requiring any further interaction, as in this example. In cases where this does not work out, check out the  [section on troubleshooting](https://sgamesolver.readthedocs.io/en/latest/troubleshooting.html) in the documentation.
 
-##### 4. Aftermath#
+##### 4. Aftermath
 We can now display the solution:
 ```python
 print(qre.equilibrium)
