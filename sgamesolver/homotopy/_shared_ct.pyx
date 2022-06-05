@@ -1,8 +1,9 @@
+# cython: profile=False
+# cython: language_level=3
+
 """Module containing the following subfunctions shared between the different homotopies:
 u_tilde, u_tilde_sia, u_tilde_sijab, phi_siat, arrays_equal
 """
-# cython: profile=False
-# cython: language_level=3
 
 # general comments on these functions:
 """

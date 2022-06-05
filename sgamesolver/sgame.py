@@ -361,7 +361,7 @@ class SGameHomotopy:
         self.solver.start()
 
     def notify(self, result):
-        """Takes continuation result from HomContSolver and stores as new equilibrium if applicable."""
+        """Takes continuation result from HomContSolver and in case of success, stores it as equilibrium."""
         if result['success']:
             sigma, V, t = self.y_to_sigma_V_t(result['y'])
             self.equilibrium = StrategyProfile(self.game, sigma, V, t)

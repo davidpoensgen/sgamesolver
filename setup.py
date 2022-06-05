@@ -107,7 +107,7 @@ ext_modules = [
 
 setup(
     name='sgamesolver',
-    version='0.1',
+    version='1.0',
     description='A homotopy-based solver for stochastic games',
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -115,12 +115,17 @@ setup(
     project_urls={
         'Bug Tracker': 'https://github.com/davidpoensgen/sgamesolver/issues',
         'Documentation': 'https://sgamesolver.readthedocs.io/en/latest/',
-        'Please cite this paper': 'TO-BE-PUT-HERE-3'
+        'Please cite this paper': 'https://dx.doi.org/10.2139/ssrn.3316631'
     },
     author='Steffen Eibelshäuser, David Poensgen',
     author_email='steffen.eibelshaeuser@gmail.com, davidpoensgenecon@gmail.com',
     classifiers=[
         'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
         'Programming Language :: Cython',
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',

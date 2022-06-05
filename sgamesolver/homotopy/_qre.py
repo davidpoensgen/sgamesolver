@@ -5,7 +5,6 @@ import numpy as np
 
 from sgamesolver.sgame import SGame, LogStratHomotopy
 from sgamesolver.homcont import HomContSolver
-
 try:
     import sgamesolver.homotopy._qre_ct as _qre_ct
     ct = True
@@ -41,11 +40,10 @@ class QRE_base(LogStratHomotopy):
         'ds_deflation_factor': 0.5,
         'ds_min': 1e-9,
         'ds_max': 1000,
-        'corrector_steps_max': 20,
+        'corrector_steps_max': 10,
+        'ds_inflation_min_consecutive_successes': 5,
         'corrector_distance_max': 0.3,
         'corrector_ratio_max': 0.3,
-        'detJ_change_max': 1.3,
-        'bifurcation_angle_min': 175,
     }
 
     robust_parameters = {
@@ -59,8 +57,6 @@ class QRE_base(LogStratHomotopy):
         'corrector_steps_max': 30,
         'corrector_distance_max': 0.1,
         'corrector_ratio_max': 0.1,
-        'detJ_change_max': 1.1,
-        'bifurcation_angle_min': 175,
     }
 
     def solver_setup(self, target_lambda: float = np.inf) -> None:

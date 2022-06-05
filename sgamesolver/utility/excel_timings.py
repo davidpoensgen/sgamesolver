@@ -423,7 +423,6 @@ def main():
             run_file(file)
         if args.SD:
             import subprocess
-
             subprocess.run(["shutdown", "-s"])
     except Exception:
         # any exception the running code does not catch (besides KeyboardInterrupt).
@@ -431,7 +430,6 @@ def main():
         # this is to ensure shutdown goes through even if something unexpected happens.
         if args.SD:
             import subprocess
-
             subprocess.run(["shutdown", "-s"])
         else:
             raise

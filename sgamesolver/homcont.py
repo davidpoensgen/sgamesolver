@@ -155,7 +155,7 @@ class HomContSolver:
         self.corrector_ratio_max = 0.3
 
         self.detJ_change_max = 0.5
-        self.bifurcation_angle_min = 177.5
+        self.bifurcation_angle_min = 175
 
         self.sign = 0
         self.set_greedy_sign()
