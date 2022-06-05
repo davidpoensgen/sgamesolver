@@ -6,7 +6,7 @@ homotopy continuation method.
 
 Some useful links:
 - Source code is hosted on [github](https://github.com/davidpoensgen/sgamesolver)
-- Also on github is an [issue tracker](https://github.com/davidpoensgen/sgamesolver/issues):, where you are welcome to submit bug reports or feature requests
+- Also on github is an [issue tracker](https://github.com/davidpoensgen/sgamesolver/issues) for bug reports and feature requests
 - Documentation is found on [readthedocs](https://sgamesolver.readthedocs.io/en/latest/)
 
 sgamesolver is free and open source, under the MIT license. 

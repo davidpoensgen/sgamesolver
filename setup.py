@@ -113,6 +113,7 @@ setup(
     long_description_content_type='text/markdown',
     url='https://github.com/davidpoensgen/sgamesolver',
     project_urls={
+        'github': 'https://github.com/davidpoensgen/sgamesolver/',
         'Bug Tracker': 'https://github.com/davidpoensgen/sgamesolver/issues',
         'Documentation': 'https://sgamesolver.readthedocs.io/en/latest/',
         'Please cite this paper': 'https://dx.doi.org/10.2139/ssrn.3316631'
