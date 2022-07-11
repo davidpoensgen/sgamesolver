@@ -107,7 +107,7 @@ ext_modules = [
 
 setup(
     name='sgamesolver',
-    version='1.0.post1',
+    version='1.0.post2',
     description='A homotopy-based solver for stochastic games',
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -142,7 +142,7 @@ setup(
         'install': install_with_options,
         'develop': develop_with_options,
     },
-    packages=['sgamesolver', 'sgamesolver.homotopy'],
+    packages=['sgamesolver', 'sgamesolver.homotopy', 'sgamesolver.utility'],
     ext_modules=cythonize(ext_modules, language_level="3") if cython else ext_modules,
 
     python_requires='>=3.6',
