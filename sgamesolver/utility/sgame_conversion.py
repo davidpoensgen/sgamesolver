@@ -150,7 +150,7 @@ def _dataframe_to_game(df: pd.DataFrame, row_offset=0):
                                   f'actions: {", ".join(action_profile)} > row: {row_no}')
             if to_state_format:
                 phi[index + (slice(None),)] = 0
-                to_state = state_list.index(str(rows['to_state']))
+                to_state = state_list.index(str(rows['to_state'].iloc[0]))
                 phi[index + (to_state,)] = 1
             else:
                 try:

@@ -107,7 +107,7 @@ ext_modules = [
 
 setup(
     name='sgamesolver',
-    version='1.0.post2',
+    version='1.0.post3',
     description='A homotopy-based solver for stochastic games',
     long_description=long_description,
     long_description_content_type='text/markdown',
