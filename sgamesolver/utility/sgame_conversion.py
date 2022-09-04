@@ -43,6 +43,7 @@ def game_from_table(table: Union[str, pd.DataFrame]) -> SGame:
 def _dataframe_to_game(df: pd.DataFrame, row_offset=0):
     """Function to actually parse the dataframe and convert the information to numpy.ndarrays."""
     # row_offset is to account for (i) header and (ii) 0-indexing; e.g. line 2 in .xlsx corresponds to index 0 of df
+
     # copy index to a column, so it is preserved over all splits etc.
     df['idx_column'] = df.index
 
@@ -81,7 +82,7 @@ def _dataframe_to_game(df: pd.DataFrame, row_offset=0):
     if 'state' not in df.columns:
         raise ValueError('Table does not have a "state"-column.')
     # make sure the state labels are strings
-    state_list = [str(state) for state in df['state'].unique()]
+    state_list = tuple(str(state) for state in df['state'].unique())
     state_set = set(state_list)
     num_s = len(state_list)
     # check if transitions are specified correctly
@@ -91,12 +92,9 @@ def _dataframe_to_game(df: pd.DataFrame, row_offset=0):
                              ' Please remove either.')
         to_state_format = True
         to_state_col_list = None
-        # ensure that to_states are reads as strings, even if e.g. a column of integers is passed
-        to_state_set = {str(state) for state in df['to_state'].unique()}
-        if not to_state_set.issubset(state_set):
-            missing_states = to_state_set.difference(state_set)
-            raise ValueError(f'The following states appear in column "to_state", but not in "state": {missing_states}')
-    else:
+        # checking the format of individual rows is done when they are actually parsed; see below
+
+    else:  # phi_-column format
         to_state_format = False
         to_state_list = [col[4:] for col in df.columns if col[:4] == 'phi_']
         if len(to_state_list) != len(set(to_state_list)):
@@ -131,11 +129,11 @@ def _dataframe_to_game(df: pd.DataFrame, row_offset=0):
             rows = df_state.merge(pd.DataFrame((action_profile,), columns=action_col_list))
             # check for any errors, but finish parsing the table (so that all errors can be reported at once)
             if len(rows) == 0:
-                error_list.append(f'Missing > state: {state}, actions: {", ".join(action_profile)}')
+                error_list.append(f'Missing action profile > state: {state}, actions: {", ".join(action_profile)}')
                 continue
             elif len(rows) > 1:
                 row_no = ", ".join(map(str, list(rows['idx_column'] + row_offset)))
-                error_list.append(f'Duplicate > state: {state}, '
+                error_list.append(f'Duplicate action profile > state: {state}, '
                                   f'actions: {", ".join(action_profile)} > rows: {row_no}')
                 continue
             try:
@@ -150,8 +148,20 @@ def _dataframe_to_game(df: pd.DataFrame, row_offset=0):
                                   f'actions: {", ".join(action_profile)} > row: {row_no}')
             if to_state_format:
                 phi[index + (slice(None),)] = 0
-                to_state = state_list.index(str(rows['to_state'].iloc[0]))
-                phi[index + (to_state,)] = 1
+                try:
+                    transitions = _parse_transition_string(str(rows['to_state'].iloc[0]))
+                    for (to_state, probability) in transitions:
+                        try:
+                            to_state_index = state_list.index(to_state)
+                            phi[index + (to_state_index,)] = probability
+                        except ValueError:  # to-state not in state_list
+                            row_no = ", ".join(map(str, list(rows['idx_column'] + row_offset)))
+                            error_list.append(f'Unknown to-state "{to_state}" > state: {state}, '
+                                              f'actions: {", ".join(action_profile)} > row: {row_no}')
+                except TransitionParseError:
+                    row_no = ", ".join(map(str, list(rows['idx_column'] + row_offset)))
+                    error_list.append(f'Format (to_state) > state: {state}, '
+                                      f'actions: {", ".join(action_profile)} > row: {row_no}')
             else:
                 try:
                     phi[index + (slice(None),)] = rows[to_state_col_list]
@@ -172,6 +182,40 @@ def _dataframe_to_game(df: pd.DataFrame, row_offset=0):
         raise ValueError(message)
 
     return u_list, phi_list, delta, state_list, player_list, action_lists_list
+
+
+def _parse_transition_string(to_state_string):
+    """Parses transistions given in the string format, i.e. 'to_state_label_A: prob_A, to_state_label_B: prob_B' etc.
+    An empty string is treated as termination. A single label without a colon is understood as a deterministic
+    transition to that state.
+    """
+    # empty string indicates termination; parsing done
+    if not to_state_string.strip():
+        return []
+    # strip enclosing "{ }" if present
+    if len(to_state_string) >= 2 and to_state_string[0] == '{' and to_state_string[-1] == '}':
+        to_state_string = to_state_string[1:-1]
+    # split at ',', remove any empty strings which may result e.g. from a trailing comma
+    to_state_list = [to_state for to_state in to_state_string.split(',') if to_state]
+    # if only a single element is present and no ":": transition is deterministic
+    if len(to_state_list) == 1 and ":" not in to_state_list[0]:
+        return [(to_state_list[0], 1.0)]
+    # otherwise: decompose state-by-state
+    out = []
+    for to_state in to_state_list:
+        try:
+            label, probability = to_state.split(':')
+            # remove surrounding double quotes, whitespace from label
+            label = label.strip().strip('"').strip()
+            probability = float(probability)
+            out.append((label, probability))
+        except Exception:
+            raise TransitionParseError
+    return out
+
+
+class TransitionParseError(Exception):
+    pass
 
 
 def game_to_table(game: SGame) -> pd.DataFrame:
