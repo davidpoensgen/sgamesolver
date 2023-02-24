@@ -11,7 +11,8 @@ python excel_timings.py filename0 [filename1 ....]      (from a directory contai
 -> add flag -SD to shutdown once all files are done (on windows).
 
 2) To create xlsx-files instead, just add flag -m:
-python excel_timings.py -m filename0 [filename1 filename2 ....]
+sgamesolver-timings -m filename0 [filename1 filename2 ....]    (from any directory; sgamesolver needs to be installed)
+python excel_timings.py -m filename0 [filename1 ....]      (from a directory containing this file; no installation needed)
 (make sure to adapt the new files and then run them as above)
 -> Alternatively, just copy an existing file, make any desired changes,
    and delete all rows (except header) from table "runs".
@@ -66,6 +67,7 @@ def make_file(filename):
     spec.append(["computer", ""])
     spec.append(["solver parameters", ""])
     spec.append(["homotopy parameters", ""])
+    spec.append(["game parameters", ""])
     spec.append(["", ""])
     spec.append(["description", ""])
     spec.append(["file created on", datetime.now().strftime("%Y-%m-%d, %H:%M:%S")])
@@ -149,6 +151,7 @@ def run_file(filename):
     homotopy_constructor = HOMOTOPIES[homotopy_string]
     solver_parameters_all = str_to_dict(spec['B3'].value or "")
     homotopy_parameters_all = str_to_dict(spec['B4'].value or "")
+    game_parameters_all = str_to_dict(spec['B5'].value or "")
 
     runs = wb["Runs"]
 
@@ -167,6 +170,9 @@ def run_file(filename):
         homotopy_parameters = str_to_dict(homotopy_parameters or "")
         game_parameters = str_to_dict(game_parameters or "")
 
+        game_parameters_combined = {**game_parameters_all, **game_parameters}
+        nongeneric = game_parameters_combined.pop("nongeneric", False)
+
         numbers_done = list(runs_pd.query(f'S=={S} & I=={I} & A=={A}')['number'])
         success_count = runs_pd.query(f'S=={S} & I=={I} & A=={A} & success == True').shape[0]
         for number in range(100_000):
@@ -180,10 +186,15 @@ def run_file(filename):
                 print(f'{datetime.now().strftime("%H:%M:%S")} > {S}-{I}-{A}: {number:2d} ', end="", flush=True)
                 date = datetime.now().strftime("%Y-%m-%d, %H:%M:%S")
 
-                game = sgamesolver.SGame.random_game(S, I, A, seed=seed, **game_parameters)
+                if nongeneric:
+                    game = sgamesolver.SGame.random_generic_game(S, I, A, seed=seed, **game_parameters_combined)
+                else:
+                    game = sgamesolver.SGame.random_game(S, I, A, seed=seed, **game_parameters_combined)
 
                 # if the same parameter is specified both in parameters and parameters_all, the former will override.
                 homotopy = homotopy_constructor(game, **{**homotopy_parameters_all, **homotopy_parameters})
+                if nongeneric and homotopy_string == "LogTracing":
+                    homotopy.nu = game.random_weights(0.75, 1.25, zeros=True, seed=seed+1)
                 homotopy.solver_setup()
                 homotopy.solver.verbose = 0
                 homotopy.solver.set_parameters(**{**solver_parameters_all, **solver_parameters})

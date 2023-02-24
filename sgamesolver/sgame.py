@@ -106,6 +106,7 @@ class SGame:
         for p in range(self.num_players):
             self.transitions[:, p] = self.delta[p] * self.phi
 
+
     @classmethod
     def random_game(cls, num_states, num_players, num_actions, delta=0.95, seed=None) -> 'SGame':
         """Creates an SGame of given size, with random payoff- and transition arrays.
@@ -121,6 +122,7 @@ class SGame:
         Passing a seed to the random number generator ensures that the game can be recreated at a
         later occasion or by other users.
         """
+
         rng = np.random.default_rng(seed=seed)
 
         # if num_actions passed as int -> fixed number for all agents:
@@ -146,6 +148,51 @@ class SGame:
             delta = rng.uniform(delta[0], delta[1], size=num_players)
 
         return cls(u, phi, delta)
+
+    @classmethod
+    def random_nongeneric_game(cls, num_states, num_players, num_actions, delta=0.95, seed=None,
+                               u_values=None, u_probabilities=None, phi_probability_bins=None) -> 'SGame':
+        """Creates a random non-generic game..."""
+
+        rng = np.random.default_rng(seed=seed)
+
+        # if num_actions passed as int -> fixed number for all agents:
+        if isinstance(num_actions, (int, float)):
+            num_actions = np.ones((num_states, num_players), dtype=int) * num_actions
+        # if given as (min, max) -> randomize accordingly
+        elif isinstance(num_actions, (list, tuple)) and np.array(num_actions).shape == (2,):
+            num_actions = rng.integers(low=num_actions[0], high=num_actions[1],
+                                       size=(num_states, num_players), endpoint=True)
+        # else, assume it is an array that fully specifies the game size
+        num_actions = np.array(num_actions, dtype=np.int32)
+
+        # if u_values and u_probabilities is not given explicitly, they default to [0, 0.1, ..., 1.0] uniformly.
+        if u_values is None:
+            u_values = np.linspace(0, 1, num=11)
+
+        u = [rng.choice(u_values, (num_players, *num_actions[s, :]), p=u_probabilities) for s in range(num_states)]
+
+        s2 = 2*num_states
+        uniform = np.ones(num_states)/num_states
+        phi = [rng.multinomial(s2, uniform, size=num_actions[s, :])/s2 for s in range(num_states)]
+
+        if isinstance(delta, (int, float)):
+            delta = np.ones(num_players) * delta
+        elif isinstance(delta, (list, tuple)) and len(delta) == 2:
+            delta = rng.uniform(delta[0], delta[1], size=num_players)
+
+        # want to ensure that the randomized game results in an irreducible Markov chain (at least under completely
+        # mixed strategies). This is to ensure the nongeneric games are as comparable to the generic games
+        # as reasonably possible
+        # this is achieved by re-randomizing phi until this property holds.
+        # in order to be able to use some methods of the game class, the game is actually created early
+        # on and then modified if needed.
+        game = cls(u, phi, delta)
+        while not game.is_irreducible():
+            phi = [rng.multinomial(s2, uniform, size=num_actions[s, :]) / s2 for s in range(num_states)]
+            game = cls(u, phi, delta)
+
+        return game
 
     @classmethod
     def one_shot_game(cls, payoff_matrix: np.ndarray) -> 'SGame':
@@ -275,6 +322,32 @@ class SGame:
             losses[:, p] = action_values.max(axis=-1) - values[:, p]
 
         return losses
+
+    def get_transition_matrix(self, strategy_profile) -> np.ndarray:
+        """Calculate the transition matrix of the Markov chain over the state space
+        induced by a given strategy profile."""
+
+        sigma = np.nan_to_num(strategy_profile)
+        sigma_list = [sigma[:, p, :] for p in range(self.num_players)]
+
+        # einsum eq: phi: 'sABC...t,sA,sB,sC,...->st'
+        einsum_eq_phi = f's{ABC[0:self.num_players]}t,s{",s".join(ABC[p] for p in range(self.num_players))}->st'
+        phi = np.einsum(einsum_eq_phi, self.phi, *sigma_list)
+
+        return phi
+
+    def is_irreducible(self) -> bool:
+        """Test whether the game is irreducible. A game is irreducible if every state can be reached from any state
+        (directly or indirectly, via other states), assuming a completely mixed strategy profile
+        (putting positive weight on every action).
+        """
+        transition_matrix = self.get_transition_matrix(self.centroid_strategy())
+        transition_matrix = transition_matrix + np.eye(self.num_states)
+        # replace non-0 entries with 1.0 to avoid float underflow when power is taken below
+        transition_matrix[transition_matrix > 0] = 1.0
+        transition_matrix = np.linalg.matrix_power(transition_matrix, self.num_states - 1)
+        # the chain is irreducible iff no 0-entries remain
+        return (transition_matrix > 0).all()
 
 
 class StrategyProfile:
@@ -495,3 +568,4 @@ class LogStratHomotopy(SGameHomotopy):
         sigma_difference = np.exp(y_new[:self.game.num_actions_total]) - np.exp(y_old[:self.game.num_actions_total])
         sigma_distance = np.max(np.abs(sigma_difference))
         return sigma_distance / np.abs(y_new[-1] - y_old[-1])
+
