@@ -187,7 +187,7 @@ def run_file(filename):
                 date = datetime.now().strftime("%Y-%m-%d, %H:%M:%S")
 
                 if nongeneric:
-                    game = sgamesolver.SGame.random_generic_game(S, I, A, seed=seed, **game_parameters_combined)
+                    game = sgamesolver.SGame.random_nongeneric_game(S, I, A, seed=seed, **game_parameters_combined)
                 else:
                     game = sgamesolver.SGame.random_game(S, I, A, seed=seed, **game_parameters_combined)
 
@@ -243,6 +243,7 @@ def run_file(filename):
 
 
 def summarize_file(filename):
+    """Update the Summary sheet of the respective file."""
     if filename[-5:] != ".xlsx":
         filename = filename + ".xlsx"
     wb = openpyxl.load_workbook(filename=filename)
@@ -281,6 +282,7 @@ def summarize_file(filename):
 
 
 def latex_file(filename):
+    """Create or update a .tex-file displaying the timing information from the file's summary sheet."""
     if filename[-5:] != '.xlsx':
         filename = filename + '.xlsx'
     summary_pd = pd.read_excel(filename, sheet_name='Summary')
@@ -353,6 +355,7 @@ def time_format(secs):
 
 
 def str_to_dict(str_):
+    """Parses parameters passed as string, outputting a dictionary."""
     out = {}
     parameters = str_.split(",")
     for parameter in parameters:
@@ -372,7 +375,7 @@ def str_to_dict(str_):
                     value = False
                 elif value == "None":
                     value = None
-                # all other string are preserved
+                # all other strings are preserved
             out[key.strip()] = value
     return out
 
