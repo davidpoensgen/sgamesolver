@@ -129,12 +129,13 @@ def _dataframe_to_game(df: pd.DataFrame, row_offset=0):
             rows = df_state.merge(pd.DataFrame((action_profile,), columns=action_col_list))
             # check for any errors, but finish parsing the table (so that all errors can be reported at once)
             if len(rows) == 0:
-                error_list.append(f'Missing action profile > state: {state}, actions: {", ".join(action_profile)}')
+                error_list.append(f'Missing action profile > state: {state}, '
+                                  f'actions: {", ".join(map(str, action_profile))}')
                 continue
             elif len(rows) > 1:
                 row_no = ", ".join(map(str, list(rows['idx_column'] + row_offset)))
                 error_list.append(f'Duplicate action profile > state: {state}, '
-                                  f'actions: {", ".join(action_profile)} > rows: {row_no}')
+                                  f'actions: {", ".join(map(str, action_profile))} > rows: {row_no}')
                 continue
             try:
                 u[(slice(None),) + index] = rows[u_col_list]
@@ -145,7 +146,7 @@ def _dataframe_to_game(df: pd.DataFrame, row_offset=0):
             except ValueError:
                 row_no = ", ".join(map(str, list(rows['idx_column'] + row_offset)))
                 error_list.append(f'Format (u) > state: {state}, '
-                                  f'actions: {", ".join(action_profile)} > row: {row_no}')
+                                  f'actions: {", ".join(map(str, action_profile))} > row: {row_no}')
             if to_state_format:
                 phi[index + (slice(None),)] = 0
                 try:
@@ -157,11 +158,11 @@ def _dataframe_to_game(df: pd.DataFrame, row_offset=0):
                         except ValueError:  # to-state not in state_list
                             row_no = ", ".join(map(str, list(rows['idx_column'] + row_offset)))
                             error_list.append(f'Unknown to-state "{to_state}" > state: {state}, '
-                                              f'actions: {", ".join(action_profile)} > row: {row_no}')
+                                              f'actions: {", ".join(map(str, action_profile))} > row: {row_no}')
                 except TransitionParseError:
                     row_no = ", ".join(map(str, list(rows['idx_column'] + row_offset)))
                     error_list.append(f'Format (to_state) > state: {state}, '
-                                      f'actions: {", ".join(action_profile)} > row: {row_no}')
+                                      f'actions: {", ".join(map(str, action_profile))} > row: {row_no}')
             else:
                 try:
                     phi[index + (slice(None),)] = rows[to_state_col_list]
@@ -170,7 +171,7 @@ def _dataframe_to_game(df: pd.DataFrame, row_offset=0):
                 except ValueError:
                     row_no = ", ".join(map(str, list(rows['idx_column'] + row_offset)))
                     error_list.append(f'Format (phi) > state: {state}, '
-                                      f'actions: {", ".join(action_profile)} > row: {row_no}')
+                                      f'actions: {", ".join(map(str, action_profile))} > row: {row_no}')
 
         u_list.append(u)
         phi_list.append(phi)
@@ -223,10 +224,6 @@ def game_to_table(game: SGame) -> pd.DataFrame:
     state_labels = game.state_labels
     player_labels = game.player_labels
     action_labels = game.action_labels
-    # if action-labels is given as single list for all agents, create a full nested version:
-    if isinstance(action_labels[0], (str, int, float)):
-        action_labels = [[action_labels[:game.nums_actions[s, i]]
-                          for i in range(game.num_players)] for s in range(game.num_states)]
 
     # table header:
     a_cols = [f'a_{p}' for p in player_labels]

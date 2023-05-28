@@ -180,7 +180,7 @@ class SGame:
     def action_labels(self, value):
         if isinstance(value[0], (str, int, float)):
             # just a single list which applies to all state/players
-            self._action_labels = [[value for p in range(self.num_players)] for s in range(self.num_states)]
+            self._action_labels = [[value for _ in range(self.num_players)] for _ in range(self.num_states)]
         else:
             self._action_labels = value
 
@@ -340,9 +340,27 @@ class StrategyProfile:
     def __str__(self):
         return self.to_string()
 
-    def simulate(self, runs: int = 1, initial_state=None, max_periods=100,
+    def simulate(self, initial_state=None, max_periods=100, runs: int = 1,
                  labels: bool = True, discounting=True, seed: int = None) -> pd.DataFrame:
         rng = np.random.default_rng(seed=seed)
+        """Simulates the strategy profile. Inputs are
+        initial_state: The starting state of each simulation run, or a distribution over it. Can be an integer 
+            (which represents the 0-based index of the state), the label of the state as string, or a numpy array 
+            representing a probability distribution over all states.
+        max_periods: The number of periods simulated per run.
+        runs: The number of independent runs performed.
+        labels:if True (default) the result will contain state- and action labels; if False, their integer index will 
+            be used.
+        seed: allows to set a seed for the random number generator, allowing results to be reproducible.
+        
+        Returns a Pandas DataFrame with the following columns:
+        run: indicates to which run the row belongs
+        period: the period to which it refers
+        state: current state 
+        a_[player], one for each player: the action chosen by this player
+        u_[player], one for each player: the instantaneous utility for this player
+        V_[player], total discounted utility up until and including the current period, from the perspective of period 0
+        """
 
         # process initial state
         if initial_state is None:
