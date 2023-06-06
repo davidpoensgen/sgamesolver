@@ -341,7 +341,7 @@ class StrategyProfile:
         return self.to_string()
 
     def simulate(self, initial_state=None, max_periods=100, runs: int = 1,
-                 labels: bool = True, discounting=True, seed: int = None) -> pd.DataFrame:
+                 labels: bool = True, seed: int = None) -> pd.DataFrame:
         rng = np.random.default_rng(seed=seed)
         """Simulates the strategy profile. Inputs are
         initial_state: The starting state of each simulation run, or a distribution over it. Can be an integer 
@@ -412,11 +412,8 @@ class StrategyProfile:
                 action_profile = tuple(rng.choice(self.game.num_actions_max, p=sigma[state, player, :])
                                        for player in range(self.game.num_players))
                 u = self.game.u[(state, slice(None)) + action_profile]
-                if discounting:
-                    total_utility += np.multiply(u, delta_powers)
-                    delta_powers = delta_powers * self.game.delta
-                else:
-                    total_utility += u
+                total_utility += np.multiply(u, delta_powers)
+                delta_powers = delta_powers * self.game.delta
                 next_state_distribution = phi[(state,) + action_profile + (slice(None),)]
 
                 row = {
