@@ -118,7 +118,7 @@ def _dataframe_to_game(df: pd.DataFrame, row_offset=0):
     error_list = []
     for state in state_list:
         df_state = df[df['state'] == state]
-        action_lists = [df_state['a_' + player].unique() for player in player_list]
+        action_lists = [df_state['a_' + player].unique().tolist() for player in player_list]
         action_lists_list.append(action_lists)
         nums_a = [len(action_list) for action_list in action_lists]
         u = np.full([num_p] + nums_a, np.NaN)
