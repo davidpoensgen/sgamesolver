@@ -553,7 +553,7 @@ class SGameHomotopy:
                 ax.set_ylim((-.05, 1.05))
                 ax.label_outer()
                 if player == 0:
-                    ax.set_ylabel(f'state{state}', rotation=90, size='large')
+                    ax.set_ylabel(f'{self.game.state_labels[state]}', rotation=90, size='large')
                 if state == 0:
                     ax.set_title(f'player{player}')
                 if state == self.game.num_states - 1:
