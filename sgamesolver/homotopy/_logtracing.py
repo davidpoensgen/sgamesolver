@@ -17,7 +17,7 @@ ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
 
 def LogTracing(game: SGame, rho: Union[str, np.ndarray] = "centroid", nu: Optional[np.ndarray] = None,
-               eta: float = 1.0, eta_fix: bool = False, implementation='auto', **kwargs):
+               eta: float = 1.0, eta_fix: bool = True, implementation='auto', **kwargs):
     """Tracing homotopy for stochastic games."""
     if implementation == 'cython' or (implementation == 'auto' and ct):
         return LogTracing_ct(game, rho, nu, eta, eta_fix, **kwargs)
@@ -33,7 +33,7 @@ class LogTracing_base(LogStratHomotopy):
     """Tracing homotopy: base class"""
 
     def __init__(self, game: SGame, rho: Union[str, np.ndarray] = "centroid",
-                 nu: Optional[np.ndarray] = None, eta: float = 1.0, eta_fix: bool = False) -> None:
+                 nu: Optional[np.ndarray] = None, eta: float = 1.0, eta_fix: bool = True) -> None:
         super().__init__(game)
 
         if isinstance(rho, str) and rho == "centroid":
@@ -154,7 +154,7 @@ class LogTracing_ct(LogTracing_base):
     """Tracing homotopy: Cython implementation"""
 
     def __init__(self, game: SGame, rho: Union[str, np.ndarray] = "centroid",
-                 nu: Optional[np.ndarray] = None, eta: float = 1.0, eta_fix: bool = False, **kwargs):
+                 nu: Optional[np.ndarray] = None, eta: float = 1.0, eta_fix: bool = True, **kwargs):
         super().__init__(game, rho, nu, eta, eta_fix)
         self.cache = _logtracing_ct.TracingCache()
         self.parallel = False
@@ -178,7 +178,7 @@ class LogTracing_np(LogTracing_base):
     """Tracing homotopy: Numpy implementation"""
 
     def __init__(self, game: SGame, rho: Union[str, np.ndarray] = "centroid",
-                 nu: Optional[np.ndarray] = None, eta: float = 1.0, eta_fix: bool = False, **kwargs):
+                 nu: Optional[np.ndarray] = None, eta: float = 1.0, eta_fix: bool = True, **kwargs):
         """prepares the following:
             - H_mask, J_mask
             - T_H, T_J

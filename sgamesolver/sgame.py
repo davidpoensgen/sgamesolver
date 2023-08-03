@@ -172,6 +172,18 @@ class SGame:
         from sgamesolver.utility.sgame_conversion import game_to_table
         return game_to_table(self)
 
+    @property
+    def action_labels(self):
+        return self._action_labels
+
+    @action_labels.setter
+    def action_labels(self, value):
+        if isinstance(value[0], (str, int, float)):
+            # just a single list which applies to all state/players
+            self._action_labels = [[value for _ in range(self.num_players)] for _ in range(self.num_states)]
+        else:
+            self._action_labels = value
+
     def random_strategy(self, zeros=False, seed=None) -> np.ndarray:
         """Generate a random strategy profile. Padded with NaNs, or zeros under the respective option."""
         rng = np.random.default_rng(seed=seed)
@@ -294,11 +306,6 @@ class StrategyProfile:
         string = ""
         player_len = len(max(self.game.player_labels, key=len))
         state_len = len(max(self.game.state_labels, key=len))
-        if action_labels:  # check label format by checking list depth:
-            if isinstance(self.game.action_labels[0], (str, int, float)):
-                nested = False
-            else:
-                nested = True
         for state in range(self.game.num_states):
             string += f'+++++++++{" " + self.game.state_labels[state] + " ":+^{state_len + 2}}+++++++++\n'
             V_s = [f'{self.values[state, i]:.{v_decimals}f}' for i in range(self.game.num_players)]
@@ -307,14 +314,15 @@ class StrategyProfile:
                 sigma_si = self.strategies[state, player, :self.game.nums_actions[state, player]]
                 row = f'{self.game.player_labels[player]: <{player_len+1}}: v={V_s[player]:>{V_width}}, ' \
                       f'σ={np.array2string(sigma_si, formatter={"float_kind": lambda x: f"%.{decimals}f" % x})}\n'
-                if action_labels and (nested or player == 0):
+                if action_labels and (player == 0 or self.game.action_labels[state][player]
+                                      != self.game.action_labels[state][player-1]):
+                    labels = self.game.action_labels[state][player]
+                    if len(labels) > self.game.nums_actions[state, :].max():
+                        # shorten list if more labels than actions exist
+                        labels = labels[:self.game.nums_actions[state, :].max()]
                     leading_space = " " * (len(row.split("σ=")[0]) + 3)
                     action_width = decimals + 2
-                    if nested:
-                        labels = self.game.action_labels[state][player]
-                    else:
-                        labels = self.game.action_labels[:self.game.nums_actions[state].max()]
-                    label_string = " ".join([f'{a[:action_width]:^{action_width}}' for a in labels])
+                    label_string = " ".join([f'{a[:action_width]:<{action_width}}' for a in labels])
                     string += leading_space + label_string + "\n"
                 string += row
 
@@ -331,6 +339,104 @@ class StrategyProfile:
 
     def __str__(self):
         return self.to_string()
+
+    def simulate(self, initial_state=None, max_periods=100, runs: int = 1,
+                 labels: bool = True, seed: int = None) -> pd.DataFrame:
+        rng = np.random.default_rng(seed=seed)
+        """Simulates the strategy profile. Inputs are
+        initial_state: The starting state of each simulation run, or a distribution over it. Can be an integer 
+            (which represents the 0-based index of the state), the label of the state as string, or a numpy array 
+            representing a probability distribution over all states.
+        max_periods: The number of periods simulated per run.
+        runs: The number of independent runs performed.
+        labels:if True (default) the result will contain state- and action labels; if False, their integer index will 
+            be used.
+        seed: allows to set a seed for the random number generator, allowing results to be reproducible.
+        
+        Returns a Pandas DataFrame with the following columns:
+        run: indicates to which run the row belongs
+        period: the period to which it refers
+        state: current state 
+        a_[player], one for each player: the action chosen by this player
+        u_[player], one for each player: the instantaneous utility for this player
+        V_[player], total discounted utility up until and including the current period, from the perspective of period 0
+        """
+
+        # process initial state
+        if initial_state is None:
+            initial_state_distribution = np.ones(self.game.num_states)/self.game.num_states
+        elif isinstance(initial_state, str):
+            try:
+                state_no = self.game.state_labels.index(initial_state)
+            except ValueError:
+                raise ValueError(f'State "{initial_state}" is not in the state label list of the game.')
+            # get state number here
+            initial_state_distribution = np.zeros(self.game.num_states)
+            initial_state_distribution[state_no] = 1
+            pass
+        elif isinstance(initial_state, (int, float)):
+            initial_state_distribution = np.zeros(self.game.num_states)
+            initial_state_distribution[initial_state] = 1
+        elif isinstance(initial_state, (list, tuple, np.ndarray)):
+            if len(initial_state) != self.game.num_states:
+                raise ValueError(f'Argument initial_state has {len(initial_state)} entries, '
+                                 f'but the game has {self.game.num_states} states.')
+            initial_state_distribution = np.ndarray(initial_state)
+
+        sigma = np.nan_to_num(self.strategies)
+        # copy phi and extend the last dimension (=to_state) with an entry of 1-sum of the other probabilities
+        # the result can be used with random.choice, with the last entry representing chance of termination
+        phi = np.append(self.game.phi, 1 - self.game.phi.sum(axis=-1, keepdims=True), axis=-1)
+        # due to rounding error, 1-sum can be slightly negative, which would throw an error in random.choice.
+        # set those entries to 0. (Careful: does not check for any other violations etc., will miss phi summing to > 1)
+        phi[..., -1] = np.maximum(phi[..., -1], 0)
+
+        player_strings = [self.game.player_labels[player] if labels else str(player)
+                          for player in range(self.game.num_players)]
+
+        # will create a dictionary for each row, and only convert to pd.Dataframe at the end,
+        # as final length is unknown -> when appending, memory would need to be reallocated all the time
+        rows = []
+
+        for run in range(runs):
+            next_state_distribution = np.append(initial_state_distribution, [0])
+            total_utility = np.zeros(self.game.num_players)
+            delta_powers = np.ones(self.game.num_players)
+            period = 0
+            while period < max_periods:
+                state = rng.choice(self.game.num_states + 1, p=next_state_distribution)
+                if state == self.game.num_states:
+                    # this additional "state" corresponds to termination of the game, see above
+                    break
+                # No need to truncate sigma to num_actions: additional entries are 0 anyway
+                action_profile = tuple(rng.choice(self.game.num_actions_max, p=sigma[state, player, :])
+                                       for player in range(self.game.num_players))
+                u = self.game.u[(state, slice(None)) + action_profile]
+                total_utility += np.multiply(u, delta_powers)
+                delta_powers = delta_powers * self.game.delta
+                next_state_distribution = phi[(state,) + action_profile + (slice(None),)]
+
+                row = {
+                    'run': run,
+                    'period': period,
+                    'state': self.game.state_labels[state] if labels else state,
+                }
+                for player in range(self.game.num_players):
+                    row['action_' + player_strings[player]] = \
+                        self.game.action_labels[state][player][action_profile[player]] if labels \
+                        else action_profile[player]
+                    row['u_' + player_strings[player]] = u[player]
+                    row['V_' + player_strings[player]] = total_utility[player]
+                rows.append(row)
+
+                period += 1
+        columns = ['run', 'period', 'state']
+        columns += ['action_' + player_strings[player] for player in range(self.game.num_players)]
+        columns += ['u_' + player_strings[player] for player in range(self.game.num_players)]
+        columns += ['V_' + player_strings[player] for player in range(self.game.num_players)]
+        output = pd.DataFrame(rows, columns=columns)
+
+        return output
 
 
 class SGameHomotopy:
@@ -447,7 +553,7 @@ class SGameHomotopy:
                 ax.set_ylim((-.05, 1.05))
                 ax.label_outer()
                 if player == 0:
-                    ax.set_ylabel(f'state{state}', rotation=90, size='large')
+                    ax.set_ylabel(f'{self.game.state_labels[state]}', rotation=90, size='large')
                 if state == 0:
                     ax.set_title(f'player{player}')
                 if state == self.game.num_states - 1:
