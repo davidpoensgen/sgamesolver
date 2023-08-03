@@ -1,6 +1,6 @@
 # Change Log
 
-## [1.0.2] - 2023-06-14
+## [1.0.2] - 2023-08-03
 
 ### New
 - Added basic functionality for simulations. Implemented as method `.simulate()` 
